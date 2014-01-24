@@ -1,4 +1,49 @@
 hadmin
 ======
 
-Hadoop (and related tools) administration tool.
+*This is my first python project. The python will no doubt be sloppy,
+and I welcome improvements as will as criticism of my coding style.*
+
+Hadoop (and related tools) administration tool. Manages config in
+an easy way, and also generates XML on the fly for multi-tenant
+environments. The purpose of Hadmin is two-fold:
+
+* Provide a Python API to update Hadoop config
+* Provide command-line tools to update Hadoop config
+
+Hadmin (will) strives to support as many versions as possible. Right
+now only 1.1.x is supported, but hopefully that'll change pretty quick.
+Hopefully support can be easily added by way of some simple config, but
+we'll see.
+
+A long-term goal of Hadmin is to intelligently generate as much config
+dynamically as possible, hopefully leading to better configured clusters.
+This could even include tuning performance automatically based on some
+formulas to at least give sys admins a head start on performance tuning.
+
+Dynamically generating queues in a multi-tenanted environment is easy.
+For a queue named staff, there are three files:
+
+* staff.users: Users that can submit to the queue, each on their own line
+* staff.admins: Administrators, each on their own line
+* staff.settings: Queue settings
+
+### ".users" file
+This should contain a list of usernames allowed on this queue, each on
+his/her own line.
+
+### ".admins" file
+Same as the .users file, but with usernames of admins.
+
+### ".settings" file
+Contains performance stuff and other settings related to how queues function.
+
+#### Future work
+For any setting, leaving it blank will cause Hadmin to try and deduce a
+smart value, taking into account number of users on the queue as well as
+the hardware it's being run on.
+
+## Helping out
+On the off chance that you've stumbled on this project and want to
+contribute, that's fantastic. It's pretty open-ended, but the structure
+will be nailed down within a few months.
