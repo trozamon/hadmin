@@ -1,0 +1,27 @@
+mapred.job.tracker:
+        val: jt.example.com:8021
+mapred.child.java.opts:
+        val: -Xmx1024M
+mapred.system.dir:
+        val: /var/hadoop/mapred/system
+mapred.local.dir:
+        val: /var/hadoop/mapred/local
+mapred.jobtracker.taskScheduler:
+        val: org.apache.hadoop.mapred.CapacityTaskScheduler
+mapred.tasktracker.map.tasks.maximum:
+        val: 11
+mapred.tasktracker.reduce.tasks.maximum:
+        val: 11
+mapred.queue.names:
+        val: default,staff
+mapred.acls.enabled:
+        val: true
+mapred.task.timeout:
+        val: 600000
+
+mapred.jobtracker.staging.root.dir:
+        val: /user
+        final: true
+mapreduce.jobtracker.staging.root.dir:
+        val: /user
+        final: true

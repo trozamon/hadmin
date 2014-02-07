@@ -1,0 +1,3 @@
+cap-min 5
+cap-max 10
+usertasks-max 100000

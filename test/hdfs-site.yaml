@@ -1,0 +1,19 @@
+dfs.block.size: 134217728
+dfs.replication: 3
+dfs.replication.max: 10
+dfs.namenode.replication.min: 1
+dfs.name.dir: "/var/hadoop/name"
+dfs.data.dir: "/var/hadoop/data"
+dfs.http.address: "nn.example.com:50070"
+dfs.permissions: true
+dfs.umaskmode:
+        val: 027
+        final: true
+
+dfs.safemode.threshold.pct:
+        val: 0.999
+        final: true
+
+dfs.safemode.extension:
+        val: 5000
+        final: true

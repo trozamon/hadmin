@@ -1,0 +1,14 @@
+abbr:
+        cap-min: mapred.capacity-scheduler.queue.default.capacity
+        cap-max:  mapred.capacity-scheduler.queue.default.maximum-capacity
+        usertasks-max: mapred.capacity-scheduler.queue.default.maximum-initialized-active-tasks-per-user
+
+files:
+        mapred-queue-acls.xml:
+                mapred.queue.default.acl-submit-job: users
+                mapred.queue.default.acl-administer-jobs: admins
+
+        capacity-scheduler.xml: settings
+
+        mapred-site.xml:
+                mapred.queue.names: $queues

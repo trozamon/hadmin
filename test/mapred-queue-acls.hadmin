@@ -1,2 +1,0 @@
-final mapred.queue.default.acl-submit-job trozamon,cron
-final mapred.queue.default.acl-administer-jobs trozamon
