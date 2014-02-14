@@ -1,4 +1,9 @@
 from xml.etree import ElementTree as ET
+from yaml import load, dump
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 
 class ConfigValue:
     """Keeps track of Hadoop config values
@@ -16,10 +21,8 @@ class ConfigValue:
     def __str__(self):
         ret = ""
         if self.is_final:
-            ret += "final\t"
-        else:
-            ret += "\t"
-        ret += self.key + "\t" + self.value
+            ret += "final"
+        ret += "\t" + self.key + "\t" + str(self.value)
         return ret
 
     def set_is_final(self, string):
@@ -78,25 +81,19 @@ class Config:
         return cls(configs)
 
     @classmethod
-    def from_hadmin(cls, filename):
+    def from_yaml(cls, filename):
         """Parse Hadmin's config and fill ConfigValues"""
         configs = []
         tmp = ConfigValue()
         f = open(filename, "r")
-        for line in f:
-            line = line.rstrip('\n')
-            arr = line.split(" ")
-            if len(arr) == 3:
-                tmp.set_is_final(arr[0])
-                tmp.key = arr[1]
-                tmp.value = arr[2]
-            elif len(arr) == 2:
-                tmp.key = arr[0]
-                tmp.value = arr[1]
-                tmp.set_is_final(False)
-            else:
-                print("Error processing hadmin file")
-                exit(1)
+        data = load(f, Loader=Loader)
+        for elem in data:
+            tmp.key = elem
+            try:
+                tmp.value = data[elem]['val']
+                tmp.set_is_final(data[elem]['final'])
+            except TypeError:
+                tmp.value = data[elem]
             configs.append(tmp)
             tmp = ConfigValue()
         return cls(configs)
@@ -123,7 +120,7 @@ if __name__ == "__main__":
     if fname.split('.')[-1] == "xml":
         conf = Config.from_xml(fname)
     else:
-        conf = Config.from_hadmin(fname)
+        conf = Config.from_yaml(fname)
 
     print(conf)
     print(conf.to_xml())
