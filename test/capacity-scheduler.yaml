@@ -1,5 +1,5 @@
 mapred.capacity-scheduler.maximum-system-jobs: 100
-mapred.capacity-scheduler.default-supports-priority: true
+mapred.capacity-scheduler.default-supports-priority: "true"
 mapred.capacity-scheduler.default-minimum-user-limit-percent: 25
 mapred.capacity-scheduler.default-user-limit-factor: 10
 mapred.capacity-scheduler.default-maximum-active-tasks-per-queue: 200000

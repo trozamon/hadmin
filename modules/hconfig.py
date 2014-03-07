@@ -35,7 +35,7 @@ class ConfigValue:
     def to_xml(self, num_tabs):
         """Outputs an XML representation"""
         out = [(num_tabs * "\t") + "<name>" + self.key + "</name>"]
-        out.append((num_tabs * "\t") + "<value>" + self.value + "</value>")
+        out.append((num_tabs * "\t") + "<value>" + str(self.value) + "</value>")
         if self.is_final:
             out.append((num_tabs * "\t") + "<final>true</final>")
 
@@ -49,7 +49,10 @@ class Config:
 
     """
     def __init__(self, config_value_array):
-        self.configs = config_value_array
+        if config_value_array == None:
+            self.configs = []
+        else:
+            self.configs = config_value_array
 
     def __str__(self):
         ret = ""
@@ -94,6 +97,8 @@ class Config:
                 tmp.set_is_final(data[elem]['final'])
             except TypeError:
                 tmp.value = data[elem]
+            except KeyError:
+                tmp.final = False
             configs.append(tmp)
             tmp = ConfigValue()
         return cls(configs)

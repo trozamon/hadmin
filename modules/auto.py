@@ -21,7 +21,7 @@ def create_queues(directory):
         if re.search("\.users", f):
             is_queue_file = True
             tmp.key = "mapred.queue." + queue_name + ".acl-submit-job"
-            tmp.set_is_final(True)
+            tmp.is_final = True
             user_list = ""
             for line in open(filename):
                 line = line.rstrip("\n")
@@ -33,7 +33,7 @@ def create_queues(directory):
         elif re.search("\.admins", f):
             is_queue_file = True
             tmp.key = "mapred.queue." + queue_name + ".acl-administer-jobs"
-            tmp.set_is_final(True)
+            tmp.is_final = True
             admin_list = ""
             for line in open(filename):
                 line = line.rstrip("\n")
@@ -52,7 +52,7 @@ def create_queues(directory):
             try:
                 arr[queue_name]
             except KeyError:
-                arr[queue_name] = Config([])
+                arr[queue_name] = Config(None)
             for conf_val in tmps:
                 arr[queue_name].configs.append(conf_val)
 
@@ -67,8 +67,8 @@ def create_configs(directory):
     configs['core-site.xml'] = Config.from_yaml(directory + "/core-site.yaml")
     configs['hadoop-policy.xml'] = Config.from_yaml(directory + "/hadoop-policy.yaml")
     configs['hdfs-site.xml'] = Config.from_yaml(directory + "/hdfs-site.yaml")
-    configs['mapred-queue-acls.xml'] = Config.from_yaml(directory + "/mapred-queue-acls.yaml")
     configs['mapred-site.xml'] = Config.from_yaml(directory + "/mapred-site.yaml")
+    configs['mapred-queue-acls.xml'] = Config(None)
 
     queues = create_queues(directory)
 
@@ -79,16 +79,20 @@ def create_configs(directory):
         queue_list = queue_list + queue
         for conf in queues[queue].configs:
             if conf.key == "mapred.queue." + queue + ".acl-submit-job":
-                users = conf
+                configs['mapred-queue-acls.xml'].configs.append(conf)
             elif conf.key == "mapred.queue." + queue + ".acl-administer-jobs":
-                admins = conf
+                configs['mapred-queue-acls.xml'].configs.append(conf)
             elif conf.key == "mapred.capacity-scheduler.queue." + queue + ".capacity":
-                cap = conf
+                configs['capacity-scheduler.xml'].configs.append(conf)
             elif conf.key == "mapred.capacity-scheduler.queue." + queue + ".maximum-capacity":
-                maxcap = conf
+                configs['capacity-scheduler.xml'].configs.append(conf)
             elif conf.key == "mapred.capacity-scheduler.queue." + queue + ".maximum-initialized-active-tasks-per-user":
-                init_tasks = conf
-        configs['capacity-scheduler.xml'].configs.append(
+                configs['capacity-scheduler.xml'].configs.append(conf)
+    tmp = ConfigValue()
+    tmp.key = "mapred.queue.names"
+    tmp.value = queue_list
+    configs['mapred-site.xml'].configs.append(tmp)
+    return configs
     
 if __name__ == "__main__":
     import sys
@@ -98,8 +102,9 @@ if __name__ == "__main__":
         exit(1)
 
     fname = sys.argv[1]
-    tmp = create_queues(fname)
+    tmp = create_configs(fname)
     for conf in tmp:
         print(conf)
         print(tmp[conf])
+        print(tmp[conf].to_xml())
         print()
