@@ -3,6 +3,11 @@
 import re
 import os
 from hconfig import Config, ConfigValue
+from yaml import load, dump
+try:
+    from yaml import CLoader as Loader, CDumper as Dumper
+except ImportError:
+    from yaml import Loader, Dumper
 
 def create_queues(directory):
     """ Reads all the .users, .admins, and .settings in a given directory.
@@ -11,50 +16,26 @@ def create_queues(directory):
     and 'admins' return a CSV list, and 'settings' returns an array of
     ConfigValues. """
     arr = {}
-    for f in os.listdir(directory):
-        filename = directory + "/" + f
-        queue_name = f.split(".")[0]
-        tmps = []
-        tmp = ConfigValue()
-        is_queue_file = False
 
-        if re.search("\.users", f):
-            is_queue_file = True
-            tmp.key = "mapred.queue." + queue_name + ".acl-submit-job"
+    f = open(directory + "/hadmin-queues.yaml", "r")
+    data = load(f, Loader=Loader)
+    for elem in data:
+        arr[elem] = []
+        for key in data[elem]:
+            tmp = ConfigValue()
+            if key == "users":
+                tmp.key = "mapred.queue." + elem + ".acl-submit-job"
+            elif key == "admins":
+                tmp.key = "mapred.queue." + elem + ".acl-administer-jobs"
+            elif key == "capacity":
+                tmp.key = "mapred.capacity-scheduler.queue." + elem + ".capacity"
+            elif key == "maximum-capacity":
+                tmp.key = "mapred.capacity-scheduler.queue." + elem + ".maximum-capacity"
+            elif key == "maximum-initialized-active-tasks-per-user":
+                tmp.key = "mapred.capacity-scheduler.queue." + elem + ".maximum-initialized-active-tasks-per-user"
             tmp.is_final = True
-            user_list = ""
-            for line in open(filename):
-                line = line.rstrip("\n")
-                if len(user_list) > 0:
-                    user_list = user_list + ","
-                user_list = user_list + line
-            tmp.value = user_list
-            tmps.append(tmp)
-        elif re.search("\.admins", f):
-            is_queue_file = True
-            tmp.key = "mapred.queue." + queue_name + ".acl-administer-jobs"
-            tmp.is_final = True
-            admin_list = ""
-            for line in open(filename):
-                line = line.rstrip("\n")
-                if len(admin_list) > 0:
-                    admin_list = admin_list + ","
-                admin_list = admin_list + line
-            tmp.value = admin_list
-            tmps.append(tmp)
-        elif re.search("\.settings", f):
-            is_queue_file = True
-            conf = Config.from_yaml(filename)
-            for conf_val in conf.configs:
-                tmps.append(conf_val)
-
-        if is_queue_file:
-            try:
-                arr[queue_name]
-            except KeyError:
-                arr[queue_name] = Config(None)
-            for conf_val in tmps:
-                arr[queue_name].configs.append(conf_val)
+            tmp.value = data[elem][key]
+            arr[elem].append(tmp)
 
     return arr
 
@@ -77,7 +58,7 @@ def create_configs(directory):
         if len(queue_list) > 0:
             queue_list = queue_list + ","
         queue_list = queue_list + queue
-        for conf in queues[queue].configs:
+        for conf in queues[queue]:
             if conf.key == "mapred.queue." + queue + ".acl-submit-job":
                 configs['mapred-queue-acls.xml'].configs.append(conf)
             elif conf.key == "mapred.queue." + queue + ".acl-administer-jobs":

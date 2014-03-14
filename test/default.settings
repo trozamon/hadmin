@@ -1,3 +1,0 @@
-mapred.capacity-scheduler.queue.default.capacity: 5
-mapred.capacity-scheduler.queue.default.maximum-capacity: 10
-mapred.capacity-scheduler.queue.default.maximum-initialized-active-tasks-per-user: 100000
