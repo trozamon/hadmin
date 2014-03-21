@@ -2,7 +2,7 @@
 
 import re
 import os
-from hconfig import Config, ConfigValue
+from hadmin.hconfig import Config, ConfigValue
 from yaml import load, dump
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
@@ -39,7 +39,7 @@ def create_queues(directory):
 
     return arr
 
-def create_configs(directory):
+def create_configs(directory="."):
     """ Creates all the config files. Adds queue and user info to
     capacity-scheduler.xml, mapred-queue-acls.xml, and mapred-site.xml. """
 

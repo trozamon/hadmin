@@ -1,8 +1,9 @@
 #!/usr/bin/env python
 
 import sys
+sys.path.append('..')
 import argparse
-from modules.user import *
+import hadmin.cmd
 
 def print_help():
     """ Prints out the help message """
@@ -15,11 +16,13 @@ def print_help():
     print(tmp)
 
 def run():
+    if (len(sys.argv) <= 1 or sys.argv[1] == "-h"):
+        print_help()
+        return 0
     command = sys.argv[1]
-
     sysargs = sys.argv[2:]
-    if command == 'useradd':
-        useradd(sysargs, None)
+
+    return getattr(hadmin.cmd, command)(sysargs)
 
 if __name__ == "__main__":
-    run()
+    sys.exit(run())
