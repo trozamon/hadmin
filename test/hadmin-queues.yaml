@@ -2,11 +2,11 @@ default:
         users: trozamon,root
         admins: trozamon
         capacity: 5
-        maximum-capacity: 10
-        maximum-initialized-active-tasks-per-user: 100000
+        max-cap: 10
+        max-init-tpu: 100000
 staff:
         users: trozamon,root,bossman
         admins: trozamon,root
         capacity: 5
-        maximum-capacity: 100
-        maximum-initialized-active-tasks-per-user: 100000
+        max-cap: 100
+        max-init-tpu: 100000

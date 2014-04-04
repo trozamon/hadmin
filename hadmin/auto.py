@@ -2,40 +2,43 @@
 
 import re
 import os
-from hadmin.hconfig import Config, ConfigValue
+from hadmin.config import Config
 from yaml import load, dump
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
     from yaml import Loader, Dumper
 
+hadmin_key_rep = "____"
+hadmin_key_map = dict()
+#hadmin_key_map['users'] = "mapred.queue." + hadmin_key_rep + ".acl-submit-job"
+hadmin_key_map['users'] = "mapred.queue.__.acl-submit-job"
+hadmin_key_map["admins"] = \
+        "mapred.queue." + hadmin_key_rep + ".acl-administer-jobs"
+hadmin_key_map["capacity"] = \
+        "mapred.capacity-scheduler.queue." + hadmin_key_rep + ".capacity"
+hadmin_key_map["max-cap"] = \
+        "mapred.capacity-scheduler.queue." + hadmin_key_rep + \
+        ".maximum-capacity"
+hadmin_key_map["max-init-tpu"] = \
+        "mapred.capacity-scheduler.queue." + hadmin_key_rep + \
+        ".maximum-initialized-active-tasks-per-user"
+
+# TODO Actually comment this mofo
 def create_queues(directory):
-    """ Reads all the .users, .admins, and .settings in a given directory.
-    Creates an two-dimension array, with the first field as the name of the
-    queue, and the second field as 'users', 'admins', or 'settings'. 'users'
-    and 'admins' return a CSV list, and 'settings' returns an array of
-    ConfigValues. """
-    arr = {}
+
+    arr = dict()
 
     f = open(directory + "/hadmin-queues.yaml", "r")
     data = load(f, Loader=Loader)
-    for elem in data:
-        arr[elem] = []
-        for key in data[elem]:
-            tmp = ConfigValue()
-            if key == "users":
-                tmp.key = "mapred.queue." + elem + ".acl-submit-job"
-            elif key == "admins":
-                tmp.key = "mapred.queue." + elem + ".acl-administer-jobs"
-            elif key == "capacity":
-                tmp.key = "mapred.capacity-scheduler.queue." + elem + ".capacity"
-            elif key == "maximum-capacity":
-                tmp.key = "mapred.capacity-scheduler.queue." + elem + ".maximum-capacity"
-            elif key == "maximum-initialized-active-tasks-per-user":
-                tmp.key = "mapred.capacity-scheduler.queue." + elem + ".maximum-initialized-active-tasks-per-user"
-            tmp.is_final = True
-            tmp.value = data[elem][key]
-            arr[elem].append(tmp)
+    for queue in data:
+        arr[queue] = dict()
+        for opt in data[queue]:
+            key = hadmin_key_map[opt]
+            match = re.sub(hadmin_key_rep, queue, key)
+            if not match:
+                raise KeyError("Improperly mapped hadmin key: " + opt + " in queue " + queue)
+            arr[queue][match] = str(data[queue][opt])
 
     return arr
 
@@ -43,7 +46,7 @@ def create_configs(directory="."):
     """ Creates all the config files. Adds queue and user info to
     capacity-scheduler.xml, mapred-queue-acls.xml, and mapred-site.xml. """
 
-    configs = {}
+    configs = dict()
     configs['capacity-scheduler.xml'] = Config.from_yaml(directory + "/capacity-scheduler.yaml")
     configs['core-site.xml'] = Config.from_yaml(directory + "/core-site.yaml")
     configs['hadoop-policy.xml'] = Config.from_yaml(directory + "/hadoop-policy.yaml")
@@ -58,6 +61,7 @@ def create_configs(directory="."):
         if len(queue_list) > 0:
             queue_list = queue_list + ","
         queue_list = queue_list + queue
+        # TODO This needs to be rewritten from here at least
         for conf in queues[queue]:
             if conf.key == "mapred.queue." + queue + ".acl-submit-job":
                 configs['mapred-queue-acls.xml'].configs.append(conf)
@@ -83,9 +87,13 @@ if __name__ == "__main__":
         exit(1)
 
     fname = sys.argv[1]
-    tmp = create_configs(fname)
-    for conf in tmp:
-        print(conf)
-        print(tmp[conf])
-        print(tmp[conf].to_xml())
-        print()
+    tmp = create_queues(fname)
+    for queue in tmp:
+        for opt in tmp[queue]:
+            print(queue + " " + opt + ": " + tmp[queue][opt])
+#    tmp = create_configs(fname)
+#    for conf in tmp:
+#        print(conf)
+#        print(tmp[conf])
+#        print(tmp[conf].to_xml())
+#        print()
