@@ -14,10 +14,11 @@ class Config:
     """
     def __init__(self, config_value_array):
         if config_value_array == None:
-            self.configs = dict(dict())
+            self.configs = dict()
         else:
             self.configs = config_value_array
 
+    # TODO Gonna have to rewrite this to use get_value, get_final
     def __str__(self):
         out = ""
         for key in self.configs:
@@ -28,6 +29,44 @@ class Config:
             out = out + tmp
         out = out[0:-2]
         return out
+
+    def set_value(self, key, value):
+        """ Sets the value of the key """
+        if self.configs[key] is None:
+            self.configs[key] = dict()
+            self.configs[key]["final"] = False
+        self.configs[key]["value"] = str(value)
+
+    def get_value(self, key):
+        """ Gets the value of the key """
+        if self.configs[key] is None:
+            raise KeyError("Key " + key + " doesn't exist in this config")
+        return self.configs[key]["value"]
+
+    def set_final(self, key, is_final):
+        """ Sets the finality of this key to true or false as a bool.
+        is_final can be either a string or a boolean because I'm so
+        awesome at sanitizing data. """
+        if self.configs[key] is None:
+            self.configs[key] = dict()
+            self.configs[key]["value"] = ""
+        tmp = str(is_final).lower()
+        if tmp == "true":
+            self.configs[key]["final"] = True
+        else:
+            self.configs[key]["final"] = False
+
+    def is_final(self, key):
+        """ For use in logical tests """
+        if self.configs[key] is None:
+            raise KeyError("Key " + key + " doesn't exist in this config")
+        return self.configs[key]["final"]
+
+    def get_final(self, key):
+        """ For use in printing out """
+        if self.configs[key] is None:
+            raise KeyError("Key " + key + " doesn't exist in this config")
+        return str(self.configs[key]["final"]).lower()
 
     @classmethod
     def from_xml(cls, filename):
@@ -71,21 +110,28 @@ class Config:
             except TypeError:
                 val = str(data[elem])
                 fnl = "false"
+            except KeyError:
+                val = str(data[elem])
+                fnl = "false"
 
             configs[key] = dict()
             configs[key]['value'] = val
             configs[key]['final'] = fnl
         return cls(configs)
 
+    # TODO Rewrite this mofo to use get_value, get_final
     def to_xml(self):
         """Return an XML representation of this Config"""
         out = ["<configuration>"]
         for key in self.configs:
-            out.append("\t<property>");
-            out.append("\t\t<name>" + key + "</name>")
-            out.append("\t\t<value>" + self.configs[key]['value'] + "</value>")
-            out.append("\t\t<final>" + self.configs[key]['final'] + "</final>")
-            out.append("\t</property>")
+            try:
+                out.append("\t<property>");
+                out.append("\t\t<name>" + key + "</name>")
+                out.append("\t\t<value>" + self.configs[key]['value'] + "</value>")
+                out.append("\t\t<final>" + str(self.configs[key]['final']).lower() + "</final>")
+                out.append("\t</property>")
+            except TypeError:
+                print("Error using key " + key + " with data " + self.configs[key])
         out.append("</configuration>")
         return '\n'.join(out)
 
