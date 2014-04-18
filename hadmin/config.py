@@ -6,148 +6,205 @@ except ImportError:
     from yaml import Loader, Dumper
 
 class Config:
-    """Holds a bunch of ConfigValues and processes them
+    """ Holds a Hadoop configuration.
     
-    Can print them out for debugging, check for valid values, return
-    an XML or Hadmin representation.
+    Config holds a Hadoop configuration as a two-dimensional map. It
+    is organized with the first dimension as the configuration key. The
+    second dimension contains two elements: value and final.
+
+    Config allows for returning either an XML or YAML representation.
+    Future work will be to include type-checking and other potential
+    validation based on a rules file, although this will be in a different
+    class, probably ConfigValidator or something.
 
     """
-    def __init__(self, config_value_array):
-        if config_value_array == None:
-            self.configs = dict()
-        else:
-            self.configs = config_value_array
-
-    # TODO Gonna have to rewrite this to use get_value, get_final
-    def __str__(self):
-        out = ""
-        for key in self.configs:
-            tmp = ""
-            if self.configs[key]['final'] == "true":
-                tmp = "final "
-            tmp = tmp + key + ": " + self.configs[key]['value'] + "\n"
-            out = out + tmp
-        out = out[0:-2]
-        return out
-
-    def set_value(self, key, value):
-        """ Sets the value of the key """
-        if self.configs[key] is None:
-            self.configs[key] = dict()
-            self.configs[key]["final"] = False
-        self.configs[key]["value"] = str(value)
-
-    def get_value(self, key):
-        """ Gets the value of the key """
-        if self.configs[key] is None:
-            raise KeyError("Key " + key + " doesn't exist in this config")
-        return self.configs[key]["value"]
-
-    def set_final(self, key, is_final):
-        """ Sets the finality of this key to true or false as a bool.
-        is_final can be either a string or a boolean because I'm so
-        awesome at sanitizing data. """
-        if self.configs[key] is None:
-            self.configs[key] = dict()
-            self.configs[key]["value"] = ""
-        tmp = str(is_final).lower()
-        if tmp == "true":
-            self.configs[key]["final"] = True
-        else:
-            self.configs[key]["final"] = False
-
-    def is_final(self, key):
-        """ For use in logical tests """
-        if self.configs[key] is None:
-            raise KeyError("Key " + key + " doesn't exist in this config")
-        return self.configs[key]["final"]
-
-    def get_final(self, key):
-        """ For use in printing out """
-        if self.configs[key] is None:
-            raise KeyError("Key " + key + " doesn't exist in this config")
-        return str(self.configs[key]["final"]).lower()
 
     @classmethod
     def from_xml(cls, filename):
-        """Parse Hadoop XML and fill ConfigValues"""
+        """ Parses Hadoop XML and fill a two-dimensonal map. """
 
-        configs = dict()
-        key = ""
-        val = ""
-        fnl = "false"
+        conf = cls()
+        key = ''
+        val = ''
+        fnl = False
 
         for event, elem in ET.iterparse(filename):
-            if elem.tag == "name":
-                if key != "":
-                    configs[key]['value'] = val
-                    configs[key]['final'] = fnl
-                    fnl = "false"
+            if elem.tag is 'name':
+                if len(key) > 0:
+                    conf[key][Config.val_tag] = val
+                    conf[key][Config.fnl_tag] = fnl
                 key = elem.text
-            elif elem.tag == "value":
+                val = ''
+                fnl = False
+            elif elem.tag is 'value':
                 val = elem.text
-            elif elem.tag == "final":
+            elif elem.tag is 'final':
                 fnl = elem.text
-                configs[key]['value'] = val
-                configs[key]['final'] = fnl
-        return cls(configs)
+        conf.validate()
+        return conf
 
     @classmethod
     def from_yaml(cls, filename):
-        """Parse Hadmin's config and fill ConfigValues"""
-        configs = dict()
+        """Parse YAML and fill two-dimensional map."""
+
+        conf = cls()
+        key = ''
+        val = ''
+        fnl = ''
+
         f = open(filename, "r")
         data = load(f, Loader=Loader)
-        key = ""
-        val = ""
-        fnl = ""
 
         for elem in data:
             key = elem
             try:
-                val = str(data[elem]['val'])
-                fnl = data[elem]['final']
+                val = data[elem][Config.val_tag]
+                fnl = data[elem][Config.fnl_tag]
             except TypeError:
-                val = str(data[elem])
-                fnl = "false"
+                val = data[elem]
+                fnl = False
             except KeyError:
-                val = str(data[elem])
-                fnl = "false"
+                print("KeyError in strange place... possibly malformed input")
+                quit(1)
 
-            configs[key] = dict()
-            configs[key]['value'] = val
-            configs[key]['final'] = fnl
-        return cls(configs)
+            conf[key, Config.val_tag] = val
+            conf[key, Config.fnl_tag] = fnl
+        conf.validate()
+        return conf
 
-    # TODO Rewrite this mofo to use get_value, get_final
     def to_xml(self):
-        """Return an XML representation of this Config"""
+        """ Return an XML representation of this Config """
         out = ["<configuration>"]
-        for key in self.configs:
-            try:
-                out.append("\t<property>");
-                out.append("\t\t<name>" + key + "</name>")
-                out.append("\t\t<value>" + self.configs[key]['value'] + "</value>")
-                out.append("\t\t<final>" + str(self.configs[key]['final']).lower() + "</final>")
-                out.append("\t</property>")
-            except TypeError:
-                print("Error using key " + key + " with data " + self.configs[key])
+        for key in sorted(self.conf.keys()):
+            out.append("\t<property>");
+            out.append("\t\t<name>" + key + "</name>")
+            out.append("\t\t<value>" + self[key, Config.val_tag] + "</value>")
+            fnl = str(self[key, Config.fnl_tag]).lower()
+            out.append("\t\t<final>" + fnl + "</final>")
+            out.append("\t</property>")
         out.append("</configuration>")
         return '\n'.join(out)
+
+    def validate(self):
+        """ Validates the configuration.
+
+        Checks to ensure each key has an associated value and final, and
+        that final is a boolean value.
+
+        """
+
+        if len(self.conf) is 0:
+            return
+
+        for key in self.conf:
+            item = self.conf[key]
+            if len(item) not in (1, 2):
+                val = ''
+                fnl = ''
+                if Config.val_tag in item:
+                    val = item[Config.val_tag]
+                if Config.fnl_tag in item:
+                    fnl = item[Config.fnl_tag]
+                item = dict()
+                if len(val) > 0:
+                    item[Config.val_tag] = val
+                if len(fnl) > 0:
+                    item[Config.fnl_tag] = fnl
+
+            if Config.val_tag not in item:
+                item = dict()
+                item[Config.val_tag] = ''
+            else:
+                item[Config.val_tag] = str(item[Config.val_tag])
+
+            if Config.fnl_tag not in item:
+                item[Config.fnl_tag] = False
+            else:
+                tmp = str(item[Config.fnl_tag]).lower()
+                if tmp is 'true':
+                    item[Config.fnl_tag] = True
+                else:
+                    item[Config.fnl_tag] = False
+
+    def add_key(self, key):
+        if key not in self.conf.keys():
+            self.conf[key] = dict()
+            self.conf[key][Config.val_tag] = ''
+            self.conf[key][Config.fnl_tag] = False
+
+    def __init__(self, conf_dict=None):
+        """ Takes in a two-dimensional dict of Hadoop configuration """
+
+        if conf_dict == None:
+            self.conf = dict()
+        else:
+            self.conf = conf_dict
+        self.validate()
+
+    def __str__(self):
+        """ Returns a string representation. Debugging only """
+
+        out = []
+        for key in sorted(self.conf.keys()):
+            tmp = []
+            if self[key, Config.fnl_tag]:
+                tmp.append('final')
+            tmp.append('\t')
+            tmp.append(key)
+            tmp.append(':\t')
+            tmp.append(self[key, Config.val_tag])
+            out.append(''.join(tmp))
+        return '\n'.join(out)
+
+    def __getitem__(self, key):
+        """ This documentation should be better """
+
+        sub_key = Config.val_tag
+
+        if type(key) is tuple:
+            sub_key = key[1]
+            key = key[0]
+
+        if key not in self.conf.keys():
+            raise KeyError("Key " + key + " doesn't exist in the config")
+
+        return self.conf[key][sub_key]
+
+    def __setitem__(self, key, value):
+        """ Sets values """
+
+        sub_key = Config.val_tag
+
+        if type(key) is tuple:
+            sub_key = key[1]
+            key = key[0]
+
+        if sub_key not in Config.subtags and sub_key is not None:
+            raise KeyError("You cannot edit the " + sub_key + " attribute.")
+
+        if key not in self.conf.keys():
+            self.add_key(key)
+        self.conf[key][sub_key] = value
+
+    val_tag = 'value'
+    fnl_tag = 'final'
+    subtags = (val_tag, fnl_tag)
 
 # Execute a small demo if run as a script
 if __name__ == "__main__":
     import sys
 
-    if (len(sys.argv) < 2):
+    if len(sys.argv) is not 2:
         print("Usage: " + __file__ + " <file>")
         exit(1)
 
     fname = sys.argv[1]
-    if fname.split('.')[-1] == "xml":
+    if fname.split('.')[-1] is 'xml':
         conf = Config.from_xml(fname)
     else:
         conf = Config.from_yaml(fname)
 
+    print('Printing Hadmin representation:')
     print(conf)
+    print('Printing XML representation:')
     print(conf.to_xml())
