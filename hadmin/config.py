@@ -96,9 +96,12 @@ class Config:
         if len(self.conf) is 0:
             return
 
+        num_errs = 0
+
         for key in self.conf:
             item = self.conf[key]
             if len(item) not in (1, 2):
+                num_errs = num_errs + 1
                 val = ''
                 fnl = ''
                 if Config.val_tag in item:
@@ -112,12 +115,14 @@ class Config:
                     item[Config.fnl_tag] = fnl
 
             if Config.val_tag not in item:
+                num_errs = num_errs + 1
                 item = dict()
                 item[Config.val_tag] = ''
             else:
                 item[Config.val_tag] = str(item[Config.val_tag])
 
             if Config.fnl_tag not in item:
+                num_errs = num_errs + 1
                 item[Config.fnl_tag] = False
             else:
                 tmp = str(item[Config.fnl_tag]).lower()
