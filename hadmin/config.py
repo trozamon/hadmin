@@ -1,13 +1,15 @@
+import re
 from xml.etree import ElementTree as ET
-from yaml import load, dump
+from yaml import load
 try:
-    from yaml import CLoader as Loader, CDumper as Dumper
+    from yaml import CLoader as Loader
 except ImportError:
-    from yaml import Loader, Dumper
+    from yaml import Loader
+
 
 class Config:
     """ Holds a Hadoop configuration.
-    
+
     Config holds a Hadoop configuration as a two-dimensional map. It
     is organized with the first dimension as the configuration key. The
     second dimension contains two elements: value and final.
@@ -76,7 +78,7 @@ class Config:
         """ Return an XML representation of this Config """
         out = ["<configuration>"]
         for key in sorted(self.conf.keys()):
-            out.append("\t<property>");
+            out.append("\t<property>")
             out.append("\t\t<name>" + key + "</name>")
             out.append("\t\t<value>" + self[key, Config.val_tag] + "</value>")
             fnl = str(self[key, Config.fnl_tag]).lower()
@@ -152,6 +154,48 @@ class Config:
     fnl_tag = 'final'
     subtags = (val_tag, fnl_tag)
 
+
+class QueueACLConfig(Config):
+    """ Holds a CapacityScheduler queue config, specifically the one in
+    mapred-queue-acls.xml.
+
+    The class generates the verbose XML configuration from a lighter
+    YAML format used by Hadmin. """
+
+    key_rep = "____"
+    key_map = dict()
+    key_map["users"] = "mapred.queue." + key_rep + ".acl-submit-job"
+    key_map["admins"] = "mapred.queue." + key_rep + ".acl-administer-jobs"
+
+    @classmethod
+    def from_yaml(cls, fname):
+        conf = cls()
+
+        f = open(fname, "r")
+        data = load(f, Loader=Loader)
+
+        for queue in data:
+            for key in ("users", "admins"):
+                match = re.sub(QueueACLConfig.key_rep, queue,
+                               QueueACLConfig.key_map[key])
+                if not match:
+                    raise KeyError(key + " is improperly mapped")
+                conf[match] = data[queue][key]
+        return conf
+
+#class CapacitySchedulerConfig(Config):
+#
+#    hadmin_key_map["capacity"] = \
+#            "mapred.capacity-scheduler.queue." + hadmin_key_rep + ".capacity"
+#
+#    hadmin_key_map["max-cap"] = \
+#            "mapred.capacity-scheduler.queue." + hadmin_key_rep + \
+#            ".maximum-capacity"
+#
+#    hadmin_key_map["max-init-tpu"] = \
+#            "mapred.capacity-scheduler.queue." + hadmin_key_rep + \
+#            ".maximum-initialized-active-tasks-per-user"
+
 # Execute a small demo if run as a script
 if __name__ == "__main__":
     import sys
@@ -161,12 +205,5 @@ if __name__ == "__main__":
         exit(1)
 
     fname = sys.argv[1]
-    if fname.split('.')[-1] is 'xml':
-        conf = Config.from_xml(fname)
-    else:
-        conf = Config.from_yaml(fname)
-
-    print('Printing Hadmin representation:')
+    conf = QueueACLConfig.from_yaml(fname)
     print(conf)
-    print('Printing XML representation:')
-    print(conf.to_xml())
