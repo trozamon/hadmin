@@ -85,66 +85,19 @@ class Config:
         out.append("</configuration>")
         return '\n'.join(out)
 
-    def validate(self):
-        """ Validates the configuration.
-
-        Checks to ensure each key has an associated value and final, and
-        that final is a boolean value.
-
-        """
-
-        if len(self.conf) is 0:
-            return
-
-        num_errs = 0
-
-        for key in self.conf:
-            item = self.conf[key]
-            if len(item) not in (1, 2):
-                num_errs = num_errs + 1
-                val = ''
-                fnl = ''
-                if Config.val_tag in item:
-                    val = item[Config.val_tag]
-                if Config.fnl_tag in item:
-                    fnl = item[Config.fnl_tag]
-                item = dict()
-                if len(val) > 0:
-                    item[Config.val_tag] = val
-                if len(fnl) > 0:
-                    item[Config.fnl_tag] = fnl
-
-            if Config.val_tag not in item:
-                num_errs = num_errs + 1
-                item = dict()
-                item[Config.val_tag] = ''
-            else:
-                item[Config.val_tag] = str(item[Config.val_tag])
-
-            if Config.fnl_tag not in item:
-                num_errs = num_errs + 1
-                item[Config.fnl_tag] = False
-            else:
-                tmp = str(item[Config.fnl_tag]).lower()
-                if tmp is 'true':
-                    item[Config.fnl_tag] = True
-                else:
-                    item[Config.fnl_tag] = False
-
     def add_key(self, key):
+        """ Adds a new config key if it doesn't already exist. This
+        is mostly to be used internally """
+
         if key not in self.conf.keys():
             self.conf[key] = dict()
-            self.conf[key][Config.val_tag] = ''
+            self.conf[key][Config.val_tag] = ""
             self.conf[key][Config.fnl_tag] = False
 
-    def __init__(self, conf_dict=None):
+    def __init__(self):
         """ Takes in a two-dimensional dict of Hadoop configuration """
 
-        if conf_dict == None:
-            self.conf = dict()
-        else:
-            self.conf = conf_dict
-        self.validate()
+        self.conf = dict()
 
     def __str__(self):
         """ Returns a string representation. Debugging only """
@@ -184,12 +137,16 @@ class Config:
             sub_key = key[1]
             key = key[0]
 
-        if sub_key not in Config.subtags and sub_key is not None:
+        if sub_key not in Config.subtags:
             raise KeyError("You cannot edit the " + sub_key + " attribute.")
 
         if key not in self.conf.keys():
             self.add_key(key)
-        self.conf[key][sub_key] = value
+
+        if sub_key == Config.val_tag:
+            self.conf[key][sub_key] = str(value)
+        elif sub_key == Config.fnl_tag:
+            self.conf[key][sub_key] = bool(value)
 
     val_tag = 'value'
     fnl_tag = 'final'
