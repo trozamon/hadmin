@@ -47,9 +47,13 @@ class Config:
 
     @classmethod
     def from_yaml(cls, filename):
+        conf = cls()
+        conf.add_yaml_file(filename)
+        return conf
+
+    def add_yaml_file(self, filename):
         """Parse YAML and fill two-dimensional map."""
 
-        conf = cls()
         key = ''
         val = ''
         fnl = ''
@@ -69,10 +73,8 @@ class Config:
                 print("KeyError in strange place... possibly malformed input")
                 quit(1)
 
-            conf[key, Config.val_tag] = val
-            conf[key, Config.fnl_tag] = fnl
-        conf.validate()
-        return conf
+            self[key, Config.val_tag] = val
+            self[key, Config.fnl_tag] = fnl
 
     def to_xml(self):
         """ Return an XML representation of this Config """
@@ -183,27 +185,45 @@ class QueueACLConfig(Config):
                 conf[match] = data[queue][key]
         return conf
 
-#class CapacitySchedulerConfig(Config):
-#
-#    hadmin_key_map["capacity"] = \
-#            "mapred.capacity-scheduler.queue." + hadmin_key_rep + ".capacity"
-#
-#    hadmin_key_map["max-cap"] = \
-#            "mapred.capacity-scheduler.queue." + hadmin_key_rep + \
-#            ".maximum-capacity"
-#
-#    hadmin_key_map["max-init-tpu"] = \
-#            "mapred.capacity-scheduler.queue." + hadmin_key_rep + \
-#            ".maximum-initialized-active-tasks-per-user"
+
+class CapacitySchedulerConfig(Config):
+    """ Holds a CapacityScheduler configuration, specifically the config
+    in capacity-scheduler.xml.
+
+    This class generates the config partly from Hadmin YAML and partly
+    from Hadoop YAML. """
+
+    key_rep = "____"
+    cap_pre = "mapred.capacity-scheduler.queue." + key_rep + "."
+    key_map = dict()
+    key_map["capacity"] = cap_pre + "capacity"
+    key_map["max-cap"] = cap_pre + "maximum-capacity"
+    key_map["max-init-tpu"] = cap_pre + "maximum-initialized-active-tasks-per-user"
+
+    @classmethod
+    def from_yaml(cls, hadmin_file, capacity_file):
+        conf = cls()
+        f = open(hadmin_file, "r")
+        data = load(f, Loader=Loader)
+
+        for queue in data:
+            for key in ("capacity", "max-cap", "max-init-tpu"):
+                match = re.sub(CapacitySchedulerConfig.key_rep, queue,
+                               CapacitySchedulerConfig.key_map[key])
+                if not match:
+                    raise KeyError(key + " is improperly mapped")
+                conf[match] = data[queue][key]
+
+        conf.add_yaml_file(capacity_file)
+        return conf
 
 # Execute a small demo if run as a script
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) is not 2:
-        print("Usage: " + __file__ + " <file>")
+    if len(sys.argv) is not 3:
+        print("Usage: " + __file__ + " <queue_conf> <cap_conf>")
         exit(1)
 
-    fname = sys.argv[1]
-    conf = QueueACLConfig.from_yaml(fname)
+    conf = CapacitySchedulerConfig.from_yaml(sys.argv[1], sys.argv[2])
     print(conf)
