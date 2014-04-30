@@ -31,16 +31,16 @@ class Config:
         fnl = False
 
         for event, elem in ET.iterparse(filename):
-            if elem.tag is 'name':
+            if elem.tag == 'name':
                 if len(key) > 0:
                     conf[key][Config.val_tag] = val
                     conf[key][Config.fnl_tag] = fnl
                 key = elem.text
                 val = ''
                 fnl = False
-            elif elem.tag is 'value':
+            elif elem.tag == 'value':
                 val = elem.text
-            elif elem.tag is 'final':
+            elif elem.tag == 'final':
                 fnl = elem.text
         conf.validate()
         return conf
@@ -70,8 +70,9 @@ class Config:
                 val = data[elem]
                 fnl = False
             except KeyError:
-                print("KeyError in strange place... possibly malformed input")
-                quit(1)
+                print("The only acceptable subkeys are {" + ','.join(Config.subtags) + "}")
+                print("Please fix " + elem + " in " + filename)
+                exit(1)
 
             self[key, Config.val_tag] = val
             self[key, Config.fnl_tag] = fnl
@@ -99,7 +100,7 @@ class Config:
             self.conf[key][Config.fnl_tag] = False
 
     def __init__(self):
-        """ Takes in a two-dimensional dict of Hadoop configuration """
+        """ Does what little initialization there is. """
 
         self.conf = dict()
 
@@ -164,10 +165,9 @@ class QueueACLConfig(Config):
     The class generates the verbose XML configuration from a lighter
     YAML format used by Hadmin. """
 
-    key_rep = "____"
-    key_map = dict()
-    key_map["users"] = "mapred.queue." + key_rep + ".acl-submit-job"
-    key_map["admins"] = "mapred.queue." + key_rep + ".acl-administer-jobs"
+    def __init__(self):
+        self.conf = dict()
+        self.queue_list = list()
 
     @classmethod
     def from_yaml(cls, fname):
@@ -178,12 +178,21 @@ class QueueACLConfig(Config):
 
         for queue in data:
             for key in ("users", "admins"):
-                match = re.sub(QueueACLConfig.key_rep, queue,
-                               QueueACLConfig.key_map[key])
-                if not match:
-                    raise KeyError(key + " is improperly mapped")
-                conf[match] = data[queue][key]
+                conf[conf.get_key(key, queue)] = data[queue][key]
+            conf.queue_list.append(queue)
         return conf
+
+    def get_key(self, key, queue):
+        match = re.sub(QueueACLConfig.key_rep, queue,
+                       QueueACLConfig.key_map[key])
+        if not match:
+            raise KeyError(key + " is improperly mapped")
+        return str(match)
+
+    key_rep = "____"
+    key_map = dict()
+    key_map["users"] = "mapred.queue." + key_rep + ".acl-submit-job"
+    key_map["admins"] = "mapred.queue." + key_rep + ".acl-administer-jobs"
 
 
 class CapacitySchedulerConfig(Config):
@@ -217,13 +226,34 @@ class CapacitySchedulerConfig(Config):
         conf.add_yaml_file(capacity_file)
         return conf
 
+
+class ConfigManager(dict):
+    """ Initializes and manages all the config files. """
+
+    def __init__(self, directory):
+        """ Creates all the config files. Adds queue and user info to
+        capacity-scheduler.xml, mapred-queue-acls.xml, and mapred-site.xml. """
+
+        self['capacity-scheduler.xml'] = CapacitySchedulerConfig.from_yaml(directory + "/hadmin-queues.yaml", directory + "/capacity-scheduler.yaml")
+        self['core-site.xml'] = Config.from_yaml(directory + "/core-site.yaml")
+        self['hadoop-policy.xml'] = Config.from_yaml(directory + "/hadoop-policy.yaml")
+        self['hdfs-site.xml'] = Config.from_yaml(directory + "/hdfs-site.yaml")
+        self['mapred-site.xml'] = Config.from_yaml(directory + "/mapred-site.yaml")
+        self['mapred-queue-acls.xml'] = QueueACLConfig.from_yaml(directory + "/hadmin-queues.yaml")
+
+        self['mapred-site.xml']['mapred.queue.names'] = ','.join(self['mapred-queue-acls.xml'].queue_list)
+
+
 # Execute a small demo if run as a script
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) is not 3:
+    if len(sys.argv) != 2:
         print("Usage: " + __file__ + " <queue_conf> <cap_conf>")
         exit(1)
 
-    conf = CapacitySchedulerConfig.from_yaml(sys.argv[1], sys.argv[2])
-    print(conf)
+    conf = ConfigManager(sys.argv[1])
+    for f in conf:
+        print(f)
+        print(conf[f])
+        print()
