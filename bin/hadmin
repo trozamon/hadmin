@@ -6,24 +6,29 @@ sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import argparse
 import hadmin.cmd
 
-def print_help():
-    """ Prints out the help message """
-    tmp = "Usage: hadmin <command> <command options>\n\n"
-    tmp = tmp + "Commands:\n"
-    tmp = tmp + "\t- useradd\n"
-    tmp = tmp + "\t- queueadd\n"
-    tmp = tmp + "\t- userdel\n"
-    tmp = tmp + "\t- queuedel\n"
-    print(tmp)
+help_string = """Usage: hadmin <command> <command options>
+
+Commands:
+    - useradd
+    - queueadd
+    - userdel
+    - queuedel"""
 
 def run():
     if (len(sys.argv) <= 1 or sys.argv[1] == "-h"):
-        print_help()
+        print(help_string)
         return 0
     command = sys.argv[1]
     sysargs = sys.argv[2:]
+    return hadmin.cmd.modules[command](sysargs)
 
-    return getattr(hadmin.cmd, command)(sysargs)
+#    try:
+#        return hadmin.cmd.modules[command](sysargs)
+#    except AttributeError:
+#        print("Sorry, that command doesn't exist")
+#        print()
+#        print(help_string)
+    return 1
 
 if __name__ == "__main__":
     sys.exit(run())

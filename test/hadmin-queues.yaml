@@ -1,12 +1,12 @@
 default:
-        users: trozamon,root
-        admins: trozamon
-        capacity: 5
-        max-cap: 10
-        max-init-tpu: 100000
+  admins: trozamon
+  capacity: 5
+  max-cap: 10
+  max-init-tpu: 100000
+  users: trozamon,root
 staff:
-        users: trozamon,root,bossman
-        admins: trozamon,root
-        capacity: 5
-        max-cap: 100
-        max-init-tpu: 100000
+  admins: trozamon,root
+  capacity: 5
+  max-cap: 100
+  max-init-tpu: 100000
+  users: trozamon,root,bossman

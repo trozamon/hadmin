@@ -1,8 +1,5 @@
 import hadmin.config as hconfig
-import hadmin.auto as hauto
 import argparse
-
-# TODO Update to use the new config syntax
 
 def useradd(args):
     """
@@ -16,18 +13,27 @@ def useradd(args):
     parser.add_argument('user')
     parser.add_argument('queue')
     args = parser.parse_args(args)
-    configs = hauto.create_configs()
-    added = False
-    try:
-        for conf_val in configs['mapred-queue-acls.xml'].configs:
-            if conf_val.key == 'mapred.queue.' + args.queue + 'acl-submit-job':
-                conf_val.value.append(',' + args.user)
-                added = True
-    except KeyError:
-        print("Queue does not exist")
-        return 1
+    with hconfig.HadminManager('.') as mgr:
+        mgr.add_user(args.user, args.queue)
 
-    if added == True:
-        print("Added " + args.user + " to queue " + args.queue)
-    else:
-        print("Not added for some reason")
+    print("Added " + args.user + " to queue " + args.queue)
+
+def userdel(args):
+    print("Coming soon")
+
+def queueadd(args):
+    print("Coming soon")
+
+def queuedel(args):
+    print("Coming soon")
+
+def queuemod(args):
+    print("Coming soon")
+
+modules = {
+        'useradd' : useradd,
+        'userdel' : userdel,
+        'queueadd' : queueadd,
+        'queuedel' : queuedel,
+        'queuemod' : queuemod
+        }

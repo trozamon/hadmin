@@ -1,8 +1,8 @@
 import re
 from xml.etree import ElementTree as ET
-from yaml import load
+from yaml import load, dump
 try:
-    from yaml import CLoader as Loader
+    from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
     from yaml import Loader
 
@@ -242,6 +242,47 @@ class ConfigManager(dict):
         self['mapred-queue-acls.xml'] = QueueACLConfig.from_yaml(directory + "/hadmin-queues.yaml")
 
         self['mapred-site.xml']['mapred.queue.names'] = ','.join(self['mapred-queue-acls.xml'].queue_list)
+
+    def generate(self, directory):
+        """ Generates all the XML Hadoop config """
+
+        for filename in self:
+            f = open(directory + '/' + filename, 'w')
+            f.write(self[filename].to_xml())
+            f.close()
+
+class HadminManager:
+
+    def __init__(self, directory):
+        self.filename = directory + '/hadmin-queues.yaml'
+        with open(self.filename, 'r') as f:
+            self.conf = load(f, Loader=Loader)
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, type, value, traceback):
+        with open(self.filename, 'w') as f:
+            f.write(dump(self.conf, Dumper=Dumper, default_flow_style=False))
+
+    def add_user(self, user, queue):
+        if queue not in self.conf.keys():
+            raise KeyError('Queue ' + queue + ' does not exist')
+        if user in self.conf[queue]['users'].split(','):
+            raise KeyError('User ' + user + ' is already in queue ' + queue)
+
+        self.conf[queue]['users'] = self.conf[queue]['users'] + ',' + user
+
+    def add_queue(self, user, queue):
+        if queue in self.conf.keys():
+            raise KeyError('Queue ' + queue + ' already exists')
+
+        self.conf[queue] = dict()
+        self.conf[queue]['users'] = ''
+        self.conf[queue]['admins'] = ''
+        self.conf[queue]['capacity'] = 0
+        self.conf[queue]['max-cap'] = 0
+        self.conf[queue]['max-init-tpu'] = 0
 
 
 # Execute a small demo if run as a script
