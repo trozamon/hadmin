@@ -13,5 +13,7 @@ setup(
         url = "http://github.com/trozamon/hadmin",
         license = "MIT",
 
-        test_suite = "hadmin.hadmin_test"
+        test_suite = "hadmin.hadmin_test",
+
+        setup_requires = ['flake8']
 )
