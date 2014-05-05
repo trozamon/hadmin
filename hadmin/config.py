@@ -252,6 +252,12 @@ class ConfigManager(dict):
             f.close()
 
 class HadminManager:
+    """ Manages modifying users and queues easy programatically
+    
+    Note: Keeps the lists of users and admins sorted for better vcs
+    control
+
+    """
 
     def __init__(self, directory):
         self.filename = directory + '/hadmin-queues.yaml'
@@ -266,20 +272,27 @@ class HadminManager:
             f.write(dump(self.conf, Dumper=Dumper, default_flow_style=False))
 
     def check_queue(self, queue):
+        """ Checks that a queue doesn't already exist """
         if queue not in self.conf.keys():
             raise KeyError('Queue ' + queue + ' does not exist')
 
     def add_user(self, user, queue):
+        """ Adds a user to a queue """
         self.check_queue(queue)
-        if user in self.conf[queue]['users'].split(','):
+        arr = self.conf[queue]['users'].split(',')
+        if user in arr:
             raise KeyError('User ' + user + ' is already in queue ' + queue)
 
-        self.conf[queue]['users'] = self.conf[queue]['users'] + ',' + user
+        arr.append(user)
+        self.conf[queue]['users'] = ','.join(sorted(arr))
 
     def del_user(self, user, queue):
+        """ Deletes a user from a queue """
         self.check_queue(queue)
         try:
-            del(self.conf[self.conf[queue]['users'].index(user)])
+            arr = self.conf[queue]['users'].split(',')
+            del(arr[arr.index(user)])
+            self.conf[queue]['users'] = ','.join(sorted(arr))
         except ValueError:
             raise ValueError('User ' + user + ' is not in queue ' + queue)
 

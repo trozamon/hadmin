@@ -21,7 +21,22 @@ def useradd(args):
             print(str(e)[1:-1])
 
 def userdel(args):
-    print("Coming soon")
+    """
+    Takes in a user and removes him from a queue
+
+    """
+
+    parser = argparse.ArgumentParser(prog='userdel',
+            description='HAdmin userdel utility')
+    parser.add_argument('user')
+    parser.add_argument('queue')
+    args = parser.parse_args(args)
+    with hconfig.HadminManager('.') as mgr:
+        try:
+            mgr.del_user(args.user, args.queue)
+            print("Removed " + args.user + " from queue " + args.queue)
+        except ValueError as e:
+            print(str(e)[1:-1])
 
 def queueadd(args):
     print("Coming soon")
