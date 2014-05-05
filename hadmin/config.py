@@ -265,13 +265,30 @@ class HadminManager:
         with open(self.filename, 'w') as f:
             f.write(dump(self.conf, Dumper=Dumper, default_flow_style=False))
 
-    def add_user(self, user, queue):
+    def check_queue(self, queue):
         if queue not in self.conf.keys():
             raise KeyError('Queue ' + queue + ' does not exist')
+
+    def add_user(self, user, queue):
+        self.check_queue(queue)
         if user in self.conf[queue]['users'].split(','):
             raise KeyError('User ' + user + ' is already in queue ' + queue)
 
         self.conf[queue]['users'] = self.conf[queue]['users'] + ',' + user
+
+    def del_user(self, user, queue):
+        self.check_queue(queue)
+        try:
+            del(self.conf[self.conf[queue]['users'].index(user)])
+        except ValueError:
+            raise ValueError('User ' + user + ' is not in queue ' + queue)
+
+    def add_admin(self, admin, queue):
+        self.check_queue(queue)
+        if admin in self.conf[queue]['admins'].split(','):
+            raise KeyError('Admin ' + admin + ' is already in queue ' + queue)
+
+        self.conf[queue]['admins'] = self.conf[queue]['admins'] + ',' + admin
 
     def add_queue(self, user, queue):
         if queue in self.conf.keys():

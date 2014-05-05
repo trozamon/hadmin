@@ -14,9 +14,11 @@ def useradd(args):
     parser.add_argument('queue')
     args = parser.parse_args(args)
     with hconfig.HadminManager('.') as mgr:
-        mgr.add_user(args.user, args.queue)
-
-    print("Added " + args.user + " to queue " + args.queue)
+        try:
+            mgr.add_user(args.user, args.queue)
+            print("Added " + args.user + " to queue " + args.queue)
+        except KeyError as e:
+            print(str(e)[1:-1])
 
 def userdel(args):
     print("Coming soon")
