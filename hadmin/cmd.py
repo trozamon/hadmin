@@ -12,11 +12,18 @@ def useradd(args):
             description='HAdmin useradd utility')
     parser.add_argument('user')
     parser.add_argument('queue')
+    parser.add_argument('--admin', dest='is_admin', action='store_const',
+            const=True, default=False,
+            help='Add an administrator')
     args = parser.parse_args(args)
     with hconfig.HadminManager('.') as mgr:
         try:
-            mgr.add_user(args.user, args.queue)
-            print("Added " + args.user + " to queue " + args.queue)
+            if args.is_admin:
+                mgr.add_admin(args.user, args.queue)
+                print("Added user " + args.user + " to queue " + args.queue)
+            else:
+                mgr.add_user(args.user, args.queue)
+                print("Added admin " + args.user + " to queue " + args.queue)
         except KeyError as e:
             print(str(e)[1:-1])
 
@@ -30,11 +37,18 @@ def userdel(args):
             description='HAdmin userdel utility')
     parser.add_argument('user')
     parser.add_argument('queue')
+    parser.add_argument('--admin', dest='is_admin', action='store_const',
+            const=True, default=False,
+            help='Delete an administrator')
     args = parser.parse_args(args)
     with hconfig.HadminManager('.') as mgr:
         try:
-            mgr.del_user(args.user, args.queue)
-            print("Removed " + args.user + " from queue " + args.queue)
+            if args.is_admin:
+                mgr.del_admin(args.user, args.queue)
+                print("Removed admin " + args.user + " from queue " + args.queue)
+            else:
+                mgr.del_user(args.user, args.queue)
+                print("Removed user " + args.user + " from queue " + args.queue)
         except ValueError as e:
             print(str(e)[1:-1])
 
@@ -46,11 +60,3 @@ def queuedel(args):
 
 def queuemod(args):
     print("Coming soon")
-
-modules = {
-        'useradd' : useradd,
-        'userdel' : userdel,
-        'queueadd' : queueadd,
-        'queuedel' : queuedel,
-        'queuemod' : queuemod
-        }

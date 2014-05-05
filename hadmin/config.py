@@ -276,32 +276,41 @@ class HadminManager:
         if queue not in self.conf.keys():
             raise KeyError('Queue ' + queue + ' does not exist')
 
-    def add_user(self, user, queue):
-        """ Adds a user to a queue """
+    def add_user_or_admin(self, ident, user, queue):
+        """ Adds a user/admin to a queue """
+        if ident not in ('users', 'admins'):
+            raise ValueError('ident ' + ident + ' incorrect')
         self.check_queue(queue)
-        arr = self.conf[queue]['users'].split(',')
+        arr = self.conf[queue][ident].split(',')
         if user in arr:
-            raise KeyError('User ' + user + ' is already in queue ' + queue)
+            raise KeyError(ident[0:-1].capitalize() + ' ' + user + ' is already in queue ' + queue)
 
         arr.append(user)
-        self.conf[queue]['users'] = ','.join(sorted(arr))
+        self.conf[queue][ident] = ','.join(sorted(arr))
 
-    def del_user(self, user, queue):
-        """ Deletes a user from a queue """
-        self.check_queue(queue)
-        try:
-            arr = self.conf[queue]['users'].split(',')
-            del(arr[arr.index(user)])
-            self.conf[queue]['users'] = ','.join(sorted(arr))
-        except ValueError:
-            raise ValueError('User ' + user + ' is not in queue ' + queue)
+    def add_user(self, user, queue):
+        self.add_user_or_admin('users', user, queue)
 
     def add_admin(self, admin, queue):
-        self.check_queue(queue)
-        if admin in self.conf[queue]['admins'].split(','):
-            raise KeyError('Admin ' + admin + ' is already in queue ' + queue)
+        self.add_user_or_admin('admins', admin, queue)
 
-        self.conf[queue]['admins'] = self.conf[queue]['admins'] + ',' + admin
+    def del_user_or_admin(self, ident, user, queue):
+        """ Deletes a user from a queue """
+        if ident not in ('users', 'admins'):
+            raise ValueError('ident ' + ident + ' incorrect')
+        self.check_queue(queue)
+        try:
+            arr = self.conf[queue][ident].split(',')
+            del(arr[arr.index(user)])
+            self.conf[queue][ident] = ','.join(sorted(arr))
+        except ValueError:
+            raise ValueError(ident[0:-1].capitalize() + ' ' + user + ' is not in queue ' + queue)
+
+    def del_user(self, user, queue):
+        self.del_user_or_admin('users', user, queue)
+
+    def del_admin(self, user, queue):
+        self.del_user_or_admin('admins', user, queue)
 
     def add_queue(self, user, queue):
         if queue in self.conf.keys():

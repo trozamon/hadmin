@@ -20,14 +20,7 @@ def run():
         return 0
     command = sys.argv[1]
     sysargs = sys.argv[2:]
-    return hadmin.cmd.modules[command](sysargs)
-
-#    try:
-#        return hadmin.cmd.modules[command](sysargs)
-#    except AttributeError:
-#        print("Sorry, that command doesn't exist")
-#        print()
-#        print(help_string)
+    return getattr(hadmin.cmd, command)(sysargs)
     return 1
 
 if __name__ == "__main__":
