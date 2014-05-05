@@ -51,12 +51,33 @@ def userdel(args):
                 print("Removed user " + args.user + " from queue " + args.queue)
         except ValueError as e:
             print(str(e)[1:-1])
+        except AttributeError as e:
+            print(e)
 
 def queueadd(args):
-    print("Coming soon")
+    parser = argparse.ArgumentParser(prog='queueadd',
+            description='HAdmin queueadd utility')
+    parser.add_argument('queue')
+    parser.add_argument('user')
+    args = parser.parse_args(args)
+    with hconfig.HadminManager('.') as mgr:
+        try:
+            mgr.add_queue(args.queue, args.user)
+            print('Added queue ' + args.queue + ' with initial user/admin ' + args.user)
+        except KeyError as e:
+            print(str(e)[1:-1])
 
 def queuedel(args):
-    print("Coming soon")
+    parser = argparse.ArgumentParser(prog='queueadd',
+            description='HAdmin queueadd utility')
+    parser.add_argument('queue')
+    args = parser.parse_args(args)
+    with hconfig.HadminManager('.') as mgr:
+        try:
+            mgr.del_queue(args.queue)
+            print('Removed queue ' + args.queue)
+        except KeyError as e:
+            print(str(e)[1:-1])
 
 def queuemod(args):
     print("Coming soon")

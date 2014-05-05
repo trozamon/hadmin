@@ -272,7 +272,7 @@ class HadminManager:
             f.write(dump(self.conf, Dumper=Dumper, default_flow_style=False))
 
     def check_queue(self, queue):
-        """ Checks that a queue doesn't already exist """
+        """ Checks that a queue exists """
         if queue not in self.conf.keys():
             raise KeyError('Queue ' + queue + ' does not exist')
 
@@ -301,6 +301,8 @@ class HadminManager:
         self.check_queue(queue)
         try:
             arr = self.conf[queue][ident].split(',')
+            if len(arr) < 2:
+                raise AttributeError('Cannot delete the last ' + ident[0:-1] + ' of a queue')
             del(arr[arr.index(user)])
             self.conf[queue][ident] = ','.join(sorted(arr))
         except ValueError:
@@ -312,16 +314,40 @@ class HadminManager:
     def del_admin(self, user, queue):
         self.del_user_or_admin('admins', user, queue)
 
-    def add_queue(self, user, queue):
+    def add_queue(self, queue, user):
         if queue in self.conf.keys():
             raise KeyError('Queue ' + queue + ' already exists')
 
         self.conf[queue] = dict()
-        self.conf[queue]['users'] = ''
-        self.conf[queue]['admins'] = ''
+        self.conf[queue]['users'] = user
+        self.conf[queue]['admins'] = user
         self.conf[queue]['capacity'] = 0
         self.conf[queue]['max-cap'] = 0
         self.conf[queue]['max-init-tpu'] = 0
+
+    def del_queue(self, queue):
+        if queue not in self.conf.keys():
+            raise KeyError('Queue ' + queue + ' does not exist')
+
+        del(self.conf[queue])
+
+    def set_queue_cap(self, queue, cap):
+        self.check_queue(queue)
+        if type(cap) is not int:
+            raise TypeError('Queue capacity must be an integer')
+        self.conf[queue]['capacity'] = cap
+
+    def set_queue_max_cap(self, queue, max_cap):
+        self.check_queue(queue)
+        if type(max_cap) is not int:
+            raise TypeError('Queue maximum capacity must be an integer')
+        self.conf[queue]['max-cap'] = max_cap
+
+    def set_queue_max_init_tpu(self, queue, max_init_tpu):
+        self.check_queue(queue)
+        if type(max_cap) is not int:
+            raise TypeError('Queue maximum initialized tasks per user must be an integer')
+        self.conf[queue]['max-init-tpu'] = max_init_tpu
 
 
 # Execute a small demo if run as a script
