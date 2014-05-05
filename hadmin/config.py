@@ -333,21 +333,18 @@ class HadminManager:
 
     def set_queue_cap(self, queue, cap):
         self.check_queue(queue)
-        if type(cap) is not int:
-            raise TypeError('Queue capacity must be an integer')
-        self.conf[queue]['capacity'] = cap
+        tmp = int(cap)
+        self.conf[queue]['capacity'] = tmp
 
     def set_queue_max_cap(self, queue, max_cap):
         self.check_queue(queue)
-        if type(max_cap) is not int:
-            raise TypeError('Queue maximum capacity must be an integer')
-        self.conf[queue]['max-cap'] = max_cap
+        tmp = int(max_cap)
+        self.conf[queue]['max-cap'] = tmp
 
     def set_queue_max_init_tpu(self, queue, max_init_tpu):
         self.check_queue(queue)
-        if type(max_cap) is not int:
-            raise TypeError('Queue maximum initialized tasks per user must be an integer')
-        self.conf[queue]['max-init-tpu'] = max_init_tpu
+        tmp = int(max_init_tpu)
+        self.conf[queue]['max-init-tpu'] = tmp
 
 
 # Execute a small demo if run as a script

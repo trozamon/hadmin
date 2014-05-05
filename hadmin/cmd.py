@@ -80,4 +80,26 @@ def queuedel(args):
             print(str(e)[1:-1])
 
 def queuemod(args):
-    print("Coming soon")
+    parser = argparse.ArgumentParser(prog='queuemod',
+            description='HAdmin queuemod utility')
+    parser.add_argument('queue')
+    parser.add_argument('--capacity', nargs=1, help='New capacity')
+    parser.add_argument('--maxcap', nargs=1, help='New maximum capacity')
+    parser.add_argument('--tpu', nargs=1, help='New maximum tasks per user')
+    args = parser.parse_args(args)
+    with hconfig.HadminManager('.') as mgr:
+        try:
+            if args.capacity is not None:
+                tmp = args.capacity[0]
+                mgr.set_queue_cap(args.queue, tmp)
+                print('Set ' + args.queue + ' capacity to ' + tmp)
+            if args.maxcap is not None:
+                tmp = args.maxcap[0]
+                mgr.set_queue_max_cap(args.queue, tmp)
+                print('Set ' + args.queue + ' maximum capacity to ' + tmp)
+            if args.tpu is not None:
+                tmp = args.tpu[0]
+                mgr.set_queue_max_init_tpu(args.queue, tmp)
+                print('Set ' + args.queue + ' tasks per user to ' + tmp)
+        except TypeError as e:
+            print(e)
