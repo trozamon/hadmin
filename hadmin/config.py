@@ -1,4 +1,5 @@
 import re
+import os
 from xml.etree import ElementTree as ET
 from yaml import load, dump
 try:
@@ -245,6 +246,11 @@ class ConfigManager(dict):
 
     def generate(self, directory):
         """ Generates all the XML Hadoop config """
+
+        try:
+            os.listdir(directory)
+        except FileNotFoundError:
+            os.mkdir(directory)
 
         for filename in self:
             f = open(directory + '/' + filename, 'w')

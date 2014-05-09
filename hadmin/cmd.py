@@ -103,3 +103,14 @@ def queuemod(args):
                 print('Set ' + args.queue + ' tasks per user to ' + tmp)
         except TypeError as e:
             print(e)
+
+def gen(args):
+    parser = argparse.ArgumentParser(prog='gen',
+            description='HAdmin XML generation utility')
+    parser.add_argument('directory', help="""
+    Output directory for XML configuration. Please note that this directory
+    doesn't need to be empty, but any existing files with the same names
+    will be overwritten""")
+    args = parser.parse_args(args)
+    mgr = hconfig.ConfigManager('.')
+    mgr.generate(args.directory)
