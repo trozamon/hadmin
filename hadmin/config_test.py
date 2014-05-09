@@ -1,5 +1,5 @@
 import unittest
-from hadmin.config import Config
+from hadmin.config import *
 
 class ConfigTest(unittest.TestCase):
 
@@ -8,12 +8,6 @@ class ConfigTest(unittest.TestCase):
 
     def tearDown(self):
         self.conf = None
-
-    def test_add_key(self):
-        self.assertTrue(len(self.conf.conf.keys()) == 0)
-        self.conf.add_key('test')
-        self.assertTrue(len(self.conf.conf.keys()) == 1)
-        self.assertTrue('test' in self.conf.conf.keys())
 
     def test_str_value_only(self):
         self.conf['test'] = 1
@@ -32,3 +26,31 @@ class ConfigTest(unittest.TestCase):
         self.assertTrue(self.conf['test1', Config.fnl_tag])
         self.conf['test1', Config.fnl_tag] = False
         self.assertFalse(self.conf['test1', Config.fnl_tag])
+
+class MapperTest(unittest.TestCase):
+
+    def setUp(self):
+        self.mapper = Mapper('-', '.')
+        self.mapper['hey'] = 'yo.-.wazzup'
+
+    def tearDown(self):
+        self.mapper = None
+
+    def test_map_empty(self):
+        with self.assertRaises(KeyError):
+            self.mapper['test']
+
+    def test_map_forward(self):
+        self.assertEqual(self.mapper['hey'], 'yo.-.wazzup')
+
+    def test_map_reverse(self):
+        self.assertEqual(self.mapper['yo.-.wazzup'], 'hey')
+
+    def test_map_subs_forward(self):
+        self.assertEqual(self.mapper['hey', 'alec'], 'yo.alec.wazzup')
+
+    def test_map_subs_reverse(self):
+        self.assertEqual(self.mapper['yo.alec.wazzup'], ('alec', 'hey'))
+
+    def test_find_bare_key(self):
+        self.assertEqual(self.mapper.find_bare_key('yo.alec.wazzup'), 'yo.-.wazzup')

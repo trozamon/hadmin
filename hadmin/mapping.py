@@ -1,4 +1,5 @@
 rep = '____'
+field_sep = '.'
 
 fwd = {
     'max-sys-jobs': 'mapred.capacity-scheduler.maximum-system-jobs',

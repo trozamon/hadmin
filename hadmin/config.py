@@ -11,13 +11,16 @@ except ImportError:
 class Config:
     """ Holds a Hadoop configuration.
 
-    Config holds a Hadoop configuration as a two-dimensional map. It
+    Config holds a Hadoop configuration as a two-dimensional dict. It
     is organized with the first dimension as the configuration key. The
     second dimension contains two elements: value and final.
 
     Config allows for returning either an XML or YAML representation.
 
     """
+
+    def __init__(self):
+        self.conf = dict()
 
     @classmethod
     def from_xml(cls, filename):
@@ -92,20 +95,6 @@ class Config:
     def to_yaml(self):
         return dump(self.conf, Dumper=Dumper, default_flow_style=False)
 
-    def add_key(self, key):
-        """ Adds a new config key if it doesn't already exist. This
-        is mostly to be used internally """
-
-        if key not in self.conf.keys():
-            self.conf[key] = dict()
-            self.conf[key][Config.val_tag] = ""
-            self.conf[key][Config.fnl_tag] = False
-
-    def __init__(self):
-        """ Does what little initialization there is. """
-
-        self.conf = dict()
-
     def __str__(self):
         """ Returns a string representation. Debugging only """
 
@@ -152,7 +141,9 @@ class Config:
             raise KeyError("You cannot edit the " + sub_key + " attribute.")
 
         if key not in self.conf.keys():
-            self.add_key(key)
+            self.conf[key] = dict()
+            self.conf[key][Config.val_tag] = ""
+            self.conf[key][Config.fnl_tag] = False
 
         if sub_key == Config.val_tag:
             self.conf[key][sub_key] = str(value)
@@ -163,6 +154,42 @@ class Config:
     fnl_tag = 'final'
     subtags = (val_tag, fnl_tag)
 
+class Mapper:
+
+    def __init__(self, rep, field_sep, mapping=dict()):
+        self.rep = rep
+        self.field_sep = field_sep
+        self.mapping = dict()
+        for key in mapping:
+            self.mapping[key] = hadmin.mapping.fwd[key]
+
+    def __setitem__(self, key, value):
+        self.mapping[key] = value
+        self.mapping[value] = key
+
+    def __getitem__(self, key):
+        ret = None
+        if type(key) is tuple:
+            match = re.sub(self.rep, key[1], self.mapping[key[0]])
+            if not match:
+                raise KeyError(expr + ' is improperly mapped')
+            ret = str(match)
+        else:
+            key_fixed = self.find_bare_key(key)
+            if key_fixed == key:
+                ret = self.mapping[key]
+            else:
+                ret = (key.split(self.field_sep)[-2], self.mapping[key_fixed])
+        return ret
+
+    def find_bare_key(self, key):
+        if key in self.mapping.keys():
+            return key
+        key_split = key.split(self.field_sep)
+        if len(key_split) > 2:
+            key_split[-2] = self.rep
+        key_fixed = self.field_sep.join(key_split)
+        return key_fixed
 
 class QueueACLConfig(Config):
     """ Holds a CapacityScheduler queue config, specifically the one in
