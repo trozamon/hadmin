@@ -1,0 +1,21 @@
+default:
+  admins: trozamon
+  capacity: 5
+  max-cap: 10
+  max-init-tpu: 100000
+  users: trozamon,root
+staff:
+  admins: trozamon,root
+  capacity: 5
+  max-cap: 100
+  max-init-tpu: 100000
+  users: trozamon,root,bossman
+mapred.capacity-scheduler.maximum-system-jobs: 100
+mapred.capacity-scheduler.default-supports-priority: "true"
+mapred.capacity-scheduler.default-minimum-user-limit-percent: 25
+mapred.capacity-scheduler.default-user-limit-factor: 10
+mapred.capacity-scheduler.default-maximum-active-tasks-per-queue: 200000
+mapred.capacity-scheduler.default-maximum-active-tasks-per-user: 100000
+mapred.capacity-scheduler.default-init-accept-jobs-factor: 10
+mapred.capacity-scheduler.init-poll-interval: 5000
+mapred.capacity-scheduler.init-worker-threads: 5
