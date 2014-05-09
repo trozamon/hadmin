@@ -37,13 +37,6 @@ configuration, run
 This will dump a bunch of YAML into the current directory that Hadmin will
 modify and use to generate Hadoop XML.
 
-If you currently don't have any Hadoop configuration or are starting from
-a blank installation, you can run
-
-    hadmin init
-
-and an interactive wizard will help you create an initial set of configuration.
-
 ## Generating Hadoop configuration
 Generating Hadoop configuration can be accomplished by running
 
