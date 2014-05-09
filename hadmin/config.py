@@ -16,9 +16,6 @@ class Config:
     second dimension contains two elements: value and final.
 
     Config allows for returning either an XML or YAML representation.
-    Future work will be to include type-checking and other potential
-    validation based on a rules file, although this will be in a different
-    class, probably ConfigValidator or something.
 
     """
 
@@ -34,8 +31,8 @@ class Config:
         for event, elem in ET.iterparse(filename):
             if elem.tag == 'name':
                 if len(key) > 0:
-                    conf[key][Config.val_tag] = val
-                    conf[key][Config.fnl_tag] = fnl
+                    conf[key, Config.val_tag] = val
+                    conf[key, Config.fnl_tag] = fnl
                 key = elem.text
                 val = ''
                 fnl = False
@@ -43,7 +40,8 @@ class Config:
                 val = elem.text
             elif elem.tag == 'final':
                 fnl = elem.text
-        conf.validate()
+        conf[key, Config.val_tag] = val
+        conf[key, Config.fnl_tag] = fnl
         return conf
 
     @classmethod
@@ -91,6 +89,9 @@ class Config:
         out.append("</configuration>")
         return '\n'.join(out)
 
+    def to_yaml(self):
+        return dump(self.conf, Dumper=Dumper, default_flow_style=False)
+
     def add_key(self, key):
         """ Adds a new config key if it doesn't already exist. This
         is mostly to be used internally """
@@ -128,6 +129,8 @@ class Config:
         if type(key) is tuple:
             sub_key = key[1]
             key = key[0]
+        key = str(key)
+        sub_key = str(sub_key)
 
         if key not in self.conf.keys():
             raise KeyError("Key " + key + " doesn't exist in the config")
@@ -142,6 +145,8 @@ class Config:
         if type(key) is tuple:
             sub_key = key[1]
             key = key[0]
+        key = str(key)
+        sub_key = str(sub_key)
 
         if sub_key not in Config.subtags:
             raise KeyError("You cannot edit the " + sub_key + " attribute.")
@@ -183,6 +188,11 @@ class QueueACLConfig(Config):
             conf.queue_list.append(queue)
         return conf
 
+    def to_yaml(self, hadmin_dict):
+        for key in self.conf:
+            tmp = key.split('.')
+            hadmin_dict[tmp[-2]][QueueACLConfig.rev_key_map[tmp[-1]]] = self[key]
+
     def get_key(self, key, queue):
         match = re.sub(QueueACLConfig.key_rep, queue,
                        QueueACLConfig.key_map[key])
@@ -194,6 +204,10 @@ class QueueACLConfig(Config):
     key_map = dict()
     key_map["users"] = "mapred.queue." + key_rep + ".acl-submit-job"
     key_map["admins"] = "mapred.queue." + key_rep + ".acl-administer-jobs"
+
+    rev_key_map = dict()
+    rev_key_map['acl-submit-job'] = 'users'
+    rev_key_map['acl-administer-jobs'] = 'admins'
 
 
 class CapacitySchedulerConfig(Config):
@@ -209,6 +223,21 @@ class CapacitySchedulerConfig(Config):
     key_map["capacity"] = cap_pre + "capacity"
     key_map["max-cap"] = cap_pre + "maximum-capacity"
     key_map["max-init-tpu"] = cap_pre + "maximum-initialized-active-tasks-per-user"
+    rev_key_map = dict()
+    rev_key_map['capacity'] = 'capacity'
+    rev_key_map['maximum-capacity'] = 'max-cap'
+    rev_key_map['maximum-initialized-active-tasks-per-user'] = 'max-init-tpu'
+
+    def __init__(self):
+        self.conf = dict()
+        self.queue_list = list()
+
+    def get_key(self, key, queue):
+        match = re.sub(CapacitySchedulerConfig.key_rep, queue,
+                       CapacitySchedulerConfig.key_map[key])
+        if not match:
+            raise KeyError(key + " is improperly mapped")
+        return str(match)
 
     @classmethod
     def from_yaml(cls, hadmin_file, capacity_file):
@@ -217,32 +246,68 @@ class CapacitySchedulerConfig(Config):
         data = load(f, Loader=Loader)
 
         for queue in data:
-            for key in ("capacity", "max-cap", "max-init-tpu"):
-                match = re.sub(CapacitySchedulerConfig.key_rep, queue,
-                               CapacitySchedulerConfig.key_map[key])
-                if not match:
-                    raise KeyError(key + " is improperly mapped")
+            for key in CapacitySchedulerConfig.key_map:
+                conf.get_key(key, queue)
                 conf[match] = data[queue][key]
+            conf.queue_list.append(queue)
 
         conf.add_yaml_file(capacity_file)
         return conf
 
+    def to_yaml(self, hadmin_dict):
+        passed_out = list()
+        if len(self.queue_list) == 0:
+            self.gen_queue_list()
+        for queue in self.queue_list:
+            for key in CapacitySchedulerConfig.key_map:
+                match = self.get_key(key, queue)
+                passed_out.append(match)
+
+        out = dict()
+        for key in self.conf:
+            if key in passed_out:
+                tmp = key.split('.')
+                hadmin_dict[tmp[-2]][CapacitySchedulerConfig.rev_key_map[tmp[-1]]] = self[key]
+            else:
+                out[key] = self[key]
+
+        return dump(out, Dumper=Dumper, default_flow_style=False)
+
+    def gen_queue_list(self):
+        for key in self.conf:
+            tmp = key.split('.')
+            if tmp[-1] == 'capacity':
+                self.queue_list.append(tmp[-2])
 
 class ConfigManager(dict):
     """ Initializes and manages all the config files. """
 
-    def __init__(self, directory):
+    @classmethod
+    def from_xml(cls, directory):
+        mgr = cls()
+        mgr['capacity-scheduler'] = CapacitySchedulerConfig.from_xml(directory + '/capacity-scheduler.xml')
+        mgr['core-site'] = Config.from_xml(directory + "/core-site.xml")
+        mgr['hadoop-policy'] = Config.from_xml(directory + "/hadoop-policy.xml")
+        mgr['hdfs-site'] = Config.from_xml(directory + "/hdfs-site.xml")
+        mgr['mapred-site'] = Config.from_xml(directory + "/mapred-site.xml")
+        mgr['mapred-queue-acls'] = QueueACLConfig.from_xml(directory + "/mapred-queue-acls.xml")
+        return mgr
+
+    @classmethod
+    def from_yaml(cls, directory):
         """ Creates all the config files. Adds queue and user info to
         capacity-scheduler.xml, mapred-queue-acls.xml, and mapred-site.xml. """
 
-        self['capacity-scheduler.xml'] = CapacitySchedulerConfig.from_yaml(directory + "/hadmin-queues.yaml", directory + "/capacity-scheduler.yaml")
-        self['core-site.xml'] = Config.from_yaml(directory + "/core-site.yaml")
-        self['hadoop-policy.xml'] = Config.from_yaml(directory + "/hadoop-policy.yaml")
-        self['hdfs-site.xml'] = Config.from_yaml(directory + "/hdfs-site.yaml")
-        self['mapred-site.xml'] = Config.from_yaml(directory + "/mapred-site.yaml")
-        self['mapred-queue-acls.xml'] = QueueACLConfig.from_yaml(directory + "/hadmin-queues.yaml")
+        mgr = mgr()
+        mgr['capacity-scheduler'] = CapacitySchedulerConfig.from_yaml(directory + "/hadmin-queues.yaml", directory + "/capacity-scheduler.yaml")
+        mgr['core-site'] = Config.from_yaml(directory + "/core-site.yaml")
+        mgr['hadoop-policy'] = Config.from_yaml(directory + "/hadoop-policy.yaml")
+        mgr['hdfs-site'] = Config.from_yaml(directory + "/hdfs-site.yaml")
+        mgr['mapred-site'] = Config.from_yaml(directory + "/mapred-site.yaml")
+        mgr['mapred-queue-amgr'] = QueueACLConfig.from_yaml(directory + "/hadmin-queues.yaml")
 
-        self['mapred-site.xml']['mapred.queue.names'] = ','.join(self['mapred-queue-acls.xml'].queue_list)
+        mgr['mapred-site']['mapred.queue.names'] = ','.join(mgr['mapred-queue-amgr.xml'].queue_list)
+        return mgr
 
     def generate(self, directory):
         """ Generates all the XML Hadoop config """
@@ -253,9 +318,34 @@ class ConfigManager(dict):
             os.mkdir(directory)
 
         for filename in self:
-            f = open(directory + '/' + filename, 'w')
+            f = open(directory + '/' + filename + '.xml', 'w')
             f.write(self[filename].to_xml())
             f.close()
+
+    def save(self, directory):
+        """ Save as HAdmin YAML """
+        hadmin_file = dict()
+        self['capacity-scheduler'].gen_queue_list()
+        for queue in self['capacity-scheduler'].queue_list:
+            hadmin_file[queue] = dict()
+
+        for filename in self:
+            write = True
+            out = ''
+            if filename == 'capacity-scheduler':
+                out = self[filename].to_yaml(hadmin_file)
+            elif filename == 'mapred-queue-acls':
+                self[filename].to_yaml(hadmin_file)
+                write = False
+            else:
+                out = self[filename].to_yaml()
+
+            if write:
+                with open(directory + '/' + filename + '.yaml', 'w') as f:
+                    f.write(out)
+
+        with open(directory + '/hadmin-queues.yaml', 'w') as f:
+            f.write(dump(hadmin_file, default_flow_style=False, Dumper=Dumper))
 
 class HadminManager:
     """ Manages modifying users and queues easy programatically

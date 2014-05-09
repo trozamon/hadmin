@@ -104,6 +104,14 @@ def queuemod(args):
         except TypeError as e:
             print(e)
 
+def init(args):
+    parser = argparse.ArgumentParser(prog='init',
+            description='HAdmin initialization utility')
+    parser.add_argument('directory')
+    args = parser.parse_args(args)
+    mgr = hconfig.ConfigManager.from_xml(args.directory)
+    mgr.save('.')
+
 def gen(args):
     parser = argparse.ArgumentParser(prog='gen',
             description='HAdmin XML generation utility')
