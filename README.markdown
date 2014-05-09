@@ -74,13 +74,13 @@ queue, --maxcap the maximum capacity of the queue, and --tpu the maximum
 initialized tasks per user of the queue.
 
 ## Users
-A user can be added by running
+A user can be added to a queue by running
 
-    hadmin useradd <user>
+    hadmin useradd <user> <queue>
 
-and an administrator can be added by running
+and an administrator can be added to a queue by running
 
-    hadmin useradd --admin <user>
+    hadmin useradd --admin <user> <queue>
 
 A user or administrator can be deleted by replacing 'useradd' in the above
 commands with 'userdel'. Please note that --admin must be supplied to userdel
@@ -110,5 +110,6 @@ the hardware it's being run on.
 
 ## Helping out
 On the off chance that you've stumbled on this project and want to
-contribute, that's fantastic. It's pretty open-ended, but the structure
-will be nailed down within a few months.
+contribute, that's fantastic. You can help in any way you see fit, whether
+that is refactoring, adding features, writing tests, writing documentation,
+or testing it out on a cluster.
