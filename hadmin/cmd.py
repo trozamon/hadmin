@@ -1,5 +1,6 @@
 import hadmin.config as hconfig
-import argparse
+import argparse.ArgumentParser as ArgumentParser
+
 
 def useradd(args):
     """
@@ -8,13 +9,13 @@ def useradd(args):
 
     """
 
-    parser = argparse.ArgumentParser(prog='useradd',
-            description='HAdmin useradd utility')
+    parser = ArgumentParser(prog='useradd',
+                            description='HAdmin useradd utility')
     parser.add_argument('user')
     parser.add_argument('queue')
     parser.add_argument('--admin', dest='is_admin', action='store_const',
-            const=True, default=False,
-            help='Add an administrator')
+                        const=True, default=False,
+                        help='Add an administrator')
     args = parser.parse_args(args)
     with hconfig.HadminManager('.') as mgr:
         try:
@@ -27,49 +28,55 @@ def useradd(args):
         except KeyError as e:
             print(str(e)[1:-1])
 
+
 def userdel(args):
     """
     Takes in a user and removes him from a queue
 
     """
 
-    parser = argparse.ArgumentParser(prog='userdel',
-            description='HAdmin userdel utility')
+    parser = ArgumentParser(prog='userdel',
+                            description='HAdmin userdel utility')
     parser.add_argument('user')
     parser.add_argument('queue')
     parser.add_argument('--admin', dest='is_admin', action='store_const',
-            const=True, default=False,
-            help='Delete an administrator')
+                        const=True, default=False,
+                        help='Delete an administrator')
     args = parser.parse_args(args)
     with hconfig.HadminManager('.') as mgr:
         try:
             if args.is_admin:
                 mgr.del_admin(args.user, args.queue)
-                print("Removed admin " + args.user + " from queue " + args.queue)
+                print("Removed admin " + args.user + " from queue " +
+                      args.queue)
             else:
                 mgr.del_user(args.user, args.queue)
-                print("Removed user " + args.user + " from queue " + args.queue)
+                print("Removed user " + args.user + " from queue " +
+                      args.queue)
         except ValueError as e:
             print(str(e)[1:-1])
         except AttributeError as e:
             print(e)
 
+
 def queueadd(args):
-    parser = argparse.ArgumentParser(prog='queueadd',
-            description='HAdmin queueadd utility')
+    parser = ArgumentParser(prog='queueadd',
+                            description='HAdmin queueadd utility')
     parser.add_argument('queue')
     parser.add_argument('user')
     args = parser.parse_args(args)
     with hconfig.HadminManager('.') as mgr:
         try:
             mgr.add_queue(args.queue, args.user)
-            print('Added queue ' + args.queue + ' with initial user/admin ' + args.user)
+            print('Added queue ' + args.queue +
+                  ' with initial user/admin ' + args.user)
         except KeyError as e:
             print(str(e)[1:-1])
 
+
 def queuedel(args):
-    parser = argparse.ArgumentParser(prog='queueadd',
-            description='HAdmin queueadd utility')
+    parser = ArgumentParser(prog='queueadd',
+                            description='HAdmin queueadd utility')
     parser.add_argument('queue')
     args = parser.parse_args(args)
     with hconfig.HadminManager('.') as mgr:
@@ -79,9 +86,10 @@ def queuedel(args):
         except KeyError as e:
             print(str(e)[1:-1])
 
+
 def queuemod(args):
-    parser = argparse.ArgumentParser(prog='queuemod',
-            description='HAdmin queuemod utility')
+    parser = ArgumentParser(prog='queuemod',
+                            description='HAdmin queuemod utility')
     parser.add_argument('queue')
     parser.add_argument('--capacity', nargs=1, help='New capacity')
     parser.add_argument('--maxcap', nargs=1, help='New maximum capacity')
@@ -104,17 +112,19 @@ def queuemod(args):
         except TypeError as e:
             print(e)
 
+
 def init(args):
-    parser = argparse.ArgumentParser(prog='init',
-            description='HAdmin initialization utility')
+    parser = ArgumentParser(prog='init',
+                            description='HAdmin initialization utility')
     parser.add_argument('directory')
     args = parser.parse_args(args)
     mgr = hconfig.Manager.from_xml(args.directory)
     mgr.save('.')
 
+
 def gen(args):
-    parser = argparse.ArgumentParser(prog='gen',
-            description='HAdmin XML generation utility')
+    parser = ArgumentParser(prog='gen',
+                            description='HAdmin XML generation utility')
     parser.add_argument('directory', help="""
     Output directory for XML configuration. Please note that this directory
     doesn't need to be empty, but any existing files with the same names

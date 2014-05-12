@@ -82,8 +82,8 @@ class Config:
                 tmp = data[key]
                 data[key] = {Config.val_tag: tmp, Config.fnl_tag: False}
             except KeyError:
-                raise KeyError("You must have a '" + Config.val_tag + \
-                        "' sub-key for " + key)
+                raise KeyError("You must have a '" + Config.val_tag +
+                               "' sub-key for " + key)
 
         for key in data:
             try:
@@ -167,6 +167,7 @@ class Config:
     fnl_tag = 'final'
     subtags = (val_tag, fnl_tag)
 
+
 class Mapper:
 
     def __init__(self, rep, field_sep, mapping=dict()):
@@ -185,7 +186,7 @@ class Mapper:
         if type(key) is tuple:
             match = re.sub(self.rep, key[1], self.mapping[key[0]])
             if not match:
-                raise KeyError(expr + ' is improperly mapped')
+                raise KeyError('Improperly mapped')
             ret = str(match)
         else:
             key_fixed = self.find_bare_key(key)
@@ -213,14 +214,14 @@ class Manager(dict):
 
         mgr = cls()
         mgr['capacity-scheduler'] = \
-                Config.from_xml(directory + '/capacity-scheduler.xml')
+            Config.from_xml(directory + '/capacity-scheduler.xml')
         mgr['core-site'] = Config.from_xml(directory + "/core-site.xml")
         mgr['hadoop-policy'] = \
-                Config.from_xml(directory + "/hadoop-policy.xml")
+            Config.from_xml(directory + "/hadoop-policy.xml")
         mgr['hdfs-site'] = Config.from_xml(directory + "/hdfs-site.xml")
         mgr['mapred-site'] = Config.from_xml(directory + "/mapred-site.xml")
         mgr['mapred-queue-acls'] = \
-                Config.from_xml(directory + "/mapred-queue-acls.xml")
+            Config.from_xml(directory + "/mapred-queue-acls.xml")
         return mgr
 
     @classmethod
@@ -231,7 +232,8 @@ class Manager(dict):
         mgr = cls()
 
         mgr['core-site'] = Config.from_yaml(directory + "/core-site.yaml")
-        mgr['hadoop-policy'] = Config.from_yaml(directory + "/hadoop-policy.yaml")
+        mgr['hadoop-policy'] = Config.from_yaml(directory +
+                                                "/hadoop-policy.yaml")
         mgr['hdfs-site'] = Config.from_yaml(directory + "/hdfs-site.yaml")
         mgr['mapred-site'] = Config.from_yaml(directory + "/mapred-site.yaml")
         with Internal.from_dir(directory) as thing:
@@ -279,9 +281,10 @@ class Manager(dict):
         with open(directory + '/hadmin.yaml', 'w') as f:
             f.write(dump(hadmin_file, default_flow_style=False, Dumper=Dumper))
 
+
 class Internal:
     """ Manages modifying users and queues easy programatically
-    
+
     Note: Keeps the lists of users and admins sorted for better vcs
     control
 
@@ -308,7 +311,7 @@ class Internal:
         if len(self.filename) > 0:
             with open(self.filename, 'w') as f:
                 f.write(dump(self.conf, Dumper=Dumper,
-                    default_flow_style=False))
+                             default_flow_style=False))
 
     def check_queue(self, queue):
         """ Checks that a queue exists """
@@ -322,7 +325,8 @@ class Internal:
         self.check_queue(queue)
         arr = self.queues[queue][ident].split(',')
         if user in arr:
-            raise KeyError(ident[0:-1].capitalize() + ' ' + user + ' is already in queue ' + queue)
+            raise KeyError(ident[0:-1].capitalize() + ' ' + user +
+                           ' is already in queue ' + queue)
 
         arr.append(user)
         self.queues[queue][ident] = ','.join(sorted(arr))
@@ -341,11 +345,13 @@ class Internal:
         try:
             arr = self.queues[queue][ident].split(',')
             if len(arr) < 2:
-                raise AttributeError('Cannot delete the last ' + ident[0:-1] + ' of a queue')
+                raise AttributeError('Cannot delete the last ' +
+                                     ident[0:-1] + ' of a queue')
             del(arr[arr.index(user)])
             self.queues[queue][ident] = ','.join(sorted(arr))
         except ValueError:
-            raise ValueError(ident[0:-1].capitalize() + ' ' + user + ' is not in queue ' + queue)
+            raise ValueError(ident[0:-1].capitalize() + ' ' + user +
+                             ' is not in queue ' + queue)
 
     def del_user(self, user, queue):
         self.del_user_or_admin('users', user, queue)
@@ -388,7 +394,7 @@ class Internal:
     def get_config(self, key):
         out = Config()
         mapper = Mapper(field_sep=hadmin.mapping.field_sep,
-                rep=hadmin.mapping.rep, mapping=hadmin.mapping.fwd)
+                        rep=hadmin.mapping.rep, mapping=hadmin.mapping.fwd)
         for own in hadmin.mapping.ownership[key]:
             if type(own) is tuple:
                 tmp = self.conf[own[0]]

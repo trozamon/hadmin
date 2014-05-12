@@ -3,24 +3,25 @@ import copy
 from hadmin.config import *
 import hadmin.mapping as mapping
 
+
 class ConfigTest(unittest.TestCase):
 
     def setUp(self):
         self.conf = Config()
         self.data = {
-                'key1': {
-                    'value': 'foo',
-                    'final': False
-                    },
-                'key2': {
-                    'value': 'hey',
-                    'final': True
-                    },
-                'key3': {
-                    'value': 'sup',
-                    'final': False
-                    }
+            'key1': {
+                'value': 'foo',
+                'final': False
+                },
+            'key2': {
+                'value': 'hey',
+                'final': True
+                },
+            'key3': {
+                'value': 'sup',
+                'final': False
                 }
+            }
         self.invdata = copy.deepcopy(self.data)
         del(self.invdata['key1']['final'])
         self.throwone = copy.deepcopy(self.data)
@@ -61,6 +62,7 @@ class ConfigTest(unittest.TestCase):
         self.conf['test1', Config.fnl_tag] = False
         self.assertFalse(self.conf['test1', Config.fnl_tag])
 
+
 class MapperTest(unittest.TestCase):
 
     def setUp(self):
@@ -87,39 +89,40 @@ class MapperTest(unittest.TestCase):
         self.assertEqual(self.mapper['yo.alec.wazzup'], ('alec', 'hey'))
 
     def test_find_bare_key(self):
-        self.assertEqual(self.mapper.find_bare_key('yo.alec.wazzup'), 'yo.-.wazzup')
+        self.assertEqual(self.mapper.find_bare_key('yo.alec.wazzup'),
+                         'yo.-.wazzup')
 
 
 class InternalTest(unittest.TestCase):
 
     def setUp(self):
         self.data = {
-                'queues': {
-                    'tester': {
-                        'admins': 'bossman',
-                        'capacity': 50,
-                        'max-cap': 60,
-                        'max-tpu': 1000,
-                        'users': 'trozamon,bossman'
-                        },
-                    'default': {
-                        'admins': 'trozamon',
-                        'capacity': 5,
-                        'max-cap': 10,
-                        'max-tpu': 100000,
-                        'users': 'trozamon,root'
-                        }
+            'queues': {
+                'tester': {
+                    'admins': 'bossman',
+                    'capacity': 50,
+                    'max-cap': 60,
+                    'max-tpu': 1000,
+                    'users': 'trozamon,bossman'
                     },
-                'max-sys-jobs': '100',
-                'supports-priority': 'true',
-                'min-user-lim-perc': '25',
-                'user-lim-factor': '10',
-                'max-tpq': '200000',
-                'max-tpu': '100000',
-                'accept-jobs-factor': '10',
-                'poll-interval': '5000',
-                'worker-threads': '5'
-                }
+                'default': {
+                    'admins': 'trozamon',
+                    'capacity': 5,
+                    'max-cap': 10,
+                    'max-tpu': 100000,
+                    'users': 'trozamon,root'
+                    }
+                },
+            'max-sys-jobs': '100',
+            'supports-priority': 'true',
+            'min-user-lim-perc': '25',
+            'user-lim-factor': '10',
+            'max-tpq': '200000',
+            'max-tpu': '100000',
+            'accept-jobs-factor': '10',
+            'poll-interval': '5000',
+            'worker-threads': '5'
+            }
         self.mgr = Internal(self.data)
 
     def tearDown(self):
@@ -131,12 +134,13 @@ class InternalTest(unittest.TestCase):
 
     def test_add_admin(self):
         self.mgr.add_admin('fluffy', 'default')
-        self.assertTrue(self.mgr.conf['queues']['default']['admins'] == \
-                'fluffy,trozamon')
+        self.assertTrue(self.mgr.conf['queues']['default']['admins'] ==
+                        'fluffy,trozamon')
 
     def test_add_queue(self):
         self.mgr.add_queue('test', 'trozamon')
-        self.assertTrue(self.mgr.conf['queues']['test']['admins'] == 'trozamon')
+        self.assertTrue(self.mgr.conf['queues']['test']['admins'] ==
+                        'trozamon')
         self.assertTrue(self.mgr.conf['queues']['test']['users'] == 'trozamon')
         self.assertTrue(self.mgr.conf['queues']['test']['capacity'] == 0)
         self.assertTrue(self.mgr.conf['queues']['test']['max-cap'] == 0)
@@ -144,14 +148,14 @@ class InternalTest(unittest.TestCase):
 
     def test_add_user(self):
         self.mgr.add_user('fluffy', 'default')
-        self.assertTrue(self.mgr.conf['queues']['default']['users'] == \
-                'fluffy,root,trozamon')
+        self.assertTrue(self.mgr.conf['queues']['default']['users'] ==
+                        'fluffy,root,trozamon')
 
     def test_add_user_with(self):
         with Internal(self.data) as mgr:
             mgr.add_user('fluffy', 'default')
-            self.assertTrue(mgr.conf['queues']['default']['users'] == \
-                'fluffy,root,trozamon')
+            self.assertTrue(mgr.conf['queues']['default']['users'] ==
+                            'fluffy,root,trozamon')
 
     def test_check_queue(self):
         self.mgr.check_queue('default')
@@ -161,8 +165,8 @@ class InternalTest(unittest.TestCase):
     def test_del_admin(self):
         self.mgr.add_admin('fluffy', 'default')
         self.mgr.del_admin('trozamon', 'default')
-        self.assertTrue(self.mgr.conf['queues']['default']['admins'] == \
-                'fluffy')
+        self.assertTrue(self.mgr.conf['queues']['default']['admins'] ==
+                        'fluffy')
 
     def test_del_queue(self):
         self.mgr.del_queue('default')
