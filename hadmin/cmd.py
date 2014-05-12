@@ -109,7 +109,7 @@ def init(args):
             description='HAdmin initialization utility')
     parser.add_argument('directory')
     args = parser.parse_args(args)
-    mgr = hconfig.ConfigManager.from_xml(args.directory)
+    mgr = hconfig.Manager.from_xml(args.directory)
     mgr.save('.')
 
 def gen(args):
@@ -120,5 +120,5 @@ def gen(args):
     doesn't need to be empty, but any existing files with the same names
     will be overwritten""")
     args = parser.parse_args(args)
-    mgr = hconfig.ConfigManager('.')
+    mgr = hconfig.Manager.from_yaml('.')
     mgr.generate(args.directory)

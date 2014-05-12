@@ -60,7 +60,7 @@ class Config:
 
         f = open(filename, 'r')
         data = load(f, Loader=Loader)
-        add(data)
+        self.add(data)
 
     def add(self, data):
         """ Adds the contents of a two-dimensional dict to this Config. """
@@ -228,15 +228,17 @@ class Manager(dict):
         """ Creates all the config files. Adds queue and user info to
         capacity-scheduler.xml, mapred-queue-acls.xml, and mapred-site.xml. """
 
-        mgr = mgr()
-        mgr['capacity-scheduler'] = CapacitySchedulerConfig.from_yaml(directory + "/hadmin-queues.yaml", directory + "/capacity-scheduler.yaml")
+        mgr = cls()
+
         mgr['core-site'] = Config.from_yaml(directory + "/core-site.yaml")
         mgr['hadoop-policy'] = Config.from_yaml(directory + "/hadoop-policy.yaml")
         mgr['hdfs-site'] = Config.from_yaml(directory + "/hdfs-site.yaml")
         mgr['mapred-site'] = Config.from_yaml(directory + "/mapred-site.yaml")
-        mgr['mapred-queue-amgr'] = QueueACLConfig.from_yaml(directory + "/hadmin-queues.yaml")
+        with Internal.from_dir(directory) as thing:
+            mgr['capacity-scheduler'] = thing.get_config('capacity-scheduler')
+            mgr['mapred-queue-acls'] = thing.get_config('mapred-queue-acls')
+            mgr['mapred-site']['mapred.queue.names'] = thing.queue_list()
 
-        mgr['mapred-site']['mapred.queue.names'] = ','.join(mgr['mapred-queue-amgr.xml'].queue_list)
         return mgr
 
     def generate(self, directory):
@@ -274,7 +276,7 @@ class Manager(dict):
                 with open(directory + '/' + filename + '.yaml', 'w') as f:
                     f.write(out)
 
-        with open(directory + '/hadmin-queues.yaml', 'w') as f:
+        with open(directory + '/hadmin.yaml', 'w') as f:
             f.write(dump(hadmin_file, default_flow_style=False, Dumper=Dumper))
 
 class Internal:
@@ -287,12 +289,12 @@ class Internal:
 
     @classmethod
     def from_dir(cls, directory):
-        filename = directory + '/hadmin-queues.yaml'
+        filename = directory + '/hadmin.yaml'
         with open(filename, 'r') as f:
             tmp = cls(load(f, Loader=Loader))
 
         tmp.filename = filename
-        return conf
+        return tmp
 
     def __init__(self, data):
         self.conf = copy.deepcopy(data)

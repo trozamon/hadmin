@@ -1,3 +1,9 @@
+accept-jobs-factor: 10
+max-sys-jobs: 100
+max-tpq: 200000
+max-tpu: 100000
+min-user-lim-perc: 25
+poll-interval: 5000
 queues:
   default:
     admins: trozamon
@@ -11,12 +17,6 @@ queues:
     max-cap: 100
     max-tpu: 100000
     users: trozamon,root,bossman
-max-sys-jobs: 100
 supports-priority: true
-min-user-lim-perc: 25
 user-lim-factor: 10
-max-tpq: 200000
-max-tpu: 100000
-accept-jobs-factor: 10
-poll-interval: 5000
 worker-threads: 5
