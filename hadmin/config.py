@@ -209,10 +209,6 @@ class Manager(dict):
     """ Initializes and manages all the config files. """
 
     @classmethod
-    def from_dir(cls, directory):
-        pass
-
-    @classmethod
     def from_xml(cls, directory):
 
         mgr = cls()
@@ -400,3 +396,6 @@ class Internal:
             elif own in self.conf.keys():
                 out[mapper[own]] = self.conf[own]
         return out
+
+    def queue_list(self):
+        return ','.join(sorted(self.conf['queues'].keys()))

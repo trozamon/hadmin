@@ -95,6 +95,13 @@ class InternalTest(unittest.TestCase):
     def setUp(self):
         self.data = {
                 'queues': {
+                    'tester': {
+                        'admins': 'bossman',
+                        'capacity': 50,
+                        'max-cap': 60,
+                        'max-tpu': 1000,
+                        'users': 'trozamon,bossman'
+                        },
                     'default': {
                         'admins': 'trozamon',
                         'capacity': 5,
@@ -118,6 +125,9 @@ class InternalTest(unittest.TestCase):
     def tearDown(self):
         self.mgr = None
         self.data = None
+
+    def test_queue_list(self):
+        self.assertTrue(self.mgr.queue_list() == "default,tester")
 
     def test_add_admin(self):
         self.mgr.add_admin('fluffy', 'default')
