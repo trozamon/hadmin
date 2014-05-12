@@ -1,5 +1,6 @@
 import re
 import os
+import copy
 from xml.etree import ElementTree as ET
 from yaml import load, dump
 try:
@@ -56,31 +57,42 @@ class Config:
     def add_yaml_file(self, filename):
         """Parse YAML and fill two-dimensional map."""
 
-        key = ''
-        val = ''
-        fnl = ''
-
-        f = open(filename, "r")
+        f = open(filename, 'r')
         data = load(f, Loader=Loader)
+        add(data)
 
-        for elem in data:
-            key = elem
+    def add(self, data):
+        """ Adds the contents of a two-dimensional dict to this Config. """
+
+        self.fixup(data)
+
+        for key in data:
+            self[key, Config.val_tag] = data[key][Config.val_tag]
+            self[key, Config.fnl_tag] = data[key][Config.fnl_tag]
+
+    def fixup(self, data):
+        """ Fixes up data that comes in that should be a two-dimensional
+        dict """
+
+        for key in data:
             try:
-                val = data[elem][Config.val_tag]
-                fnl = data[elem][Config.fnl_tag]
+                data[key][Config.val_tag]
             except TypeError:
-                val = data[elem]
-                fnl = False
+                tmp = data[key]
+                data[key] = {Config.val_tag: tmp, Config.fnl_tag: False}
             except KeyError:
-                print("The only acceptable subkeys are {" + ','.join(Config.subtags) + "}")
-                print("Please fix " + elem + " in " + filename)
-                exit(1)
+                raise KeyError("You must have a '" + Config.val_tag + \
+                        "' sub-key for " + key)
 
-            self[key, Config.val_tag] = val
-            self[key, Config.fnl_tag] = fnl
+        for key in data:
+            try:
+                data[key][Config.fnl_tag]
+            except KeyError:
+                data[key][Config.fnl_tag] = False
 
     def to_xml(self):
-        """ Return an XML representation of this Config """
+        """ Return an XML representation of this Config. """
+
         out = ["<configuration>"]
         for key in sorted(self.conf.keys()):
             out.append("\t<property>")
@@ -191,133 +203,27 @@ class Mapper:
         key_fixed = self.field_sep.join(key_split)
         return key_fixed
 
-class QueueACLConfig(Config):
-    """ Holds a CapacityScheduler queue config, specifically the one in
-    mapred-queue-acls.xml.
 
-    The class generates the verbose XML configuration from a lighter
-    YAML format used by Hadmin. """
-
-    def __init__(self):
-        self.conf = dict()
-        self.queue_list = list()
-
-    @classmethod
-    def from_yaml(cls, fname):
-        conf = cls()
-
-        f = open(fname, "r")
-        data = load(f, Loader=Loader)
-
-        for queue in data:
-            for key in ("users", "admins"):
-                conf[conf.get_key(key, queue)] = data[queue][key]
-            conf.queue_list.append(queue)
-        return conf
-
-    def to_yaml(self, hadmin_dict):
-        for key in self.conf:
-            tmp = key.split('.')
-            hadmin_dict[tmp[-2]][QueueACLConfig.rev_key_map[tmp[-1]]] = self[key]
-
-    def get_key(self, key, queue):
-        match = re.sub(QueueACLConfig.key_rep, queue,
-                       QueueACLConfig.key_map[key])
-        if not match:
-            raise KeyError(key + " is improperly mapped")
-        return str(match)
-
-    key_rep = "____"
-    key_map = dict()
-    key_map["users"] = "mapred.queue." + key_rep + ".acl-submit-job"
-    key_map["admins"] = "mapred.queue." + key_rep + ".acl-administer-jobs"
-
-    rev_key_map = dict()
-    rev_key_map['acl-submit-job'] = 'users'
-    rev_key_map['acl-administer-jobs'] = 'admins'
-
-
-class CapacitySchedulerConfig(Config):
-    """ Holds a CapacityScheduler configuration, specifically the config
-    in capacity-scheduler.xml.
-
-    This class generates the config partly from Hadmin YAML and partly
-    from Hadoop YAML. """
-
-    key_rep = "____"
-    cap_pre = "mapred.capacity-scheduler.queue." + key_rep + "."
-    key_map = dict()
-    key_map["capacity"] = cap_pre + "capacity"
-    key_map["max-cap"] = cap_pre + "maximum-capacity"
-    key_map["max-init-tpu"] = cap_pre + "maximum-initialized-active-tasks-per-user"
-    rev_key_map = dict()
-    rev_key_map['capacity'] = 'capacity'
-    rev_key_map['maximum-capacity'] = 'max-cap'
-    rev_key_map['maximum-initialized-active-tasks-per-user'] = 'max-init-tpu'
-
-    def __init__(self):
-        self.conf = dict()
-        self.queue_list = list()
-
-    def get_key(self, key, queue):
-        match = re.sub(CapacitySchedulerConfig.key_rep, queue,
-                       CapacitySchedulerConfig.key_map[key])
-        if not match:
-            raise KeyError(key + " is improperly mapped")
-        return str(match)
-
-    @classmethod
-    def from_yaml(cls, hadmin_file, capacity_file):
-        conf = cls()
-        f = open(hadmin_file, "r")
-        data = load(f, Loader=Loader)
-
-        for queue in data:
-            for key in CapacitySchedulerConfig.key_map:
-                conf.get_key(key, queue)
-                conf[match] = data[queue][key]
-            conf.queue_list.append(queue)
-
-        conf.add_yaml_file(capacity_file)
-        return conf
-
-    def to_yaml(self, hadmin_dict):
-        passed_out = list()
-        if len(self.queue_list) == 0:
-            self.gen_queue_list()
-        for queue in self.queue_list:
-            for key in CapacitySchedulerConfig.key_map:
-                match = self.get_key(key, queue)
-                passed_out.append(match)
-
-        out = dict()
-        for key in self.conf:
-            if key in passed_out:
-                tmp = key.split('.')
-                hadmin_dict[tmp[-2]][CapacitySchedulerConfig.rev_key_map[tmp[-1]]] = self[key]
-            else:
-                out[key] = self[key]
-
-        return dump(out, Dumper=Dumper, default_flow_style=False)
-
-    def gen_queue_list(self):
-        for key in self.conf:
-            tmp = key.split('.')
-            if tmp[-1] == 'capacity':
-                self.queue_list.append(tmp[-2])
-
-class ConfigManager(dict):
+class Manager(dict):
     """ Initializes and manages all the config files. """
 
     @classmethod
+    def from_dir(cls, directory):
+        pass
+
+    @classmethod
     def from_xml(cls, directory):
+
         mgr = cls()
-        mgr['capacity-scheduler'] = CapacitySchedulerConfig.from_xml(directory + '/capacity-scheduler.xml')
+        mgr['capacity-scheduler'] = \
+                Config.from_xml(directory + '/capacity-scheduler.xml')
         mgr['core-site'] = Config.from_xml(directory + "/core-site.xml")
-        mgr['hadoop-policy'] = Config.from_xml(directory + "/hadoop-policy.xml")
+        mgr['hadoop-policy'] = \
+                Config.from_xml(directory + "/hadoop-policy.xml")
         mgr['hdfs-site'] = Config.from_xml(directory + "/hdfs-site.xml")
         mgr['mapred-site'] = Config.from_xml(directory + "/mapred-site.xml")
-        mgr['mapred-queue-acls'] = QueueACLConfig.from_xml(directory + "/mapred-queue-acls.xml")
+        mgr['mapred-queue-acls'] = \
+                Config.from_xml(directory + "/mapred-queue-acls.xml")
         return mgr
 
     @classmethod
@@ -374,7 +280,7 @@ class ConfigManager(dict):
         with open(directory + '/hadmin-queues.yaml', 'w') as f:
             f.write(dump(hadmin_file, default_flow_style=False, Dumper=Dumper))
 
-class HadminManager:
+class Hadmin:
     """ Manages modifying users and queues easy programatically
     
     Note: Keeps the lists of users and admins sorted for better vcs
@@ -382,21 +288,32 @@ class HadminManager:
 
     """
 
-    def __init__(self, directory):
-        self.filename = directory + '/hadmin-queues.yaml'
-        with open(self.filename, 'r') as f:
-            self.conf = load(f, Loader=Loader)
+    @classmethod
+    def from_dir(cls, directory):
+        filename = directory + '/hadmin-queues.yaml'
+        with open(filename, 'r') as f:
+            tmp = cls(load(f, Loader=Loader))
+
+        tmp.filename = filename
+        return conf
+
+    def __init__(self, data):
+        self.conf = copy.deepcopy(data)
+        self.queues = self.conf['queues']
+        self.filename = ''
 
     def __enter__(self):
         return self
 
     def __exit__(self, type, value, traceback):
-        with open(self.filename, 'w') as f:
-            f.write(dump(self.conf, Dumper=Dumper, default_flow_style=False))
+        if len(self.filename) > 0:
+            with open(self.filename, 'w') as f:
+                f.write(dump(self.conf, Dumper=Dumper,
+                    default_flow_style=False))
 
     def check_queue(self, queue):
         """ Checks that a queue exists """
-        if queue not in self.conf.keys():
+        if queue not in self.queues.keys():
             raise KeyError('Queue ' + queue + ' does not exist')
 
     def add_user_or_admin(self, ident, user, queue):
@@ -404,12 +321,12 @@ class HadminManager:
         if ident not in ('users', 'admins'):
             raise ValueError('ident ' + ident + ' incorrect')
         self.check_queue(queue)
-        arr = self.conf[queue][ident].split(',')
+        arr = self.queues[queue][ident].split(',')
         if user in arr:
             raise KeyError(ident[0:-1].capitalize() + ' ' + user + ' is already in queue ' + queue)
 
         arr.append(user)
-        self.conf[queue][ident] = ','.join(sorted(arr))
+        self.queues[queue][ident] = ','.join(sorted(arr))
 
     def add_user(self, user, queue):
         self.add_user_or_admin('users', user, queue)
@@ -423,11 +340,11 @@ class HadminManager:
             raise ValueError('ident ' + ident + ' incorrect')
         self.check_queue(queue)
         try:
-            arr = self.conf[queue][ident].split(',')
+            arr = self.queues[queue][ident].split(',')
             if len(arr) < 2:
                 raise AttributeError('Cannot delete the last ' + ident[0:-1] + ' of a queue')
             del(arr[arr.index(user)])
-            self.conf[queue][ident] = ','.join(sorted(arr))
+            self.queues[queue][ident] = ','.join(sorted(arr))
         except ValueError:
             raise ValueError(ident[0:-1].capitalize() + ' ' + user + ' is not in queue ' + queue)
 
@@ -438,36 +355,36 @@ class HadminManager:
         self.del_user_or_admin('admins', user, queue)
 
     def add_queue(self, queue, user):
-        if queue in self.conf.keys():
+        if queue in self.queues.keys():
             raise KeyError('Queue ' + queue + ' already exists')
 
-        self.conf[queue] = dict()
-        self.conf[queue]['users'] = user
-        self.conf[queue]['admins'] = user
-        self.conf[queue]['capacity'] = 0
-        self.conf[queue]['max-cap'] = 0
-        self.conf[queue]['max-init-tpu'] = 0
+        self.queues[queue] = dict()
+        self.queues[queue]['users'] = user
+        self.queues[queue]['admins'] = user
+        self.queues[queue]['capacity'] = 0
+        self.queues[queue]['max-cap'] = 0
+        self.queues[queue]['max-tpu'] = 0
 
     def del_queue(self, queue):
-        if queue not in self.conf.keys():
+        if queue not in self.queues.keys():
             raise KeyError('Queue ' + queue + ' does not exist')
 
-        del(self.conf[queue])
+        del(self.queues[queue])
 
     def set_queue_cap(self, queue, cap):
         self.check_queue(queue)
         tmp = int(cap)
-        self.conf[queue]['capacity'] = tmp
+        self.queues[queue]['capacity'] = tmp
 
     def set_queue_max_cap(self, queue, max_cap):
         self.check_queue(queue)
         tmp = int(max_cap)
-        self.conf[queue]['max-cap'] = tmp
+        self.queues[queue]['max-cap'] = tmp
 
     def set_queue_max_init_tpu(self, queue, max_init_tpu):
         self.check_queue(queue)
         tmp = int(max_init_tpu)
-        self.conf[queue]['max-init-tpu'] = tmp
+        self.queues[queue]['max-tpu'] = tmp
 
 
 # Execute a small demo if run as a script
