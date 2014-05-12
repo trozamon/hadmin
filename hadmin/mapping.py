@@ -17,13 +17,13 @@ fwd = {
             'mapred.capacity-scheduler.default-init-accept-jobs-factor',
         'poll-interval': 'mapred.capacity-scheduler.init-poll-interval',
         'worker-threads': 'mapred.capacity-scheduler.init-worker-threads',
-        'admins': 'mapred.queue.' + queue_rep + '.acl-submit-job',
-        'users': 'mapred.queue.' + queue_rep + '.acl-administer-jobs',
-        'capacity': 'mapred.capacity-scheduler.queue.' + queue_rep + \
+        'admins': 'mapred.queue.' + rep + '.acl-submit-job',
+        'users': 'mapred.queue.' + rep + '.acl-administer-jobs',
+        'capacity': 'mapred.capacity-scheduler.queue.' + rep + \
                 '.capacity',
-        'max-cap': 'mapred.capacity-scheduler.queue.' + queue_rep + \
+        'max-cap': 'mapred.capacity-scheduler.queue.' + rep + \
             '.maximum-capacity',
-        'max-tpu': 'mapred.capacity-scheduler.queue.' + queue_rep + \
+        'max-tpu': 'mapred.capacity-scheduler.queue.' + rep + \
                 '.maximum-initialized-active-tasks-per-user'
         }
 
@@ -41,7 +41,7 @@ ownership = {
             ('queues', 'capacity'),
             ('queues', 'max-cap'),
             ('queues', 'max-tpu')
-            ]
+            ],
         'mapred-queue-acls': [
             ('queues', 'admins'),
             ('queues', 'users')

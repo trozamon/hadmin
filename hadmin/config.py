@@ -1,6 +1,7 @@
 import re
 import os
 import copy
+import hadmin.mapping
 from xml.etree import ElementTree as ET
 from yaml import load, dump
 try:
@@ -280,7 +281,7 @@ class Manager(dict):
         with open(directory + '/hadmin-queues.yaml', 'w') as f:
             f.write(dump(hadmin_file, default_flow_style=False, Dumper=Dumper))
 
-class Hadmin:
+class Internal:
     """ Manages modifying users and queues easy programatically
     
     Note: Keeps the lists of users and admins sorted for better vcs
@@ -386,17 +387,16 @@ class Hadmin:
         tmp = int(max_init_tpu)
         self.queues[queue]['max-tpu'] = tmp
 
-
-# Execute a small demo if run as a script
-if __name__ == "__main__":
-    import sys
-
-    if len(sys.argv) != 2:
-        print("Usage: " + __file__ + " <queue_conf> <cap_conf>")
-        exit(1)
-
-    conf = ConfigManager(sys.argv[1])
-    for f in conf:
-        print(f)
-        print(conf[f])
-        print()
+    def get_config(self, key):
+        out = Config()
+        mapper = Mapper(field_sep=hadmin.mapping.field_sep,
+                rep=hadmin.mapping.rep, mapping=hadmin.mapping.fwd)
+        for own in hadmin.mapping.ownership[key]:
+            if type(own) is tuple:
+                tmp = self.conf[own[0]]
+                for queue in tmp:
+                    key = re.sub(mapper.rep, queue, mapper[own[1]])
+                    out[key] = tmp[queue][own[1]]
+            elif own in self.conf.keys():
+                out[mapper[own]] = self.conf[own]
+        return out

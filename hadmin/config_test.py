@@ -1,6 +1,7 @@
 import unittest
 import copy
 from hadmin.config import *
+import hadmin.mapping as mapping
 
 class ConfigTest(unittest.TestCase):
 
@@ -88,7 +89,8 @@ class MapperTest(unittest.TestCase):
     def test_find_bare_key(self):
         self.assertEqual(self.mapper.find_bare_key('yo.alec.wazzup'), 'yo.-.wazzup')
 
-class HadminManagerTest(unittest.TestCase):
+
+class InternalTest(unittest.TestCase):
 
     def setUp(self):
         self.data = {
@@ -111,7 +113,7 @@ class HadminManagerTest(unittest.TestCase):
                 'poll-interval': '5000',
                 'worker-threads': '5'
                 }
-        self.mgr = Hadmin(self.data)
+        self.mgr = Internal(self.data)
 
     def tearDown(self):
         self.mgr = None
@@ -133,6 +135,12 @@ class HadminManagerTest(unittest.TestCase):
     def test_add_user(self):
         self.mgr.add_user('fluffy', 'default')
         self.assertTrue(self.mgr.conf['queues']['default']['users'] == \
+                'fluffy,root,trozamon')
+
+    def test_add_user_with(self):
+        with Internal(self.data) as mgr:
+            mgr.add_user('fluffy', 'default')
+            self.assertTrue(mgr.conf['queues']['default']['users'] == \
                 'fluffy,root,trozamon')
 
     def test_check_queue(self):
@@ -166,3 +174,13 @@ class HadminManagerTest(unittest.TestCase):
     def test_set_queue_max_init_tpu(self):
         self.mgr.set_queue_max_init_tpu('default', 10)
         self.assertTrue(self.mgr.conf['queues']['default']['max-tpu'] == 10)
+
+    def test_get_config_queues(self):
+        conf = self.mgr.get_config('mapred-queue-acls')
+        key = re.sub(mapping.rep, 'default', mapping.fwd['users'])
+        self.assertTrue('trozamon,root' == conf[key])
+
+    def test_get_config_scheduler(self):
+        conf = self.mgr.get_config('capacity-scheduler')
+        key = mapping.fwd[mapping.ownership['capacity-scheduler'][0]]
+        self.assertTrue(conf[key] == "100")
