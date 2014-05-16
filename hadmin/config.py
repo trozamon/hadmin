@@ -290,6 +290,47 @@ class Internal:
 
     """
 
+    _ownership = {
+        1: {
+            'capacity-scheduler': [
+                ('scheduler', 'mapred.capacity-scheduler.default-init-accept-jobs-factor'),
+                ('scheduler', 'mapred.capacity-scheduler.default-minimum-user-limit-percent'),
+                ('scheduler', 'mapred.capacity-scheduler.default-supports-priority'),
+                ('scheduler', 'mapred.capacity-scheduler.init-poll-interval'),
+                ('scheduler', 'mapred.capacity-scheduler.init-worker-threads'),
+                ('scheduler', 'max-jobs'),
+                ('scheduler', 'max-tpq'),
+                ('scheduler', 'max-tpu'),
+                ('scheduler', 'user-limit-factor'),
+                ('queues', 'capacity'),
+                ('queues', 'max-cap'),
+                ('queues', 'max-tpu')
+                ],
+            'mapred-queue-acls': [
+                ('queues', 'admins'),
+                ('queues', 'users')
+                ]
+            },
+        2: {
+            'capacity-scheduler': [
+                ('scheduler', 'max-jobs'),
+                ('scheduler', 'max-tpq'),
+                ('scheduler', 'max-tpu'),
+                ('scheduler', 'user-limit-factor'),
+                ('scheduler', 'yarn.scheduler.capacity.maximum-am-resource-percent'),
+                ('scheduler', 'yarn.scheduler.capacity.node-locality-delay'),
+                ('scheduler', 'yarn.scheduler.capacity.resource-calculator'),
+                ('queues', 'capacity'),
+                ('queues', 'max-cap'),
+                ('queues', 'max-tpu')
+                ],
+            'mapred-queue-acls': [
+                ('queues', 'admins'),
+                ('queues', 'users')
+                ]
+            }
+        }
+
     @classmethod
     def from_dir(cls, directory):
         filename = directory + '/hadmin.yaml'
@@ -394,7 +435,7 @@ class Internal:
     def get_config(self, key):
         out = Config()
         mapper = Mapper(field_sep=hadmin.mapping.field_sep,
-                        rep=hadmin.mapping.rep, mapping=hadmin.mapping.fwd)
+                        rep=hadmin.mapping.rep, mapping=hadmin.mapping.mapping)
         for own in hadmin.mapping.ownership[key]:
             if type(own) is tuple:
                 tmp = self.conf[own[0]]
