@@ -1,5 +1,5 @@
 import hadmin.config as hconfig
-import argparse.ArgumentParser as ArgumentParser
+from argparse import ArgumentParser
 
 
 def useradd(args):

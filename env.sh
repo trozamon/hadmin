@@ -1,4 +1,4 @@
 #!/bin/bash
 
-export PYTHONPATH=`pwd`:$PYTHONPATH
-export PATH=`pwd`/bin:$PATH
+export PYTHONPATH="`pwd`:$PYTHONPATH"
+export PATH="`pwd`/bin:$PATH"
