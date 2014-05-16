@@ -1,8 +1,7 @@
 import unittest
 import copy
 import re
-from hadmin.config import Config, Mapper, Internal
-import hadmin.mapping as mapping
+from hadmin.config import Config, Internal
 
 
 class ConfigTest(unittest.TestCase):
@@ -68,7 +67,6 @@ class ConfigTest(unittest.TestCase):
 \t<property>
 \t\t<name>key1</name>
 \t\t<value>foo</value>
-\t\t<final>false</final>
 \t</property>
 \t<property>
 \t\t<name>key2</name>
@@ -78,41 +76,10 @@ class ConfigTest(unittest.TestCase):
 \t<property>
 \t\t<name>key3</name>
 \t\t<value>sup</value>
-\t\t<final>false</final>
 \t</property>
 </configuration>"""
         self.conf.add(self.data)
         self.assertEqual(self.conf.to_xml(), ans)
-
-
-class MapperTest(unittest.TestCase):
-
-    def setUp(self):
-        self.mapper = Mapper('-', '.')
-        self.mapper['hey'] = 'yo.-.wazzup'
-
-    def tearDown(self):
-        self.mapper = None
-
-    def test_map_empty(self):
-        with self.assertRaises(KeyError):
-            self.mapper['test']
-
-    def test_map_forward(self):
-        self.assertEqual(self.mapper['hey'], 'yo.-.wazzup')
-
-    def test_map_reverse(self):
-        self.assertEqual(self.mapper['yo.-.wazzup'], 'hey')
-
-    def test_map_subs_forward(self):
-        self.assertEqual(self.mapper['hey', 'alec'], 'yo.alec.wazzup')
-
-    def test_map_subs_reverse(self):
-        self.assertEqual(self.mapper['yo.alec.wazzup'], ('alec', 'hey'))
-
-    def test_find_bare_key(self):
-        self.assertEqual(self.mapper.find_bare_key('yo.alec.wazzup'),
-                         'yo.-.wazzup')
 
 
 class InternalTest(unittest.TestCase):
@@ -122,28 +89,21 @@ class InternalTest(unittest.TestCase):
             'queues': {
                 'tester': {
                     'admins': 'bossman',
-                    'capacity': 50,
-                    'max-cap': 60,
-                    'max-tpu': 1000,
-                    'users': 'trozamon,bossman'
+                    'cap': '50',
+                    'max-cap': '60',
+                    'users': 'bossman,trozamon'
                     },
                 'default': {
                     'admins': 'trozamon',
-                    'capacity': 5,
-                    'max-cap': 10,
-                    'max-tpu': 100000,
-                    'users': 'trozamon,root'
+                    'cap': '5',
+                    'max-cap': '10',
+                    'users': 'root,trozamon'
                     }
                 },
-            'max-sys-jobs': '100',
-            'supports-priority': 'true',
-            'min-user-lim-perc': '25',
-            'user-lim-factor': '10',
-            'max-tpq': '200000',
-            'max-tpu': '100000',
-            'accept-jobs-factor': '10',
-            'poll-interval': '5000',
-            'worker-threads': '5'
+            'scheduler': {
+                'max-jobs': '100',
+                'user-limit-factor': '10'
+                }
             }
         self.mgr = Internal(self.data)
 
@@ -151,72 +111,132 @@ class InternalTest(unittest.TestCase):
         self.mgr = None
         self.data = None
 
-    def xtest_queue_list(self):
-        self.assertTrue(self.mgr.queue_list() == "default,tester")
+    def test_queue_list(self):
+        self.assertEqual(self.mgr.queue_list(), ['default', 'tester'])
 
-    def xtest_add_admin(self):
+    def test_queue_list_str(self):
+        self.assertEqual(self.mgr.queue_list_str(), "default,tester")
+
+    def test_add_admin(self):
         self.mgr.add_admin('fluffy', 'default')
-        self.assertTrue(self.mgr.conf['queues']['default']['admins'] ==
+        self.assertEqual(self.mgr.conf['queues']['default']['admins'],
                         'fluffy,trozamon')
 
-    def xtest_add_queue(self):
+    def test_add_queue(self):
         self.mgr.add_queue('test', 'trozamon')
-        self.assertTrue(self.mgr.conf['queues']['test']['admins'] ==
-                        'trozamon')
-        self.assertTrue(self.mgr.conf['queues']['test']['users'] == 'trozamon')
-        self.assertTrue(self.mgr.conf['queues']['test']['capacity'] == 0)
-        self.assertTrue(self.mgr.conf['queues']['test']['max-cap'] == 0)
-        self.assertTrue(self.mgr.conf['queues']['test']['max-tpu'] == 0)
+        self.assertEqual(self.mgr.conf['queues']['test']['admins'], 'trozamon')
+        self.assertEqual(self.mgr.conf['queues']['test']['users'], 'trozamon')
+        self.assertEqual(self.mgr.conf['queues']['test']['cap'], 0)
+        self.assertEqual(self.mgr.conf['queues']['test']['max-cap'], 0)
+        self.assertEqual(self.mgr.conf['queues']['test']['max-tpu'], 0)
 
-    def xtest_add_user(self):
+    def test_add_user(self):
         self.mgr.add_user('fluffy', 'default')
-        self.assertTrue(self.mgr.conf['queues']['default']['users'] ==
+        self.assertEqual(self.mgr.conf['queues']['default']['users'],
                         'fluffy,root,trozamon')
 
-    def xtest_add_user_with(self):
+    def test_add_user_with(self):
         with Internal(self.data) as mgr:
             mgr.add_user('fluffy', 'default')
-            self.assertTrue(mgr.conf['queues']['default']['users'] ==
+            self.assertEqual(mgr.conf['queues']['default']['users'],
                             'fluffy,root,trozamon')
 
-    def xtest_check_queue(self):
+    def test_check_queue(self):
         self.mgr.check_queue('default')
         with self.assertRaises(KeyError):
             self.mgr.check_queue('test')
 
-    def xtest_del_admin(self):
+    def test_del_admin(self):
         self.mgr.add_admin('fluffy', 'default')
         self.mgr.del_admin('trozamon', 'default')
-        self.assertTrue(self.mgr.conf['queues']['default']['admins'] ==
-                        'fluffy')
+        self.assertEqual(self.mgr.conf['queues']['default']['admins'],
+                'fluffy')
 
-    def xtest_del_queue(self):
+    def test_del_queue(self):
         self.mgr.del_queue('default')
         with self.assertRaises(KeyError):
             self.mgr.conf['queues']['default']
 
-    def xtest_del_user(self):
+    def test_del_user(self):
         self.mgr.del_user('trozamon', 'default')
         self.assertEqual(self.mgr.conf['queues']['default']['users'], 'root')
 
-    def xtest_set_queue_cap(self):
+    def test_set_queue_cap(self):
         self.mgr.set_queue_cap('default', 10)
-        self.assertTrue(self.mgr.conf['queues']['default']['capacity'] == 10)
+        self.assertEqual(self.mgr.conf['queues']['default']['cap'], 10)
 
-    def xtest_set_queue_max_cap(self):
+    def test_set_queue_max_cap(self):
         self.mgr.set_queue_max_cap('default', 10)
-        self.assertTrue(self.mgr.conf['queues']['default']['max-cap'] == 10)
+        self.assertEqual(self.mgr.conf['queues']['default']['max-cap'], 10)
 
-    def xtest_set_queue_max_init_tpu(self):
+    def test_set_queue_max_init_tpu(self):
         self.mgr.set_queue_max_init_tpu('default', 10)
-        self.assertTrue(self.mgr.conf['queues']['default']['max-tpu'] == 10)
+        self.assertEqual(self.mgr.conf['queues']['default']['max-tpu'], 10)
 
-    def xtest_get_config_queues(self):
-        conf = self.mgr.get_config('mapred-queue-acls')
-        key = re.sub(mapping.rep, 'default', mapping.fwd['users'])
-        self.assertTrue('trozamon,root' == conf[key])
+    def test_get_data_queues_v1(self):
+        conf = self.mgr.get_data('queues', 1)
+        self.assertEqual(conf['queues']['tester']['admins'], 'bossman')
+        self.assertEqual(conf['queues']['tester']['users'], 'bossman,trozamon')
+        self.assertEqual(conf['queues']['default']['admins'], 'trozamon')
+        self.assertEqual(conf['queues']['default']['users'], 'root,trozamon')
 
-    def xtest_get_config_scheduler(self):
-        conf = self.mgr.get_config('capacity-scheduler')
-        key = mapping.fwd[mapping.ownership['capacity-scheduler'][0]]
-        self.assertTrue(conf[key] == "100")
+    def test_get_config_queues_v1(self):
+        conf = self.mgr.get_config('queues', 1)
+        self.assertEqual(conf['mapred.queue.tester.acl-submit-job'],
+                'bossman,trozamon')
+        self.assertEqual(conf['mapred.queue.tester.acl-administer-jobs'],
+                'bossman')
+        self.assertEqual(conf['mapred.queue.default.acl-submit-job'],
+                'root,trozamon')
+        self.assertEqual(conf['mapred.queue.default.acl-administer-jobs'],
+                'trozamon')
+
+    def test_get_data_queues_v2(self):
+        conf = self.mgr.get_data('queues', 2)
+        self.assertEqual(conf['queues']['tester']['admins'], 'bossman')
+        self.assertEqual(conf['queues']['tester']['users'], 'bossman,trozamon')
+        self.assertEqual(conf['queues']['default']['admins'], 'trozamon')
+        self.assertEqual(conf['queues']['default']['users'], 'root,trozamon')
+
+    def test_get_config_queues_v2(self):
+        conf = self.mgr.get_config('queues', 2)
+        self.assertEqual(conf['yarn.scheduler.capacity.root.tester.acl_submit_applications'],
+                'bossman,trozamon')
+        self.assertEqual(conf['yarn.scheduler.capacity.root.tester.acl_administer_queue'],
+                'bossman')
+        self.assertEqual(conf['yarn.scheduler.capacity.root.default.acl_submit_applications'],
+                'root,trozamon')
+        self.assertEqual(conf['yarn.scheduler.capacity.root.default.acl_administer_queue'],
+                'trozamon')
+
+    def test_get_data_scheduler_v1(self):
+        conf = self.mgr.get_data('scheduler', 1)
+        self.assertEqual(conf['queues']['tester']['cap'], '50')
+        self.assertEqual(conf['queues']['tester']['max-cap'], '60')
+        self.assertEqual(conf['queues']['default']['cap'], '5')
+        self.assertEqual(conf['queues']['default']['max-cap'], '10')
+        self.assertEqual(conf['scheduler']['max-jobs'], '100')
+        self.assertEqual(conf['scheduler']['user-limit-factor'], '10')
+
+    def test_get_config_scheduler_v1(self):
+        conf = self.mgr.get_config('scheduler', 1)
+        self.assertEqual(conf['mapred.capacity-scheduler.maximum-system-jobs'],
+                '100')
+        self.assertEqual(conf['mapred.capacity-scheduler.queue.tester.capacity'],
+                '50')
+
+    def test_get_data_scheduler_v2(self):
+        conf = self.mgr.get_data('scheduler', 2)
+        self.assertEqual(conf['queues']['tester']['cap'], '50')
+        self.assertEqual(conf['queues']['tester']['max-cap'], '60')
+        self.assertEqual(conf['queues']['default']['cap'], '5')
+        self.assertEqual(conf['queues']['default']['max-cap'], '10')
+        self.assertEqual(conf['scheduler']['max-jobs'], '100')
+        self.assertEqual(conf['scheduler']['user-limit-factor'], '10')
+
+    def test_get_config_scheduler_v2(self):
+        conf = self.mgr.get_config('scheduler', 2)
+        self.assertEqual(conf['yarn.scheduler.capacity.maximum-applications'],
+                '100')
+        self.assertEqual(conf['yarn.scheduler.capacity.root.tester.capacity'],
+                '50')

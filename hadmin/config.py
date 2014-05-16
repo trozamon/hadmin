@@ -99,8 +99,8 @@ class Config:
             out.append("\t<property>")
             out.append("\t\t<name>" + key + "</name>")
             out.append("\t\t<value>" + self[key, Config.val_tag] + "</value>")
-            fnl = str(self[key, Config.fnl_tag]).lower()
-            out.append("\t\t<final>" + fnl + "</final>")
+            if self[key, Config.fnl_tag]:
+                out.append("\t\t<final>true</final>")
             out.append("\t</property>")
         out.append("</configuration>")
         return '\n'.join(out)
@@ -168,44 +168,6 @@ class Config:
     subtags = (val_tag, fnl_tag)
 
 
-class Mapper:
-
-    def __init__(self, rep, field_sep, mapping=dict()):
-        self.rep = rep
-        self.field_sep = field_sep
-        self.mapping = dict()
-        for key in mapping:
-            self.mapping[key] = hadmin.mapping.fwd[key]
-
-    def __setitem__(self, key, value):
-        self.mapping[key] = value
-        self.mapping[value] = key
-
-    def __getitem__(self, key):
-        ret = None
-        if type(key) is tuple:
-            match = re.sub(self.rep, key[1], self.mapping[key[0]])
-            if not match:
-                raise KeyError('Improperly mapped')
-            ret = str(match)
-        else:
-            key_fixed = self.find_bare_key(key)
-            if key_fixed == key:
-                ret = self.mapping[key]
-            else:
-                ret = (key.split(self.field_sep)[-2], self.mapping[key_fixed])
-        return ret
-
-    def find_bare_key(self, key):
-        if key in self.mapping.keys():
-            return key
-        key_split = key.split(self.field_sep)
-        if len(key_split) > 2:
-            key_split[-2] = self.rep
-        key_fixed = self.field_sep.join(key_split)
-        return key_fixed
-
-
 class Manager(dict):
     """ Initializes and manages all the config files. """
 
@@ -225,21 +187,16 @@ class Manager(dict):
         return mgr
 
     @classmethod
-    def from_yaml(cls, directory):
+    def from_yaml(cls, directory, ver):
         """ Creates all the config files. Adds queue and user info to
         capacity-scheduler.xml, mapred-queue-acls.xml, and mapred-site.xml. """
 
         mgr = cls()
 
-        mgr['core-site'] = Config.from_yaml(directory + "/core-site.yaml")
-        mgr['hadoop-policy'] = Config.from_yaml(directory +
-                                                "/hadoop-policy.yaml")
-        mgr['hdfs-site'] = Config.from_yaml(directory + "/hdfs-site.yaml")
-        mgr['mapred-site'] = Config.from_yaml(directory + "/mapred-site.yaml")
         with Internal.from_dir(directory) as thing:
-            mgr['capacity-scheduler'] = thing.get_config('capacity-scheduler')
-            mgr['mapred-queue-acls'] = thing.get_config('mapred-queue-acls')
-            mgr['mapred-site']['mapred.queue.names'] = thing.queue_list()
+            mgr['capacity-scheduler'] = thing.get_config('capacity-scheduler', ver)
+            mgr['mapred-queue-acls'] = thing.get_config('mapred-queue-acls', ver)
+            mgr['mapred-queue-acls']['mapred.queue.names'] = thing.queue_list()
 
         return mgr
 
@@ -292,7 +249,7 @@ class Internal:
 
     _ownership = {
         1: {
-            'capacity-scheduler': [
+            'scheduler': [
                 ('scheduler', 'mapred.capacity-scheduler.default-init-accept-jobs-factor'),
                 ('scheduler', 'mapred.capacity-scheduler.default-minimum-user-limit-percent'),
                 ('scheduler', 'mapred.capacity-scheduler.default-supports-priority'),
@@ -302,17 +259,17 @@ class Internal:
                 ('scheduler', 'max-tpq'),
                 ('scheduler', 'max-tpu'),
                 ('scheduler', 'user-limit-factor'),
-                ('queues', 'capacity'),
+                ('queues', 'cap'),
                 ('queues', 'max-cap'),
                 ('queues', 'max-tpu')
                 ],
-            'mapred-queue-acls': [
+            'queues': [
                 ('queues', 'admins'),
                 ('queues', 'users')
                 ]
             },
         2: {
-            'capacity-scheduler': [
+            'scheduler': [
                 ('scheduler', 'max-jobs'),
                 ('scheduler', 'max-tpq'),
                 ('scheduler', 'max-tpu'),
@@ -320,11 +277,11 @@ class Internal:
                 ('scheduler', 'yarn.scheduler.capacity.maximum-am-resource-percent'),
                 ('scheduler', 'yarn.scheduler.capacity.node-locality-delay'),
                 ('scheduler', 'yarn.scheduler.capacity.resource-calculator'),
-                ('queues', 'capacity'),
+                ('queues', 'cap'),
                 ('queues', 'max-cap'),
                 ('queues', 'max-tpu')
                 ],
-            'mapred-queue-acls': [
+            'queues': [
                 ('queues', 'admins'),
                 ('queues', 'users')
                 ]
@@ -342,7 +299,6 @@ class Internal:
 
     def __init__(self, data):
         self.conf = copy.deepcopy(data)
-        self.queues = self.conf['queues']
         self.filename = ''
 
     def __enter__(self):
@@ -356,95 +312,172 @@ class Internal:
 
     def check_queue(self, queue):
         """ Checks that a queue exists """
-        if queue not in self.queues.keys():
+        if queue not in self.conf['queues'].keys():
             raise KeyError('Queue ' + queue + ' does not exist')
-
-    def add_user_or_admin(self, ident, user, queue):
-        """ Adds a user/admin to a queue """
-        if ident not in ('users', 'admins'):
-            raise ValueError('ident ' + ident + ' incorrect')
-        self.check_queue(queue)
-        arr = self.queues[queue][ident].split(',')
-        if user in arr:
-            raise KeyError(ident[0:-1].capitalize() + ' ' + user +
-                           ' is already in queue ' + queue)
-
-        arr.append(user)
-        self.queues[queue][ident] = ','.join(sorted(arr))
 
     def add_user(self, user, queue):
-        self.add_user_or_admin('users', user, queue)
+        self.__add(('queues', 'users'), user, queue)
 
     def add_admin(self, admin, queue):
-        self.add_user_or_admin('admins', admin, queue)
-
-    def del_user_or_admin(self, ident, user, queue):
-        """ Deletes a user from a queue """
-        if ident not in ('users', 'admins'):
-            raise ValueError('ident ' + ident + ' incorrect')
-        self.check_queue(queue)
-        try:
-            arr = self.queues[queue][ident].split(',')
-            if len(arr) < 2:
-                raise AttributeError('Cannot delete the last ' +
-                                     ident[0:-1] + ' of a queue')
-            del(arr[arr.index(user)])
-            self.queues[queue][ident] = ','.join(sorted(arr))
-        except ValueError:
-            raise ValueError(ident[0:-1].capitalize() + ' ' + user +
-                             ' is not in queue ' + queue)
+        self.__add(('queues', 'admins'), admin, queue)
 
     def del_user(self, user, queue):
-        self.del_user_or_admin('users', user, queue)
+        self.__remove(('queues', 'users'), user, queue)
 
-    def del_admin(self, user, queue):
-        self.del_user_or_admin('admins', user, queue)
+    def del_admin(self, admin, queue):
+        self.__remove(('queues', 'admins'), admin, queue)
 
     def add_queue(self, queue, user):
-        if queue in self.queues.keys():
+        if queue in self.conf['queues'].keys():
             raise KeyError('Queue ' + queue + ' already exists')
 
-        self.queues[queue] = dict()
-        self.queues[queue]['users'] = user
-        self.queues[queue]['admins'] = user
-        self.queues[queue]['capacity'] = 0
-        self.queues[queue]['max-cap'] = 0
-        self.queues[queue]['max-tpu'] = 0
+        self.conf['queues'][queue] = dict()
+        self.__set(('queues', 'users'), user, queue)
+        self.__set(('queues', 'admins'), user, queue)
+        self.__set(('queues', 'cap'), 0, queue)
+        self.__set(('queues', 'max-cap'), 0, queue)
+        self.__set(('queues', 'max-tpu'), 0, queue)
 
     def del_queue(self, queue):
-        if queue not in self.queues.keys():
+        if queue not in self.conf['queues'].keys():
             raise KeyError('Queue ' + queue + ' does not exist')
 
-        del(self.queues[queue])
+        del(self.conf['queues'][queue])
 
     def set_queue_cap(self, queue, cap):
         self.check_queue(queue)
         tmp = int(cap)
-        self.queues[queue]['capacity'] = tmp
+        self.__set(('queues', 'cap'), tmp, queue)
 
     def set_queue_max_cap(self, queue, max_cap):
         self.check_queue(queue)
         tmp = int(max_cap)
-        self.queues[queue]['max-cap'] = tmp
+        self.__set(('queues', 'max-cap'), tmp, queue)
 
     def set_queue_max_init_tpu(self, queue, max_init_tpu):
         self.check_queue(queue)
         tmp = int(max_init_tpu)
-        self.queues[queue]['max-tpu'] = tmp
+        self.__set(('queues', 'max-tpu'), tmp, queue)
 
-    def get_config(self, key):
+    def get_config(self, key, ver):
         out = Config()
-        mapper = Mapper(field_sep=hadmin.mapping.field_sep,
-                        rep=hadmin.mapping.rep, mapping=hadmin.mapping.mapping)
-        for own in hadmin.mapping.ownership[key]:
-            if type(own) is tuple:
-                tmp = self.conf[own[0]]
-                for queue in tmp:
-                    key = re.sub(mapper.rep, queue, mapper[own[1]])
-                    out[key] = tmp[queue][own[1]]
-            elif own in self.conf.keys():
-                out[mapper[own]] = self.conf[own]
+        conf = self.get_data(key, ver)
+        mapper = hadmin.mapping.HadoopMapper()
+        for owner in conf:
+            if owner == 'queues':
+                for queue in conf[owner]:
+                    for tmp in conf[owner][queue]:
+                        final_key = re.sub(hadmin.mapping.HadoopMapper.rep,
+                                           queue,
+                                           mapper[tmp, ver, key])
+                        out[final_key] = conf[owner][queue][tmp]
+            else:
+                for tmp in conf[owner]:
+                    final_key = mapper[tmp, ver, key]
+                    out[final_key] = conf[owner][tmp]
+
+        return out
+
+    def get_data(self, key, ver):
+        out = dict()
+
+        out['queues'] = dict()
+        for queue in self.queue_list():
+            out['queues'][queue] = dict()
+
+        if key == 'scheduler':
+            out['scheduler'] = dict()
+
+        for key in Internal._ownership[ver][key]:
+            if key[0] == 'queues':
+                for queue in self.conf['queues']:
+                    try:
+                        out['queues'][queue][key[1]] = \
+                                self.conf['queues'][queue][key[1]]
+                    except KeyError:
+                        pass
+            else:
+                try:
+                    out[key[0]][key[1]] = self.conf[key[0]][key[1]]
+                except KeyError:
+                    pass
+
         return out
 
     def queue_list(self):
-        return ','.join(sorted(self.conf['queues'].keys()))
+        return sorted(self.conf['queues'].keys())
+
+    def queue_list_str(self):
+        return ','.join(self.queue_list())
+
+    def __add(self, args, value, queue=None):
+        """ Appends a value to something in the config """
+
+        owner = args[0]
+        key = args[1]
+
+        if owner == 'queues' and queue is None:
+            raise KeyError("You can't specify a queue operation and not tell \
+                    me which queue")
+
+        tmp = None
+        if queue is not None:
+            tmp = self.conf[owner][queue][key].split(',')
+        else:
+            tmp = self.conf[owner][key].split(',')
+
+        if value in tmp:
+            raise ValueError(value + ' is already in ' + key)
+        tmp.append(value)
+        tmp = ','.join(sorted(tmp))
+
+        if queue is not None:
+            self.conf[owner][queue][key] = tmp
+        else:
+            self.conf[owner][key] = tmp
+
+    def __remove(self, args, value, queue=None):
+        """ Removes a value from something in the config """
+
+        owner = args[0]
+        key = args[1]
+
+        if owner == 'queues' and queue is None:
+            raise KeyError("You can't specify a queue operation and not tell \
+                    me which queue")
+
+        tmp = None
+        if queue is not None:
+            tmp = self.conf[owner][queue][key].split(',')
+        else:
+            tmp = self.conf[owner][key].split(',')
+
+        if len(tmp) == 1:
+            raise ValueError('You cannot attempt to delete the last ' + key + \
+                    ' in a list')
+
+        for i in range(0, len(tmp)):
+            if tmp[i] == value:
+                del(tmp[i])
+
+        tmp = ','.join(sorted(tmp))
+
+        if queue is not None:
+            self.conf[owner][queue][key] = tmp
+        else:
+            self.conf[owner][key] = tmp
+
+    def __set(self, args, value, queue=None):
+        """ Appends a value to something in the config """
+
+        owner = args[0]
+        key = args[1]
+
+        if owner == 'queues' and queue is None:
+            raise KeyError("You can't specify a queue operation and not tell \
+                    me which queue")
+
+        if queue is not None:
+            self.conf[owner][queue][key] = value
+        else:
+            self.conf[owner][key] = value
