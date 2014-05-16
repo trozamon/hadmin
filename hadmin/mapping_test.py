@@ -151,3 +151,7 @@ class HadoopMapperTest(unittest.TestCase):
     def test_version_not_supported(self):
         with self.assertRaises(KeyError):
             self.mapper['max-cap', 3]
+
+# TODO Add all valid keys, so that doing a full key just returns itself
+# This has the added benefit of making validation easy - if all supported
+# keys are in HAdmin and a key isn't found, there's an error
