@@ -1,6 +1,7 @@
 import unittest
 import copy
-from hadmin.config import *
+import re
+from hadmin.config import Config, Mapper, Internal
 import hadmin.mapping as mapping
 
 
@@ -61,6 +62,27 @@ class ConfigTest(unittest.TestCase):
         self.assertTrue(self.conf['test1', Config.fnl_tag])
         self.conf['test1', Config.fnl_tag] = False
         self.assertFalse(self.conf['test1', Config.fnl_tag])
+
+    def test_to_xml(self):
+        ans = """<configuration>
+\t<property>
+\t\t<name>key1</name>
+\t\t<value>foo</value>
+\t\t<final>false</final>
+\t</property>
+\t<property>
+\t\t<name>key2</name>
+\t\t<value>hey</value>
+\t\t<final>true</final>
+\t</property>
+\t<property>
+\t\t<name>key3</name>
+\t\t<value>sup</value>
+\t\t<final>false</final>
+\t</property>
+</configuration>"""
+        self.conf.add(self.data)
+        self.assertEqual(self.conf.to_xml(), ans)
 
 
 class MapperTest(unittest.TestCase):
