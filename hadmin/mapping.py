@@ -67,11 +67,11 @@ class HadoopMapper:
                     },
 
                 'admins': {
-                    'queues': 'yarn.scheduler.capacity.root.' + rep + '.acl_administer_queue'
+                    'scheduler': 'yarn.scheduler.capacity.root.' + rep + '.acl_administer_queue'
                     },
 
                 'users': {
-                    'queues': 'yarn.scheduler.capacity.root.' + rep + '.acl_submit_applications'
+                    'scheduler': 'yarn.scheduler.capacity.root.' + rep + '.acl_submit_applications'
                     },
 
                 'cap': {

@@ -193,21 +193,10 @@ class InternalTest(unittest.TestCase):
 
     def test_get_data_queues_v2(self):
         conf = self.mgr.get_data('queues', 2)
-        self.assertEqual(conf['queues']['tester']['admins'], 'bossman')
-        self.assertEqual(conf['queues']['tester']['users'], 'bossman,trozamon')
-        self.assertEqual(conf['queues']['default']['admins'], 'trozamon')
-        self.assertEqual(conf['queues']['default']['users'], 'root,trozamon')
+        self.assertEqual(len(conf), 1)
 
     def test_get_config_queues_v2(self):
         conf = self.mgr.get_config('queues', 2)
-        self.assertEqual(conf['yarn.scheduler.capacity.root.tester.acl_submit_applications'],
-                'bossman,trozamon')
-        self.assertEqual(conf['yarn.scheduler.capacity.root.tester.acl_administer_queue'],
-                'bossman')
-        self.assertEqual(conf['yarn.scheduler.capacity.root.default.acl_submit_applications'],
-                'root,trozamon')
-        self.assertEqual(conf['yarn.scheduler.capacity.root.default.acl_administer_queue'],
-                'trozamon')
 
     def test_get_data_scheduler_v1(self):
         conf = self.mgr.get_data('scheduler', 1)
@@ -231,6 +220,10 @@ class InternalTest(unittest.TestCase):
         self.assertEqual(conf['queues']['tester']['max-cap'], '60')
         self.assertEqual(conf['queues']['default']['cap'], '5')
         self.assertEqual(conf['queues']['default']['max-cap'], '10')
+        self.assertEqual(conf['queues']['tester']['admins'], 'bossman')
+        self.assertEqual(conf['queues']['tester']['users'], 'bossman,trozamon')
+        self.assertEqual(conf['queues']['default']['admins'], 'trozamon')
+        self.assertEqual(conf['queues']['default']['users'], 'root,trozamon')
         self.assertEqual(conf['scheduler']['max-jobs'], '100')
         self.assertEqual(conf['scheduler']['user-limit-factor'], '10')
 
@@ -240,3 +233,11 @@ class InternalTest(unittest.TestCase):
                 '100')
         self.assertEqual(conf['yarn.scheduler.capacity.root.tester.capacity'],
                 '50')
+        self.assertEqual(conf['yarn.scheduler.capacity.root.tester.acl_submit_applications'],
+                'bossman,trozamon')
+        self.assertEqual(conf['yarn.scheduler.capacity.root.tester.acl_administer_queue'],
+                'bossman')
+        self.assertEqual(conf['yarn.scheduler.capacity.root.default.acl_submit_applications'],
+                'root,trozamon')
+        self.assertEqual(conf['yarn.scheduler.capacity.root.default.acl_administer_queue'],
+                'trozamon')

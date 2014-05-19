@@ -183,10 +183,12 @@ class Manager(dict):
 
         with Internal.from_dir(directory) as thing:
             mgr['capacity-scheduler'] = thing.get_config('scheduler', ver)
-            mgr['mapred-queue-acls'] = thing.get_config('queues', ver)
-            mgr['mapred-queue-acls']['mapred.queue.names'] = \
-                    thing.queue_list_str()
-
+            if ver == 1:
+                mgr['mapred-queue-acls'] = thing.get_config('queues', ver)
+                mgr['mapred-queue-acls']['mapred.queue.names'] = \
+                        thing.queue_list_str()
+            elif ver == 2:
+                mgr['mapred-queues'] = thing.get_config('queues', ver)
         return mgr
 
     def generate(self, directory):
@@ -242,12 +244,10 @@ class Internal:
                 ('scheduler', 'yarn.scheduler.capacity.resource-calculator'),
                 ('queues', 'cap'),
                 ('queues', 'max-cap'),
-                ('queues', 'max-tpu')
-                ],
-            'queues': [
                 ('queues', 'admins'),
                 ('queues', 'users')
-                ]
+                ],
+            'queues': []
             }
         }
 

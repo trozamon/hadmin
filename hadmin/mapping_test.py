@@ -94,7 +94,7 @@ class HadoopMapperTest(unittest.TestCase):
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.acl_administer_queue')
 
     def test_admins_v2_with_owner(self):
-        self.assertEqual(self.mapper['admins', 2, 'queues'],
+        self.assertEqual(self.mapper['admins', 2, 'scheduler'],
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.acl_administer_queue')
 
     def test_users_v1(self):
@@ -110,7 +110,7 @@ class HadoopMapperTest(unittest.TestCase):
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.acl_submit_applications')
 
     def test_users_v2_with_owner(self):
-        self.assertEqual(self.mapper['users', 2, 'queues'],
+        self.assertEqual(self.mapper['users', 2, 'scheduler'],
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.acl_submit_applications')
 
     def test_cap_v1(self):
