@@ -10,9 +10,10 @@ purposes:
 * Provide command-line tools to update Hadoop config
 * Provide a Python API to update Hadoop config
 
-Current Hadoop versions supported are:
+Current Hadoop versions (hopefully) supported are:
 
-* 1.1.x
+* 1.x
+* 2.x
 
 Current operations supported are:
 
@@ -29,13 +30,11 @@ also stores all the config in YAML because it's a little easier to read
 and not nearly as annoying as XML. So, you need to be in whatever directory
 you want all this YAML to be stored in.
 
-To generate the initial YAML configuration from existing Hadoop XML
-configuration, run
+To generate initial YAML template, run
 
-    hadmin init <directory>
+    hadmin init
 
-This will dump a bunch of YAML into the current directory that Hadmin will
-modify and use to generate Hadoop XML.
+in the directory that you'd like to keep your configuration in.
 
 ## Generating Hadoop configuration
 Generating Hadoop configuration can be accomplished by running
@@ -43,7 +42,9 @@ Generating Hadoop configuration can be accomplished by running
     hadoop generate <directory>
 
 This command will generate Hadoop XML and throw it in the directory
-specified on the command line.
+specified on the command line. It takes a --version flag to specify
+the version of Hadoop that the config should be generated for. The version
+defaults to 2.
 
 ## Queues
 A queue can be added by running
