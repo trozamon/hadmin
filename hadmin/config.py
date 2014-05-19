@@ -91,6 +91,9 @@ class Config:
             except KeyError:
                 data[key][Config.fnl_tag] = False
 
+    def keys(self):
+        return self.conf.keys()
+
     def to_xml(self):
         """ Return an XML representation of this Config. """
 
@@ -172,21 +175,6 @@ class Manager(dict):
     """ Initializes and manages all the config files. """
 
     @classmethod
-    def from_xml(cls, directory):
-
-        mgr = cls()
-        mgr['capacity-scheduler'] = \
-            Config.from_xml(directory + '/capacity-scheduler.xml')
-        mgr['core-site'] = Config.from_xml(directory + "/core-site.xml")
-        mgr['hadoop-policy'] = \
-            Config.from_xml(directory + "/hadoop-policy.xml")
-        mgr['hdfs-site'] = Config.from_xml(directory + "/hdfs-site.xml")
-        mgr['mapred-site'] = Config.from_xml(directory + "/mapred-site.xml")
-        mgr['mapred-queue-acls'] = \
-            Config.from_xml(directory + "/mapred-queue-acls.xml")
-        return mgr
-
-    @classmethod
     def from_yaml(cls, directory, ver):
         """ Creates all the config files. Adds queue and user info to
         capacity-scheduler.xml, mapred-queue-acls.xml, and mapred-site.xml. """
@@ -194,9 +182,10 @@ class Manager(dict):
         mgr = cls()
 
         with Internal.from_dir(directory) as thing:
-            mgr['capacity-scheduler'] = thing.get_config('capacity-scheduler', ver)
-            mgr['mapred-queue-acls'] = thing.get_config('mapred-queue-acls', ver)
-            mgr['mapred-queue-acls']['mapred.queue.names'] = thing.queue_list()
+            mgr['capacity-scheduler'] = thing.get_config('scheduler', ver)
+            mgr['mapred-queue-acls'] = thing.get_config('queues', ver)
+            mgr['mapred-queue-acls']['mapred.queue.names'] = \
+                    thing.queue_list_str()
 
         return mgr
 
@@ -209,34 +198,8 @@ class Manager(dict):
             os.mkdir(directory)
 
         for filename in self:
-            f = open(directory + '/' + filename + '.xml', 'w')
-            f.write(self[filename].to_xml())
-            f.close()
-
-    def save(self, directory):
-        """ Save as HAdmin YAML """
-        hadmin_file = dict()
-        self['capacity-scheduler'].gen_queue_list()
-        for queue in self['capacity-scheduler'].queue_list:
-            hadmin_file[queue] = dict()
-
-        for filename in self:
-            write = True
-            out = ''
-            if filename == 'capacity-scheduler':
-                out = self[filename].to_yaml(hadmin_file)
-            elif filename == 'mapred-queue-acls':
-                self[filename].to_yaml(hadmin_file)
-                write = False
-            else:
-                out = self[filename].to_yaml()
-
-            if write:
-                with open(directory + '/' + filename + '.yaml', 'w') as f:
-                    f.write(out)
-
-        with open(directory + '/hadmin.yaml', 'w') as f:
-            f.write(dump(hadmin_file, default_flow_style=False, Dumper=Dumper))
+            with open(directory + '/' + filename + '.xml', 'w') as f:
+                f.write(self[filename].to_xml())
 
 
 class Internal:
@@ -367,14 +330,20 @@ class Internal:
             if owner == 'queues':
                 for queue in conf[owner]:
                     for tmp in conf[owner][queue]:
-                        final_key = re.sub(hadmin.mapping.HadoopMapper.rep,
-                                           queue,
-                                           mapper[tmp, ver, key])
-                        out[final_key] = conf[owner][queue][tmp]
+                        try:
+                            final_key = re.sub(hadmin.mapping.HadoopMapper.rep,
+                                               queue,
+                                               mapper[tmp, ver, key])
+                            out[final_key] = conf[owner][queue][tmp]
+                        except KeyError:
+                            pass
             else:
                 for tmp in conf[owner]:
-                    final_key = mapper[tmp, ver, key]
-                    out[final_key] = conf[owner][tmp]
+                    try:
+                        final_key = mapper[tmp, ver, key]
+                        out[final_key] = conf[owner][tmp]
+                    except KeyError:
+                        pass
 
         return out
 

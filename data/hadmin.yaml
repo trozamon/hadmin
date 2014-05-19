@@ -1,18 +1,11 @@
 queues:
   default:
-    admins: trozamon
+    admins: root
     cap: 5
     max-cap: 10
     state: running
     max-tpu: 100000
-    users: trozamon,root
-  staff:
-    admins: trozamon,root
-    cap: 5
-    max-cap: 100
-    state: running
-    max-tpu: 100000
-    users: trozamon,root,bossman
+    users: root
 scheduler:
   mapred.capacity-scheduler.default-init-accept-jobs-factor: 10
   mapred.capacity-scheduler.default-minimum-user-limit-percent: 25
@@ -22,7 +15,7 @@ scheduler:
   max-jobs: 10000
   max-tpq: 200000
   max-tpu: 100000
-  user-limit-factor: 10 //Percentage, yarn 0 to 1, mapred 0 to 100
+  user-limit-factor: 10
   yarn.scheduler.capacity.maximum-am-resource-percent: 0.1
   yarn.scheduler.capacity.node-locality-delay: -1
   yarn.scheduler.capacity.resource-calculator: org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator

@@ -1,5 +1,7 @@
 import hadmin.config as hconfig
 from argparse import ArgumentParser
+import pkgutil
+import os
 
 
 def useradd(args):
@@ -17,14 +19,14 @@ def useradd(args):
                         const=True, default=False,
                         help='Add an administrator')
     args = parser.parse_args(args)
-    with hconfig.HadminManager('.') as mgr:
+    with hconfig.Internal.from_dir('.') as mgr:
         try:
             if args.is_admin:
                 mgr.add_admin(args.user, args.queue)
-                print("Added user " + args.user + " to queue " + args.queue)
+                print("Added admin " + args.user + " to queue " + args.queue)
             else:
                 mgr.add_user(args.user, args.queue)
-                print("Added admin " + args.user + " to queue " + args.queue)
+                print("Added user " + args.user + " to queue " + args.queue)
         except KeyError as e:
             print(str(e)[1:-1])
 
@@ -43,7 +45,7 @@ def userdel(args):
                         const=True, default=False,
                         help='Delete an administrator')
     args = parser.parse_args(args)
-    with hconfig.HadminManager('.') as mgr:
+    with hconfig.Internal.from_dir('.') as mgr:
         try:
             if args.is_admin:
                 mgr.del_admin(args.user, args.queue)
@@ -65,7 +67,7 @@ def queueadd(args):
     parser.add_argument('queue')
     parser.add_argument('user')
     args = parser.parse_args(args)
-    with hconfig.HadminManager('.') as mgr:
+    with hconfig.Internal.from_dir('.') as mgr:
         try:
             mgr.add_queue(args.queue, args.user)
             print('Added queue ' + args.queue +
@@ -79,7 +81,7 @@ def queuedel(args):
                             description='HAdmin queueadd utility')
     parser.add_argument('queue')
     args = parser.parse_args(args)
-    with hconfig.HadminManager('.') as mgr:
+    with hconfig.Internal.from_dir('.') as mgr:
         try:
             mgr.del_queue(args.queue)
             print('Removed queue ' + args.queue)
@@ -95,7 +97,7 @@ def queuemod(args):
     parser.add_argument('--maxcap', nargs=1, help='New maximum capacity')
     parser.add_argument('--tpu', nargs=1, help='New maximum tasks per user')
     args = parser.parse_args(args)
-    with hconfig.HadminManager('.') as mgr:
+    with hconfig.Internal.from_dir('.') as mgr:
         try:
             if args.capacity is not None:
                 tmp = args.capacity[0]
@@ -114,12 +116,12 @@ def queuemod(args):
 
 
 def init(args):
-    parser = ArgumentParser(prog='init',
-                            description='HAdmin initialization utility')
-    parser.add_argument('directory')
-    args = parser.parse_args(args)
-    mgr = hconfig.Manager.from_xml(args.directory)
-    mgr.save('.')
+    data = pkgutil.get_data('data', 'hadmin.yaml').decode('utf-8')
+    if 'hadmin.yaml' not in os.listdir('.'):
+        with open('./hadmin.yaml', 'w') as f:
+            f.write(data)
+    else:
+        print('You already have a \'hadmin.yaml\' in this directory')
 
 
 def gen(args):
@@ -129,6 +131,11 @@ def gen(args):
     Output directory for XML configuration. Please note that this directory
     doesn't need to be empty, but any existing files with the same names
     will be overwritten""")
+    parser.add_argument('--version', '-v',
+                            help='Specify a Hadoop version, default 2')
     args = parser.parse_args(args)
-    mgr = hconfig.Manager.from_yaml('.')
+    ver = 2
+    if args.version is not None:
+        ver = int(args.version)
+    mgr = hconfig.Manager.from_yaml('.', ver)
     mgr.generate(args.directory)

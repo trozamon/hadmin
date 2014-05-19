@@ -7,6 +7,8 @@ setup(
         name = "HAdmin",
         version = "0.1",
         packages = find_packages(),
+        package_dir = {'hadmin.cmd': 'data'},
+        package_data = {'hadmin.cmd': ['hadmin.yaml']},
         author = "Alec Ten Harmsel",
         author_email = "alec@alectenharmsel.com",
         description = "A Hadoop configuration generator",
