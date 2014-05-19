@@ -35,6 +35,26 @@ class HadoopMapper:
 
                 'max-cap': {
                     'scheduler': 'mapred.capacity-scheduler.queue.' + rep + '.maximum-capacity'
+                    },
+
+                'mapred.capacity-scheduler.default-init-accept-jobs-factor': {
+                    'scheduler': 'mapred.capacity-scheduler.default-init-accept-jobs-factor'
+                    },
+
+                'mapred.capacity-scheduler.default-minimum-user-limit-percent': {
+                    'scheduler': 'mapred.capacity-scheduler.default-minimum-user-limit-percent'
+                    },
+
+                'mapred.capacity-scheduler.default-supports-priority': {
+                    'scheduler': 'mapred.capacity-scheduler.default-supports-priority'
+                    },
+
+                'mapred.capacity-scheduler.init-poll-interval': {
+                    'scheduler': 'mapred.capacity-scheduler.init-poll-interval'
+                    },
+
+                'mapred.capacity-scheduler.init-worker-threads': {
+                    'scheduler': 'mapred.capacity-scheduler.init-worker-threads'
                     }
                 },
             2: {
@@ -60,6 +80,18 @@ class HadoopMapper:
 
                 'max-cap': {
                     'scheduler': 'yarn.scheduler.capacity.root.' + rep + '.maximum-capacity'
+                    },
+
+                'yarn.scheduler.capacity.maximum-am-resource-percent': {
+                    'scheduler': 'yarn.scheduler.capacity.maximum-am-resource-percent'
+                    },
+
+                'yarn.scheduler.capacity.node-locality-delay': {
+                    'scheduler': 'yarn.scheduler.capacity.node-locality-delay'
+                    },
+
+                'yarn.scheduler.capacity.resource-calculator': {
+                    'scheduler': 'yarn.scheduler.capacity.resource-calculator'
                     }
                 }
             }

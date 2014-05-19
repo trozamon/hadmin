@@ -152,6 +152,92 @@ class HadoopMapperTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             self.mapper['max-cap', 3]
 
-# TODO Add all valid keys, so that doing a full key just returns itself
-# This has the added benefit of making validation easy - if all supported
-# keys are in HAdmin and a key isn't found, there's an error
+    def test_default_init_accept_jobs_factor_v1(self):
+        self.assertEqual(
+            self.mapper['mapred.capacity-scheduler.default-init-accept-jobs-factor', 1],
+            'mapred.capacity-scheduler.default-init-accept-jobs-factor'
+            )
+
+    def test_default_init_accept_jobs_factor_v1_with_owner(self):
+        self.assertEqual(
+            self.mapper['mapred.capacity-scheduler.default-init-accept-jobs-factor', 1, 'scheduler'],
+            'mapred.capacity-scheduler.default-init-accept-jobs-factor'
+            )
+
+    def test_default_init_accept_jobs_factor_v1_wrong_owner(self):
+        with self.assertRaises(KeyError):
+            self.mapper['mapred.capacity-scheduler.default-init-accept-jobs-factor', 1, 'queues']
+
+    def test_default_init_accept_jobs_factor_v2(self):
+        with self.assertRaises(KeyError):
+            self.mapper['mapred.capacity-scheduler.default-init-accept-jobs-factor', 2]
+
+    def test_default_init_accept_jobs_factor_v2_with_owner(self):
+        with self.assertRaises(KeyError):
+            self.mapper['mapred.capacity-scheduler.default-init-accept-jobs-factor', 2, 'scheduler']
+
+    def test_default_minimum_user_limit_percent_v1(self):
+        self.assertEqual(
+                self.mapper['mapred.capacity-scheduler.default-minimum-user-limit-percent', 1],
+                'mapred.capacity-scheduler.default-minimum-user-limit-percent'
+                )
+
+    def test_default_minimum_user_limit_percent_v1_with_owner(self):
+        self.assertEqual(
+                self.mapper['mapred.capacity-scheduler.default-minimum-user-limit-percent', 1, 'scheduler'],
+                'mapred.capacity-scheduler.default-minimum-user-limit-percent'
+                )
+
+    def test_default_supports_priority_v1(self):
+        self.assertEqual(
+                self.mapper['mapred.capacity-scheduler.default-supports-priority', 1],
+                'mapred.capacity-scheduler.default-supports-priority'
+                )
+
+    def test_init_poll_interval_v1(self):
+        self.assertEqual(
+                self.mapper['mapred.capacity-scheduler.init-poll-interval', 1],
+                'mapred.capacity-scheduler.init-poll-interval'
+                )
+
+    def test_init_worker_threads(self):
+        self.assertEqual(
+                self.mapper['mapred.capacity-scheduler.init-worker-threads', 1],
+                'mapred.capacity-scheduler.init-worker-threads'
+                )
+
+    def test_maximum_am_resource_percent_v2(self):
+        self.assertEqual(
+                self.mapper['yarn.scheduler.capacity.maximum-am-resource-percent', 2],
+                'yarn.scheduler.capacity.maximum-am-resource-percent'
+                )
+
+    def test_maximum_am_resource_percent_v2_with_owner(self):
+        self.assertEqual(
+                self.mapper['yarn.scheduler.capacity.maximum-am-resource-percent', 2, 'scheduler'],
+                'yarn.scheduler.capacity.maximum-am-resource-percent'
+                )
+
+    def test_node_locality_delay_v2(self):
+        self.assertEqual(
+                self.mapper['yarn.scheduler.capacity.node-locality-delay', 2],
+                'yarn.scheduler.capacity.node-locality-delay'
+                )
+
+    def test_node_locality_delay_v2_with_owner(self):
+        self.assertEqual(
+                self.mapper['yarn.scheduler.capacity.node-locality-delay', 2, 'scheduler'],
+                'yarn.scheduler.capacity.node-locality-delay'
+                )
+
+    def test_resource_calculator_v2(self):
+        self.assertEqual(
+                self.mapper['yarn.scheduler.capacity.resource-calculator', 2],
+                'yarn.scheduler.capacity.resource-calculator'
+                )
+
+    def test_resource_calculator_v2_with_owner(self):
+        self.assertEqual(
+                self.mapper['yarn.scheduler.capacity.resource-calculator', 2, 'scheduler'],
+                'yarn.scheduler.capacity.resource-calculator'
+                )
