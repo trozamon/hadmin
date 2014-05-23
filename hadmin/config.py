@@ -216,7 +216,7 @@ class Internal:
         1: {
             'scheduler': [
                 ('scheduler', 'mapred.capacity-scheduler.default-init-accept-jobs-factor'),
-                ('scheduler', 'mapred.capacity-scheduler.default-minimum-user-limit-percent'),
+                ('scheduler', 'mapred.capacity-scheduler.default-user-limit-factor'),
                 ('scheduler', 'mapred.capacity-scheduler.default-supports-priority'),
                 ('scheduler', 'mapred.capacity-scheduler.init-poll-interval'),
                 ('scheduler', 'mapred.capacity-scheduler.init-worker-threads'),
@@ -236,15 +236,15 @@ class Internal:
         2: {
             'scheduler': [
                 ('scheduler', 'max-jobs'),
-                ('scheduler', 'user-limit-factor'),
                 ('scheduler', 'yarn.scheduler.capacity.maximum-am-resource-percent'),
                 ('scheduler', 'yarn.scheduler.capacity.node-locality-delay'),
                 ('scheduler', 'yarn.scheduler.capacity.resource-calculator'),
+                ('queues', 'admins'),
                 ('queues', 'cap'),
                 ('queues', 'max-cap'),
-                ('queues', 'admins'),
-                ('queues', 'users'),
-                ('queues', 'state')
+                ('queues', 'state'),
+                ('queues', 'user-limit-factor'),
+                ('queues', 'users')
                 ],
             'queues': []
             }

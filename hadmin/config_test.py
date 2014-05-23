@@ -95,6 +95,7 @@ class InternalTest(unittest.TestCase):
                     'max-cap': '60',
                     'max-tpu': 1000,
                     'state': 'running',
+                    'user-limit-factor': '0.1',
                     'users': 'bossman,trozamon'
                     },
                 'default': {
@@ -103,6 +104,7 @@ class InternalTest(unittest.TestCase):
                     'max-cap': '10',
                     'max-tpu': 1000,
                     'state': 'running',
+                    'user-limit-factor': '0.1',
                     'users': 'root,trozamon'
                     }
                 },
@@ -114,7 +116,7 @@ class InternalTest(unittest.TestCase):
                 'yarn.scheduler.capacity.maximum-am-resource-percent': 0.1,
                 'mapred.capacity-scheduler.default-init-accept-jobs-factor': 5,
                 'yarn.scheduler.capacity.node-locality-delay': 5,
-                'mapred.capacity-scheduler.default-minimum-user-limit-percent':
+                'mapred.capacity-scheduler.default-user-limit-factor':
                     5,
                 'yarn.scheduler.capacity.resource-calculator': 'blah',
                 'mapred.capacity-scheduler.default-supports-priority': 'true',
@@ -242,7 +244,8 @@ class InternalTest(unittest.TestCase):
         self.assertEqual(conf['queues']['default']['admins'], 'trozamon')
         self.assertEqual(conf['queues']['default']['users'], 'root,trozamon')
         self.assertEqual(conf['scheduler']['max-jobs'], '100')
-        self.assertEqual(conf['scheduler']['user-limit-factor'], '10')
+        self.assertEqual(conf['queues']['default']['user-limit-factor'], '0.1')
+        self.assertEqual(conf['queues']['tester']['user-limit-factor'], '0.1')
 
     def test_get_config_scheduler_v2(self):
         conf = self.mgr.get_config('scheduler', 2)
@@ -275,7 +278,7 @@ class IncludedDefaultConfigTest(unittest.TestCase):
         self.assertEqual(
                 conf['scheduler']['mapred.capacity-scheduler.default-init-accept-jobs-factor'], 10)
         self.assertEqual(
-                conf['scheduler']['mapred.capacity-scheduler.default-minimum-user-limit-percent'], 25)
+                conf['scheduler']['mapred.capacity-scheduler.default-user-limit-factor'], 10)
         self.assertEqual(
                 conf['scheduler']['mapred.capacity-scheduler.default-supports-priority'], 'true')
         self.assertEqual(
@@ -289,7 +292,7 @@ class IncludedDefaultConfigTest(unittest.TestCase):
         self.assertEqual(
                 conf['scheduler']['max-tpu'], 100000)
         self.assertEqual(
-                conf['scheduler']['user-limit-factor'], 10)
+                conf['scheduler']['user-limit-factor'], 25)
         self.assertEqual(
                 conf['queues']['default']['cap'], 5)
         self.assertEqual(
@@ -349,10 +352,10 @@ class IncludedDefaultConfigTest(unittest.TestCase):
         self.assertEqual(conf['queues']['default']['admins'], 'root')
         self.assertEqual(conf['queues']['default']['cap'], 5)
         self.assertEqual(conf['queues']['default']['max-cap'], 10)
-        self.assertEqual(conf['queues']['default']['state'], 'running')
+        self.assertEqual(conf['queues']['default']['state'], 'RUNNING')
+        self.assertEqual(conf['queues']['default']['user-limit-factor'], 0.1)
         self.assertEqual(conf['queues']['default']['users'], 'root')
         self.assertEqual(conf['scheduler']['max-jobs'], 10000)
-        self.assertEqual(conf['scheduler']['user-limit-factor'], 10)
         self.assertEqual(
                 conf['scheduler']['yarn.scheduler.capacity.maximum-am-resource-percent'],
                 0.1)
@@ -372,10 +375,10 @@ class IncludedDefaultConfigTest(unittest.TestCase):
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.maximum-capacity'], '10')
         self.assertEqual(
-                conf['yarn.scheduler.capacity.root.default.state'], 'running')
+                conf['yarn.scheduler.capacity.root.default.state'], 'RUNNING')
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.user-limit-factor'],
-                '10')
+                '0.1')
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.acl_submit_applications'], 'root')
         self.assertEqual(conf['yarn.scheduler.capacity.maximum-applications'],
