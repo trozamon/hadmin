@@ -25,6 +25,24 @@ class HadoopMapperTest(unittest.TestCase):
         self.assertEqual(self.mapper['max-jobs', 2, 'scheduler'],
                          'yarn.scheduler.capacity.maximum-applications')
 
+    def test_state_v1(self):
+        with self.assertRaises(KeyError):
+            self.mapper['state', 1]
+
+    def test_state_v1_with_owner(self):
+        with self.assertRaises(KeyError):
+            self.mapper['state', 1, 'queues']
+
+    def test_state_v2(self):
+        self.assertEqual(self.mapper['state', 2],
+                         'yarn.scheduler.capacity.root.' + HadoopMapper.rep +
+                         '.state')
+
+    def test_state_v2_with_owner(self):
+        self.assertEqual(self.mapper['state', 2, 'queues'],
+                         'yarn.scheduler.capacity.root.' + HadoopMapper.rep +
+                         '.state')
+
     def test_user_limit_factor_v1(self):
         self.assertEqual(self.mapper['user-limit-factor', 1],
                          'mapred.capacity-scheduler.default-user-limit-factor')
@@ -94,7 +112,7 @@ class HadoopMapperTest(unittest.TestCase):
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.acl_administer_queue')
 
     def test_admins_v2_with_owner(self):
-        self.assertEqual(self.mapper['admins', 2, 'scheduler'],
+        self.assertEqual(self.mapper['admins', 2, 'queues'],
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.acl_administer_queue')
 
     def test_users_v1(self):
@@ -110,7 +128,7 @@ class HadoopMapperTest(unittest.TestCase):
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.acl_submit_applications')
 
     def test_users_v2_with_owner(self):
-        self.assertEqual(self.mapper['users', 2, 'scheduler'],
+        self.assertEqual(self.mapper['users', 2, 'queues'],
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.acl_submit_applications')
 
     def test_cap_v1(self):
@@ -118,7 +136,7 @@ class HadoopMapperTest(unittest.TestCase):
                          'mapred.capacity-scheduler.queue.' + HadoopMapper.rep + '.capacity')
 
     def test_cap_v1_with_owner(self):
-        self.assertEqual(self.mapper['cap', 1, 'scheduler'],
+        self.assertEqual(self.mapper['cap', 1, 'queues'],
                          'mapred.capacity-scheduler.queue.' + HadoopMapper.rep + '.capacity')
 
     def test_cap_v2(self):
@@ -126,7 +144,7 @@ class HadoopMapperTest(unittest.TestCase):
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.capacity')
 
     def test_cap_v2_with_owner(self):
-        self.assertEqual(self.mapper['cap', 2, 'scheduler'],
+        self.assertEqual(self.mapper['cap', 2, 'queues'],
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.capacity')
 
     def test_max_cap_v1(self):
@@ -134,7 +152,7 @@ class HadoopMapperTest(unittest.TestCase):
                          'mapred.capacity-scheduler.queue.' + HadoopMapper.rep + '.maximum-capacity')
 
     def test_max_cap_v1_with_owner(self):
-        self.assertEqual(self.mapper['max-cap', 1, 'scheduler'],
+        self.assertEqual(self.mapper['max-cap', 1, 'queues'],
                          'mapred.capacity-scheduler.queue.' + HadoopMapper.rep + '.maximum-capacity')
 
     def test_max_cap_v2(self):
@@ -142,7 +160,7 @@ class HadoopMapperTest(unittest.TestCase):
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.maximum-capacity')
 
     def test_max_cap_v2_with_owner(self):
-        self.assertEqual(self.mapper['max-cap', 2, 'scheduler'],
+        self.assertEqual(self.mapper['max-cap', 2, 'queues'],
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.maximum-capacity')
 
     def test_versions_supported(self):

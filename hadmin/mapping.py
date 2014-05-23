@@ -30,11 +30,11 @@ class HadoopMapper:
                     },
 
                 'cap': {
-                    'scheduler': 'mapred.capacity-scheduler.queue.' + rep + '.capacity'
+                    'queues': 'mapred.capacity-scheduler.queue.' + rep + '.capacity'
                     },
 
                 'max-cap': {
-                    'scheduler': 'mapred.capacity-scheduler.queue.' + rep + '.maximum-capacity'
+                    'queues': 'mapred.capacity-scheduler.queue.' + rep + '.maximum-capacity'
                     },
 
                 'mapred.capacity-scheduler.default-init-accept-jobs-factor': {
@@ -58,28 +58,32 @@ class HadoopMapper:
                     }
                 },
             2: {
+                'admins': {
+                    'queues': 'yarn.scheduler.capacity.root.' + rep + '.acl_administer_queue'
+                    },
+
+                'cap': {
+                    'queues': 'yarn.scheduler.capacity.root.' + rep + '.capacity'
+                    },
+
+                'max-cap': {
+                    'queues': 'yarn.scheduler.capacity.root.' + rep + '.maximum-capacity'
+                    },
+
                 'max-jobs': {
                     'scheduler': 'yarn.scheduler.capacity.maximum-applications'
+                    },
+
+                'state': {
+                    'queues': 'yarn.scheduler.capacity.root.' + rep + '.state'
                     },
 
                 'user-limit-factor': {
                     'scheduler': 'yarn.scheduler.capacity.root.default.user-limit-factor'
                     },
 
-                'admins': {
-                    'scheduler': 'yarn.scheduler.capacity.root.' + rep + '.acl_administer_queue'
-                    },
-
                 'users': {
-                    'scheduler': 'yarn.scheduler.capacity.root.' + rep + '.acl_submit_applications'
-                    },
-
-                'cap': {
-                    'scheduler': 'yarn.scheduler.capacity.root.' + rep + '.capacity'
-                    },
-
-                'max-cap': {
-                    'scheduler': 'yarn.scheduler.capacity.root.' + rep + '.maximum-capacity'
+                    'queues': 'yarn.scheduler.capacity.root.' + rep + '.acl_submit_applications'
                     },
 
                 'yarn.scheduler.capacity.maximum-am-resource-percent': {

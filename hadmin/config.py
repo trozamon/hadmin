@@ -236,8 +236,6 @@ class Internal:
         2: {
             'scheduler': [
                 ('scheduler', 'max-jobs'),
-                ('scheduler', 'max-tpq'),
-                ('scheduler', 'max-tpu'),
                 ('scheduler', 'user-limit-factor'),
                 ('scheduler', 'yarn.scheduler.capacity.maximum-am-resource-percent'),
                 ('scheduler', 'yarn.scheduler.capacity.node-locality-delay'),
@@ -245,7 +243,8 @@ class Internal:
                 ('queues', 'cap'),
                 ('queues', 'max-cap'),
                 ('queues', 'admins'),
-                ('queues', 'users')
+                ('queues', 'users'),
+                ('queues', 'state')
                 ],
             'queues': []
             }
@@ -330,32 +329,27 @@ class Internal:
             if owner == 'queues':
                 for queue in conf[owner]:
                     for tmp in conf[owner][queue]:
-                        try:
-                            final_key = re.sub(hadmin.mapping.HadoopMapper.rep,
-                                               queue,
-                                               mapper[tmp, ver, key])
-                            out[final_key] = conf[owner][queue][tmp]
-                        except KeyError:
-                            pass
+                        final_key = re.sub(hadmin.mapping.HadoopMapper.rep,
+                                           queue,
+                                           mapper[tmp, ver, owner])
+                        if not final_key:
+                            raise KeyError(mapper[tmp, ver, owner] + ' is not ' +
+                                    'meant for queues')
+                        out[final_key] = conf[owner][queue][tmp]
             else:
                 for tmp in conf[owner]:
-                    try:
-                        final_key = mapper[tmp, ver, key]
-                        out[final_key] = conf[owner][tmp]
-                    except KeyError:
-                        pass
+                    final_key = mapper[tmp, ver, owner]
+                    out[final_key] = conf[owner][tmp]
 
         return out
 
     def get_data(self, key, ver):
         out = dict()
-
         out['queues'] = dict()
+        out['scheduler'] = dict()
+
         for queue in self.queue_list():
             out['queues'][queue] = dict()
-
-        if key == 'scheduler':
-            out['scheduler'] = dict()
 
         for key in Internal._ownership[ver][key]:
             if key[0] == 'queues':
@@ -364,12 +358,14 @@ class Internal:
                         out['queues'][queue][key[1]] = \
                                 self.conf['queues'][queue][key[1]]
                     except KeyError:
-                        pass
+                        raise KeyError('You need to define the ' + key[1] +
+                                       ' in the queues section')
             else:
                 try:
                     out[key[0]][key[1]] = self.conf[key[0]][key[1]]
                 except KeyError:
-                    pass
+                    raise KeyError('You need to define the ' + key[1] +
+                                   ' key in the ' + key[0] + ' section')
 
         return out
 

@@ -9,7 +9,7 @@ queues:
 scheduler:
   mapred.capacity-scheduler.default-init-accept-jobs-factor: 10
   mapred.capacity-scheduler.default-minimum-user-limit-percent: 25
-  mapred.capacity-scheduler.default-supports-priority: true
+  mapred.capacity-scheduler.default-supports-priority: 'true'
   mapred.capacity-scheduler.init-poll-interval: 5000
   mapred.capacity-scheduler.init-worker-threads: 5
   max-jobs: 10000
