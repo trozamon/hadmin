@@ -7,109 +7,112 @@ pain of adding users, queues, and adding nodes.
 
 Current Hadoop versions supported are:
 
-* 1.1.x
+* 1.x
+* 2.x
 
 Current operations supported are:
 
 * Adding and deleting users
 * Adding, deleting, and modifying queues
 
-Getting Started
-===============
+Architecture
+============
+HAdmin maintains its own internal configuration to manage queues and
+schedulers. It does this so that a number of backends can all use the same
+simple frontend. HAdmin maintains its configuration in YAML because it's simple
+to read and edit. The YAML is sorted as well, making it as VCS friendly as
+possible.
 
-Hadmin assumes that all work is carried out in the current directory. Hadmin
-also stores all the config in YAML because it's a little easier to read
-and not nearly as annoying as XML. The YAML used by HAdmin also strips out
-the extra verboseness that the Hadoop developers added in the XML
-configuration as well.
+Types
+-----
+As a part of validation, type checking is done on the configuration.  HAdmin
+supports the following types of values in its configuration:
 
-To start, you need to be in whatever directory you want all this YAML
-to be stored in.  To generate the initial YAML configuration from
-existing Hadoop XML configuration, run
+* num: A floating point or integer
 
-    ``hadmin init <directory>``
+* str: A string
 
-This will dump a bunch of YAML into the current directory that Hadmin will
-modify and use to generate Hadoop XML. You should take a look at this YAML
-and check it out to see exactly what's going on - for the most part
-the main advantage is removing all of the extra verbose in Hadoop's XML.
-However, you'll notice that a new file, ``hadmin-queues.yaml``, has been
-generated as well. This file contains information relevant to three
-other configuration files, and is the basis of hadmin right now. Every
-single command modifies, reads, or creates this file.
+* csv: A list of strings separated by commas
 
-If you don't already have a bunch of pre-existing Hadoop configuration
-to start with, I'd suggest downloading the most recent version supported
-by HAdmin and start with that to avoid having to write it all yourself.
+Please note that the YAML spec contains boolean (true/false) values; to get
+around this, any value that is 'true' or 'false' needs to have quotes around
+it. You should literally write out 'true' or 'false', with quotes.
 
-Generating Hadoop configuration can be accomplished by running
+Queue Model
+-----------
+HAdmin views a queue as having the following properties:
 
-    ``hadoop generate <directory>``
+* Minimum Capacity: A queue has a certain guaranteed amount of the total
+  compute capacity of the cluster it is running on
 
-This command will generate Hadoop XML and throw it in the directory
-specified on the command line. It reads the YAML configuration from the
-current directory.
+* Maximum Capacity: A queue has a limit to how much capacity of the cluster it
+  can consume
 
-Queues
-======
+* Running: A queue can be running or not running
 
-A queue can be added by running
+* Administrators: A queue has administrators who can add and remove all jobs,
+  no matter who the job owner is
 
-    ``hadmin queueadd <queue> <user>``
+* Users: A queue has users who can submit jobs and delete their own jobs
 
-Adding a queue requires a user. This initial user will be added as both
-a user and an administrator.
+* User Limit: A queue has a limit on the percent of queue resources an
+  individual user can submit
 
-A queue can be deleted by running
+These are represented by configuration keys:
 
-    ``hadmin queuedel <queue>``
++----------------------+----------+------+
+| Property             | Key      | Type |
++======================+==========+======+
+| Administrators       | admins   | csv  |
++----------------------+----------+------+
+| Minimum Capacity     | mincap   | num  |
++----------------------+----------+------+
+| Maximum Capacity     | maxcap   | num  |
++----------------------+----------+------+
+| Running              | running  | str  |
++----------------------+----------+------+
+| User Limit           | ulim     | num  |
++----------------------+----------+------+
+| Users                | users    | csv  |
++----------------------+----------+------+
 
-A queue can be modified by running
+Scheduler Model
+---------------
+To HAdmin, a scheduler has the following properties:
 
-    ``hadmin queuemod --capacity <cap> --maxcap <maxcap> --tpu <tpu> <queue>``
+* Maximum Jobs: The maximum number of initialized jobs cluster-wide
 
-At least one of --capacity, --maxcap, --tpu needs to be specified for
-queuemod to actually do anything. --capacity changes the capacity of the
-queue, --maxcap the maximum capacity of the queue, and --tpu the maximum
-initialized tasks per user of the queue.
+* Maximum Tasks per Queue: Assuming jobs are split into tasks, the maximum
+  amount of tasks in a single queue
 
-## Users
-A user can be added to a queue by running
+* Maximum Tasks per User: Assuming jobs are split into tasks, the maximum
+  amount of tasks that can be run by a single user
 
-    hadmin useradd <user> <queue>
+These are also represented by configuration keys:
 
-and an administrator can be added to a queue by running
++-------------------------+---------+------+
+| Property                | Key     | Type |
++=========================+=========+======+
+| Maximum Jobs            | maxjobs | num  |
++-------------------------+---------+------+
+| Maximum Tasks per Queue | maxtpq  | num  |
++-------------------------+---------+------+
+| Maximum Tasks per User  | maxtpu  | num  |
++-------------------------+---------+------+
 
-    hadmin useradd --admin <user> <queue>
+Using HAdmin
+============
 
-A user or administrator can be deleted by replacing 'useradd' in the above
-commands with 'userdel'. Please note that --admin must be supplied to userdel
-for admin deletion; 'hadmin userdel <user>' will not remove a user from the
-admin list.
+HAdmin config is YAML with two top-level sections: 'queues' and 'scheduler'.
+The queue section contains a subsection for each queue, and each queue can
+contain the keys listed in the Queue Model section. For reference, take a look
+at the sample config provided with hadmin. You can get it into your current
+directory by running `hadmin init`, or view it in the repo at
+`data/hadmin.yaml`.
 
-An administrator has the power to delete any job from the queue, while a user
-has the power to add/delete his jobs to the queue.
-
-## Future work
-Setting the capacity of multiple queues is annoying to get correct right now
-in Hadoop - it must add up to exactly 100. It would be convenient to be
-able to specify two queues with capacities of 1 and have Hadmin figure out
-that that's supposed to be 50 for both.
-
-It'd also be nice to auto-generate sets of configs for machines with
-different CPU/HDD setups as well.
-
-A long-term goal of Hadmin is to intelligently generate as much config
-dynamically as possible, hopefully leading to better configured clusters.
-This could even include tuning performance automatically based on some
-formulas to at least give sys admins a head start on performance tuning.
-
-For any setting, leaving it blank will cause Hadmin to try and deduce a
-smart value, taking into account number of users on the queue as well as
-the hardware it's being run on.
-
-## Helping out
-On the off chance that you've stumbled on this project and want to
-contribute, that's fantastic. You can help in any way you see fit, whether
-that is refactoring, adding features, writing tests, writing documentation,
-or testing it out on a cluster.
+The scheduler section contains the keys listed in the scheduler model, and any
+other config items used by your particular scheduler (i.e. Hadoop
+CapacityScheduler).  Many schedulers have a bunch of different options and it's
+impossible to abstract all of them away into a 'model', so I've only taken the
+ones that appear to be universal. Full keys are also allowed in the scheduler
+section, as you can see in the default configuration supplied by HAdmin.
