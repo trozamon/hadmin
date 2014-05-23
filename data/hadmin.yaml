@@ -5,6 +5,7 @@ queues:
     max-cap: 10
     state: running
     max-tpu: 100000
+    user-limit-factor: 0.1
     users: root
 scheduler:
   mapred.capacity-scheduler.default-init-accept-jobs-factor: 10
