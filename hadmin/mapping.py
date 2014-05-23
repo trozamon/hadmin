@@ -9,7 +9,7 @@ class HadoopMapper:
                     },
 
                 'user-limit-factor': {
-                    'scheduler': 'mapred.capacity-scheduler.default-user-limit-factor'
+                    'scheduler': 'mapred.capacity-scheduler.default-minimum-user-limit-percent'
                     },
 
                 'max-tpq': {
@@ -41,8 +41,8 @@ class HadoopMapper:
                     'scheduler': 'mapred.capacity-scheduler.default-init-accept-jobs-factor'
                     },
 
-                'mapred.capacity-scheduler.default-minimum-user-limit-percent': {
-                    'scheduler': 'mapred.capacity-scheduler.default-minimum-user-limit-percent'
+                'mapred.capacity-scheduler.default-user-limit-factor': {
+                    'scheduler': 'mapred.capacity-scheduler.default-user-limit-factor'
                     },
 
                 'mapred.capacity-scheduler.default-supports-priority': {
@@ -79,7 +79,7 @@ class HadoopMapper:
                     },
 
                 'user-limit-factor': {
-                    'scheduler': 'yarn.scheduler.capacity.root.default.user-limit-factor'
+                    'queues': 'yarn.scheduler.capacity.root.' + rep + '.user-limit-factor'
                     },
 
                 'users': {

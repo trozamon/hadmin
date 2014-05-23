@@ -43,21 +43,33 @@ class HadoopMapperTest(unittest.TestCase):
                          'yarn.scheduler.capacity.root.' + HadoopMapper.rep +
                          '.state')
 
+    def test_default_minimum_user_limit_factor_v1(self):
+        self.assertEqual(
+                self.mapper['mapred.capacity-scheduler.default-user-limit-factor', 1],
+                'mapred.capacity-scheduler.default-user-limit-factor'
+                )
+
+    def test_default_minimum_user_limit_factor_v1_with_owner(self):
+        self.assertEqual(
+                self.mapper['mapred.capacity-scheduler.default-user-limit-factor', 1, 'scheduler'],
+                'mapred.capacity-scheduler.default-user-limit-factor'
+                )
+
     def test_user_limit_factor_v1(self):
         self.assertEqual(self.mapper['user-limit-factor', 1],
-                         'mapred.capacity-scheduler.default-user-limit-factor')
+                         'mapred.capacity-scheduler.default-minimum-user-limit-percent')
 
     def test_user_limit_factor_v1_with_owner(self):
         self.assertEqual(self.mapper['user-limit-factor', 1, 'scheduler'],
-                         'mapred.capacity-scheduler.default-user-limit-factor')
+                         'mapred.capacity-scheduler.default-minimum-user-limit-percent')
 
     def test_user_limit_factor_v2(self):
         self.assertEqual(self.mapper['user-limit-factor', 2],
-                         'yarn.scheduler.capacity.root.default.user-limit-factor')
+                         'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.user-limit-factor')
 
     def test_user_limit_factor_v2_with_owner(self):
-        self.assertEqual(self.mapper['user-limit-factor', 2, 'scheduler'],
-                         'yarn.scheduler.capacity.root.default.user-limit-factor')
+        self.assertEqual(self.mapper['user-limit-factor', 2, 'queues'],
+                         'yarn.scheduler.capacity.root.' + HadoopMapper.rep + '.user-limit-factor')
 
     def test_max_tpq_v1(self): 
         self.assertEqual(self.mapper['max-tpq', 1],
@@ -193,18 +205,6 @@ class HadoopMapperTest(unittest.TestCase):
     def test_default_init_accept_jobs_factor_v2_with_owner(self):
         with self.assertRaises(KeyError):
             self.mapper['mapred.capacity-scheduler.default-init-accept-jobs-factor', 2, 'scheduler']
-
-    def test_default_minimum_user_limit_percent_v1(self):
-        self.assertEqual(
-                self.mapper['mapred.capacity-scheduler.default-minimum-user-limit-percent', 1],
-                'mapred.capacity-scheduler.default-minimum-user-limit-percent'
-                )
-
-    def test_default_minimum_user_limit_percent_v1_with_owner(self):
-        self.assertEqual(
-                self.mapper['mapred.capacity-scheduler.default-minimum-user-limit-percent', 1, 'scheduler'],
-                'mapred.capacity-scheduler.default-minimum-user-limit-percent'
-                )
 
     def test_default_supports_priority_v1(self):
         self.assertEqual(
