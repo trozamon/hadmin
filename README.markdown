@@ -1,6 +1,6 @@
 # hadmin
 
-*This is my first python project. The python will no doubt be sloppy,
+*Note: This is my first python project. The python will no doubt be sloppy,
 and I welcome improvements as will as criticism of my coding style.*
 
 Hadmin is a Hadoop administration tool, mostly focused on reducing the
@@ -25,12 +25,18 @@ The Hadmin project assumes a little familiarity with Hadoop, as well
 as assumes that you're using the CapacityScheduler.
 
 ## Getting Started
+Before you run any of the hadmin commands, navigate to the directory you cloned
+this repo to and run
+
+    source env.sh
+
+This puts hadmin in your path so you can run it. Next, I'd suggest making
+a temporary directory somewhere and navigating to it to play around.
+
 Hadmin assumes that all work is carried out in the current directory. Hadmin
 also stores all the config in YAML because it's a little easier to read
 and not nearly as annoying as XML. So, you need to be in whatever directory
-you want all this YAML to be stored in.
-
-To generate initial YAML template, run
+you want all this YAML to be stored in. To generate initial YAML template, run
 
     hadmin init
 
@@ -39,7 +45,7 @@ in the directory that you'd like to keep your configuration in.
 ## Generating Hadoop configuration
 Generating Hadoop configuration can be accomplished by running
 
-    hadoop generate <directory>
+    hadoop gen <directory>
 
 This command will generate Hadoop XML and throw it in the directory
 specified on the command line. It takes a --version flag to specify
@@ -97,10 +103,6 @@ A long-term goal of Hadmin is to intelligently generate as much config
 dynamically as possible, hopefully leading to better configured clusters.
 This could even include tuning performance automatically based on some
 formulas to at least give sys admins a head start on performance tuning.
-
-For any setting, leaving it blank will cause Hadmin to try and deduce a
-smart value, taking into account number of users on the queue as well as
-the hardware it's being run on.
 
 ## Helping out
 On the off chance that you've stumbled on this project and want to

@@ -1,11 +1,11 @@
 queues:
   default:
     admins: root
-    cap: 5
-    max-cap: 10
+    mincap: 5
+    maxcap: 10
+    maxtpu: 100000
     state: RUNNING
-    max-tpu: 100000
-    user-limit-factor: 0.1
+    ulim: 100
     users: root
 scheduler:
   mapred.capacity-scheduler.default-init-accept-jobs-factor: 10
@@ -13,10 +13,10 @@ scheduler:
   mapred.capacity-scheduler.default-supports-priority: 'true'
   mapred.capacity-scheduler.init-poll-interval: 5000
   mapred.capacity-scheduler.init-worker-threads: 5
-  max-jobs: 10000
-  max-tpq: 200000
-  max-tpu: 100000
-  user-limit-factor: 25
+  maxjobs: 10000
+  maxtpq: 200000
+  maxtpu: 100000
+  ulim: 25
   yarn.scheduler.capacity.maximum-am-resource-percent: 0.1
   yarn.scheduler.capacity.node-locality-delay: -1
   yarn.scheduler.capacity.resource-calculator: org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator
