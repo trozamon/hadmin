@@ -4,19 +4,19 @@ class HadoopMapper:
     field_sep = '.'
     mapping = {
             1: {
-                'max-jobs': {
+                'maxjobs': {
                     'scheduler': 'mapred.capacity-scheduler.maximum-system-jobs'
                     },
 
-                'user-limit-factor': {
+                'ulim': {
                     'scheduler': 'mapred.capacity-scheduler.default-user-limit-factor'
                     },
 
-                'max-tpq': {
+                'maxtpq': {
                     'scheduler': 'mapred.capacity-scheduler.default-maximum-active-tasks-per-queue'
                     },
 
-                'max-tpu': {
+                'maxtpu': {
                     'scheduler': 'mapred.capacity-scheduler.default-maximum-active-tasks-per-user',
                     'queues': 'mapred.capacity-scheduler.queue.' + rep + '.maximum-initialized-active-tasks-per-user'
                     },
@@ -29,11 +29,11 @@ class HadoopMapper:
                     'queues': 'mapred.queue.' + rep + '.acl-submit-job'
                     },
 
-                'cap': {
+                'mincap': {
                     'queues': 'mapred.capacity-scheduler.queue.' + rep + '.capacity'
                     },
 
-                'max-cap': {
+                'maxcap': {
                     'queues': 'mapred.capacity-scheduler.queue.' + rep + '.maximum-capacity'
                     },
 
@@ -62,15 +62,15 @@ class HadoopMapper:
                     'queues': 'yarn.scheduler.capacity.root.' + rep + '.acl_administer_queue'
                     },
 
-                'cap': {
+                'mincap': {
                     'queues': 'yarn.scheduler.capacity.root.' + rep + '.capacity'
                     },
 
-                'max-cap': {
+                'maxcap': {
                     'queues': 'yarn.scheduler.capacity.root.' + rep + '.maximum-capacity'
                     },
 
-                'max-jobs': {
+                'maxjobs': {
                     'scheduler': 'yarn.scheduler.capacity.maximum-applications'
                     },
 
@@ -78,7 +78,7 @@ class HadoopMapper:
                     'queues': 'yarn.scheduler.capacity.root.' + rep + '.state'
                     },
 
-                'user-limit-factor': {
+                'ulim': {
                     'scheduler': 'yarn.scheduler.capacity.root.default.user-limit-factor'
                     },
 

@@ -220,13 +220,13 @@ class Internal:
                 ('scheduler', 'mapred.capacity-scheduler.default-supports-priority'),
                 ('scheduler', 'mapred.capacity-scheduler.init-poll-interval'),
                 ('scheduler', 'mapred.capacity-scheduler.init-worker-threads'),
-                ('scheduler', 'max-jobs'),
-                ('scheduler', 'max-tpq'),
-                ('scheduler', 'max-tpu'),
-                ('scheduler', 'user-limit-factor'),
-                ('queues', 'cap'),
-                ('queues', 'max-cap'),
-                ('queues', 'max-tpu')
+                ('scheduler', 'maxjobs'),
+                ('scheduler', 'maxtpq'),
+                ('scheduler', 'maxtpu'),
+                ('scheduler', 'ulim'),
+                ('queues', 'mincap'),
+                ('queues', 'maxcap'),
+                ('queues', 'maxtpu')
                 ],
             'queues': [
                 ('queues', 'admins'),
@@ -235,13 +235,13 @@ class Internal:
             },
         2: {
             'scheduler': [
-                ('scheduler', 'max-jobs'),
-                ('scheduler', 'user-limit-factor'),
+                ('scheduler', 'maxjobs'),
+                ('scheduler', 'ulim'),
                 ('scheduler', 'yarn.scheduler.capacity.maximum-am-resource-percent'),
                 ('scheduler', 'yarn.scheduler.capacity.node-locality-delay'),
                 ('scheduler', 'yarn.scheduler.capacity.resource-calculator'),
-                ('queues', 'cap'),
-                ('queues', 'max-cap'),
+                ('queues', 'mincap'),
+                ('queues', 'maxcap'),
                 ('queues', 'admins'),
                 ('queues', 'users'),
                 ('queues', 'state')
@@ -296,9 +296,9 @@ class Internal:
         self.conf['queues'][queue] = dict()
         self.__set(('queues', 'users'), user, queue)
         self.__set(('queues', 'admins'), user, queue)
-        self.__set(('queues', 'cap'), 0, queue)
-        self.__set(('queues', 'max-cap'), 0, queue)
-        self.__set(('queues', 'max-tpu'), 0, queue)
+        self.__set(('queues', 'mincap'), 0, queue)
+        self.__set(('queues', 'maxcap'), 0, queue)
+        self.__set(('queues', 'maxtpu'), 0, queue)
 
     def del_queue(self, queue):
         if queue not in self.conf['queues'].keys():
@@ -309,17 +309,17 @@ class Internal:
     def set_queue_cap(self, queue, cap):
         self.check_queue(queue)
         tmp = int(cap)
-        self.__set(('queues', 'cap'), tmp, queue)
+        self.__set(('queues', 'mincap'), tmp, queue)
 
     def set_queue_max_cap(self, queue, max_cap):
         self.check_queue(queue)
         tmp = int(max_cap)
-        self.__set(('queues', 'max-cap'), tmp, queue)
+        self.__set(('queues', 'maxcap'), tmp, queue)
 
     def set_queue_max_init_tpu(self, queue, max_init_tpu):
         self.check_queue(queue)
         tmp = int(max_init_tpu)
-        self.__set(('queues', 'max-tpu'), tmp, queue)
+        self.__set(('queues', 'maxtpu'), tmp, queue)
 
     def get_config(self, key, ver):
         out = Config()

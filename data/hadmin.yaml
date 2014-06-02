@@ -2,8 +2,9 @@ queues:
   default:
     admins: root
     mincap: 5
-    maxcap: 100
-    running: 'true'
+    maxcap: 10
+    maxtpu: 100000
+    state: RUNNING
     ulim: 100
     users: root
 scheduler:
@@ -15,7 +16,7 @@ scheduler:
   maxjobs: 10000
   maxtpq: 200000
   maxtpu: 100000
-  user-limit-factor: 10
+  ulim: 10
   yarn.scheduler.capacity.maximum-am-resource-percent: 0.1
   yarn.scheduler.capacity.node-locality-delay: -1
   yarn.scheduler.capacity.resource-calculator: org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator
