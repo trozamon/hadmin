@@ -447,3 +447,46 @@ class Internal:
             self.conf[owner][queue][key] = value
         else:
             self.conf[owner][key] = value
+
+class TypeChecker:
+
+    def check(self, key, val):
+        ret = False
+        try:
+            ret = TypeChecker._funcs[TypeChecker._types[key]](self, val)
+        except KeyError:
+            raise KeyError(key + ' does not have a defined type')
+        return ret
+
+    def _check_num(self, val):
+        if type(val) in (int,float):
+            return True
+        return False
+
+    def _check_str(self, val):
+        if type(val) is str and ',' not in val:
+            return True
+        return False
+
+    def _check_csv(self, val):
+        if type(val) is str:
+            return True
+        return False
+
+    _types = {
+            'ulim': 'num',
+            'maxjobs': 'num',
+            'maxtpu': 'num',
+            'maxtpq': 'num',
+            'mincap': 'num',
+            'maxcap': 'num',
+            'admins': 'csv',
+            'users': 'csv',
+            'running': 'str'
+            }
+
+    _funcs = {
+            'num': _check_num,
+            'csv': _check_csv,
+            'str': _check_str
+            }

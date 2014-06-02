@@ -3,7 +3,7 @@ import copy
 import re
 import pkgutil
 import yaml
-from hadmin.config import Config, Internal
+from hadmin.config import Config, Internal, TypeChecker
 
 
 class ConfigTest(unittest.TestCase):
@@ -391,3 +391,140 @@ class IncludedDefaultConfigTest(unittest.TestCase):
         self.assertEqual(
                 conf['yarn.scheduler.capacity.resource-calculator'],
                 'org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator')
+
+class TypeCheckerTest(unittest.TestCase):
+
+    def setUp(self):
+        self.chkr = TypeChecker()
+
+    def tearDown(self):
+        self.chkr = None
+
+    def test_ulim_int(self):
+        self.assertTrue(self.chkr.check('ulim', 1))
+
+    def test_ulim_float(self):
+        self.assertTrue(self.chkr.check('ulim', 1.1))
+
+    def test_ulim_str(self):
+        self.assertFalse(self.chkr.check('ulim', 'hey'))
+
+    def test_ulim_list(self):
+        self.assertFalse(self.chkr.check('ulim', [1]))
+
+    def test_admins_csv(self):
+        self.assertTrue(self.chkr.check('admins', 'alec,bob'))
+
+    def test_admins_str(self):
+        self.assertTrue(self.chkr.check('admins', 'alec'))
+
+    def test_admins_num(self):
+        self.assertFalse(self.chkr.check('admins', 1))
+
+    def test_admins_list(self):
+        self.assertFalse(self.chkr.check('admins', ['alec', 'bob']))
+
+    def test_mincap_int(self):
+        self.assertTrue(self.chkr.check('mincap', 1))
+
+    def test_mincap_float(self):
+        self.assertTrue(self.chkr.check('mincap', 1.1))
+
+    def test_mincap_str(self):
+        self.assertFalse(self.chkr.check('mincap', 'hey'))
+
+    def test_mincap_list(self):
+        self.assertFalse(self.chkr.check('mincap', [1]))
+
+    def test_maxcap_int(self):
+        self.assertTrue(self.chkr.check('maxcap', 1))
+
+    def test_maxcap_float(self):
+        self.assertTrue(self.chkr.check('maxcap', 1.1))
+
+    def test_maxcap_str(self):
+        self.assertFalse(self.chkr.check('maxcap', 'hey'))
+
+    def test_maxcap_list(self):
+        self.assertFalse(self.chkr.check('maxcap', [1]))
+
+    def test_running_str(self):
+        self.assertTrue(self.chkr.check('running', 'yessir'))
+
+    def test_running_csv(self):
+        self.assertFalse(self.chkr.check('running', 'yes,sir'))
+
+    def test_running_num(self):
+        self.assertFalse(self.chkr.check('running', 1))
+
+    def test_running_list(self):
+        self.assertFalse(self.chkr.check('running', ['yes']))
+
+    def test_maxjobs_int(self):
+        self.assertTrue(self.chkr.check('maxjobs', 1))
+
+    def test_maxjobs_float(self):
+        self.assertTrue(self.chkr.check('maxjobs', 1.1))
+
+    def test_maxjobs_str(self):
+        self.assertFalse(self.chkr.check('maxjobs', 'hye'))
+
+    def test_maxjobs_list(self):
+        self.assertFalse(self.chkr.check('maxjobs', [1]))
+
+    def test_maxtpu_int(self):
+        self.assertTrue(self.chkr.check('maxtpu', 1))
+
+    def test_maxtpu_float(self):
+        self.assertTrue(self.chkr.check('maxtpu', 1.1))
+
+    def test_maxtpu_str(self):
+        self.assertFalse(self.chkr.check('maxtpu', 'hye'))
+
+    def test_maxtpu_list(self):
+        self.assertFalse(self.chkr.check('maxtpu', [1]))
+
+    def test_maxtpq_int(self):
+        self.assertTrue(self.chkr.check('maxtpq', 1))
+
+    def test_maxtpq_float(self):
+        self.assertTrue(self.chkr.check('maxtpq', 1.1))
+
+    def test_maxtpq_str(self):
+        self.assertFalse(self.chkr.check('maxtpq', 'hye'))
+
+    def test_maxtpq_list(self):
+        self.assertFalse(self.chkr.check('maxtpq', [1]))
+
+    def test_num_int(self):
+        self.assertTrue(self.chkr._check_num(1))
+
+    def test_num_int_neg(self):
+        self.assertTrue(self.chkr._check_num(-1))
+
+    def test_num_float(self):
+        self.assertTrue(self.chkr._check_num(1.1))
+
+    def test_num_float_neg(self):
+        self.assertTrue(self.chkr._check_num(-1.1))
+
+    def test_num_str(self):
+        self.assertFalse(self.chkr._check_num('hey'))
+
+    def test_num_list(self):
+        self.assertFalse(self.chkr._check_num([1]))
+
+    def test_num_tuple(self):
+        self.assertFalse(self.chkr._check_num((1,2)))
+
+    def test_str(self):
+        self.assertTrue(self.chkr._check_str('hey'))
+        
+    def test_str_csv(self):
+        self.assertFalse(self.chkr._check_str('hey,ah'))
+
+    def test_csv(self):
+        self.assertTrue(self.chkr._check_csv('hey'))
+        
+    def test_csv_csv(self):
+        self.assertTrue(self.chkr._check_csv('hey,ah'))
