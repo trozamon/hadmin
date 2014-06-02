@@ -192,21 +192,39 @@ class InternalTest(unittest.TestCase):
         self.mgr.set_queue_max_init_tpu('default', 10)
         self.assertEqual(self.mgr.conf['queues']['default']['maxtpu'], 10)
 
-    def test_get_data_queues_v1(self):
+    def test_get_data_queues_v1_admins_tester(self):
         conf = self.mgr.get_data('queues', 1)
         self.assertEqual(conf['queues']['tester']['admins'], 'bossman')
+
+    def test_get_data_queues_v1_users_tester(self):
+        conf = self.mgr.get_data('queues', 1)
         self.assertEqual(conf['queues']['tester']['users'], 'bossman,trozamon')
+
+    def test_get_data_queues_v1_admins(self):
+        conf = self.mgr.get_data('queues', 1)
         self.assertEqual(conf['queues']['default']['admins'], 'trozamon')
+
+    def test_get_data_queues_v1_users(self):
+        conf = self.mgr.get_data('queues', 1)
         self.assertEqual(conf['queues']['default']['users'], 'root,trozamon')
 
-    def test_get_config_queues_v1(self):
+    def test_get_config_queues_v1_users_tester(self):
         conf = self.mgr.get_config('queues', 1)
         self.assertEqual(conf['mapred.queue.tester.acl-submit-job'],
                 'bossman,trozamon')
+
+    def test_get_config_queues_v1_admins_tester(self):
+        conf = self.mgr.get_config('queues', 1)
         self.assertEqual(conf['mapred.queue.tester.acl-administer-jobs'],
                 'bossman')
+
+    def test_get_config_queues_v1_users(self):
+        conf = self.mgr.get_config('queues', 1)
         self.assertEqual(conf['mapred.queue.default.acl-submit-job'],
                 'root,trozamon')
+
+    def test_get_config_queues_v1_admins(self):
+        conf = self.mgr.get_config('queues', 1)
         self.assertEqual(conf['mapred.queue.default.acl-administer-jobs'],
                 'trozamon')
 
@@ -217,13 +235,28 @@ class InternalTest(unittest.TestCase):
     def test_get_config_queues_v2(self):
         conf = self.mgr.get_config('queues', 2)
 
-    def test_get_data_scheduler_v1(self):
+    def test_get_data_scheduler_v1_mincap_tester(self):
         conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(conf['queues']['tester']['mincap'], 50)
+
+    def test_get_data_scheduler_v1_maxcap_tester(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(conf['queues']['tester']['maxcap'], 60)
+
+    def test_get_data_scheduler_v1_mincap(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(conf['queues']['default']['mincap'], 5)
+
+    def test_get_data_scheduler_v1_maxcap(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(conf['queues']['default']['maxcap'], 10)
+
+    def test_get_data_scheduler_v1_maxjobs(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(conf['scheduler']['maxjobs'], 100)
+
+    def test_get_data_scheduler_v1_ulim(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(conf['scheduler']['ulim'], 10)
 
     def test_get_config_scheduler_v1(self):
@@ -233,32 +266,77 @@ class InternalTest(unittest.TestCase):
         self.assertEqual(conf['mapred.capacity-scheduler.queue.tester.capacity'],
                 '50')
 
-    def test_get_data_scheduler_v2(self):
+    def test_get_data_scheduler_v2_mincap_tester(self):
         conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['tester']['mincap'], 50)
+
+    def test_get_data_scheduler_v2_maxcap_tester(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['tester']['maxcap'], 60)
+
+    def test_get_data_scheduler_v2_mincap(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['mincap'], 5)
+
+    def test_get_data_scheduler_v2_maxcap(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['maxcap'], 10)
+
+    def test_get_data_scheduler_v2_admins_tester(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['tester']['admins'], 'bossman')
+
+    def test_get_data_scheduler_v2_users_tester(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['tester']['users'], 'bossman,trozamon')
+
+    def test_get_data_scheduler_v2_admins(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['admins'], 'trozamon')
+
+    def test_get_data_scheduler_v2_users(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['users'], 'root,trozamon')
+
+    def test_get_data_scheduler_v2_ulim(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['ulim'], 0.1)
+
+    def test_get_data_scheduler_v2_ulim_tester(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['tester']['ulim'], 0.1)
+
+    def test_get_data_scheduler_v2_maxjobs(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['scheduler']['maxjobs'], 100)
 
-    def test_get_config_scheduler_v2(self):
+    def test_get_config_scheduler_v2_maxjobs(self):
         conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(conf['yarn.scheduler.capacity.maximum-applications'],
                 '100')
+
+    def test_get_config_scheduler_v2_mincap(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(conf['yarn.scheduler.capacity.root.tester.capacity'],
                 '50')
+
+    def test_get_config_scheduler_v2_users_tester(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(conf['yarn.scheduler.capacity.root.tester.acl_submit_applications'],
                 'bossman,trozamon')
+
+    def test_get_config_scheduler_v2_admins_tester(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(conf['yarn.scheduler.capacity.root.tester.acl_administer_queue'],
                 'bossman')
+
+    def test_get_config_scheduler_v2_users(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(conf['yarn.scheduler.capacity.root.default.acl_submit_applications'],
                 'root,trozamon')
+
+    def test_get_config_scheduler_v2_admins(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(conf['yarn.scheduler.capacity.root.default.acl_administer_queue'],
                 'trozamon')
 
@@ -273,57 +351,123 @@ class IncludedDefaultConfigTest(unittest.TestCase):
     def tearDown(self):
         self.mgr = None
 
-    def test_data_scheduler_v1(self):
+    def test_data_scheduler_v1_init_garbage(self):
         conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['mapred.capacity-scheduler.default-init-accept-jobs-factor'], 10)
+
+    def test_data_scheduler_v1_user_limit_factor(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['mapred.capacity-scheduler.default-user-limit-factor'], 10)
+
+    def test_data_scheduler_v1_supports_priority(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['mapred.capacity-scheduler.default-supports-priority'], 'true')
+
+    def test_data_scheduler_v1_poll_interval(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['mapred.capacity-scheduler.init-poll-interval'], 5000)
+
+    def test_data_scheduler_v1_worker_threads(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['mapred.capacity-scheduler.init-worker-threads'], 5)
+
+    def test_data_scheduler_v1_maxjobs(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['maxjobs'], 10000)
+
+    def test_data_scheduler_v1_maxtpq(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['maxtpq'], 200000)
+
+    def test_data_scheduler_v1_maxtpu(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['maxtpu'], 100000)
+
+    def test_data_scheduler_v1_ulim(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['scheduler']['ulim'], 25)
+
+    def test_data_scheduler_v1_mincap(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['queues']['default']['mincap'], 5)
+
+    def test_data_scheduler_v1_maxcap(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['queues']['default']['maxcap'], 10)
+
+    def test_data_scheduler_v1_maxtpu(self):
+        conf = self.mgr.get_data('scheduler', 1)
         self.assertEqual(
                 conf['queues']['default']['maxtpu'], 100000)
 
-    def test_config_scheduler_v1(self):
+    def test_config_scheduler_v1_default_init_garbage(self):
         conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.default-init-accept-jobs-factor'], '10')
+
+    def test_config_scheduler_v1_ulim(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.default-minimum-user-limit-percent'], '25')
+
+    def test_config_scheduler_v1_support_priority(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.default-supports-priority'], 'true')
+
+    def test_config_scheduler_v1_poll_interval(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.init-poll-interval'], '5000')
+
+    def test_config_scheduler_v1_worker_threads(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.init-worker-threads'], '5')
+
+    def test_config_scheduler_v1_maxjobs(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.maximum-system-jobs'], '10000')
+
+    def test_config_scheduler_v1_maxtpq(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.default-maximum-active-tasks-per-queue'], '200000')
+
+    def test_config_scheduler_v1_maxtpu(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.default-maximum-active-tasks-per-user'], '100000')
+
+    def test_config_scheduler_v1_user_limit_factor(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.default-user-limit-factor'], '10')
+
+    def test_config_scheduler_v1_mincap(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.queue.default.capacity'], '5')
+
+    def test_config_scheduler_v1_maxcap(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.queue.default.maximum-capacity'], '10')
+
+    def test_config_scheduler_v1_maxtpu_users(self):
+        conf = self.mgr.get_config('scheduler', 1)
         self.assertEqual(
                 conf['mapred.capacity-scheduler.queue.default.maximum-initialized-active-tasks-per-user'], '100000')
 
@@ -347,47 +491,98 @@ class IncludedDefaultConfigTest(unittest.TestCase):
         conf = self.mgr.get_config('queues', 2)
         self.assertEqual(len(conf.conf), 0)
 
-    def test_data_scheduler_v2(self):
+    def test_data_scheduler_v2_admins(self):
         conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['admins'], 'root')
+
+    def test_data_scheduler_v2_mincap(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['mincap'], 5)
+
+    def test_data_scheduler_v2_maxcap(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['maxcap'], 10)
+
+    def test_data_scheduler_v2_state(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['state'], 'RUNNING')
+
+    def test_data_scheduler_v2_users(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['queues']['default']['users'], 'root')
+
+    def test_data_scheduler_v2_maxjobs(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(conf['scheduler']['maxjobs'], 10000)
+
+    def test_data_scheduler_v2_maximum_am_resource_percent(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(
                 conf['scheduler']['yarn.scheduler.capacity.maximum-am-resource-percent'],
                 0.1)
+
+    def test_data_scheduler_v2_node_locality_delay(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(
                 conf['scheduler']['yarn.scheduler.capacity.node-locality-delay'],
                 -1)
+
+    def test_data_scheduler_v2_resource_calculator(self):
+        conf = self.mgr.get_data('scheduler', 2)
         self.assertEqual(
                 conf['scheduler']['yarn.scheduler.capacity.resource-calculator'],
                 'org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator')
 
-    def test_config_scheduler_v2(self):
+    def test_config_scheduler_v2_admins(self):
         conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.acl_administer_queue'], 'root')
+
+    def test_config_scheduler_v2_mincap(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.capacity'], '5')
+
+    def test_config_scheduler_v2_maxcap(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.maximum-capacity'], '10')
+
+    def test_config_scheduler_v2_state(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.state'], 'RUNNING')
+
+    def test_config_scheduler_v2_ulim(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.user-limit-factor'],
                 '100')
+
+    def test_config_scheduler_v2_users(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.root.default.acl_submit_applications'], 'root')
+
+    def test_config_scheduler_v2_maxjobs(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(conf['yarn.scheduler.capacity.maximum-applications'],
                 '10000')
+
+    def test_config_scheduler_v2_maximum_am_resource_percent(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.maximum-am-resource-percent'],
                 '0.1')
+
+    def test_config_scheduler_v2_node_locality_delay(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.node-locality-delay'],
                 '-1')
+
+    def test_config_scheduler_v2_resource_calculator(self):
+        conf = self.mgr.get_config('scheduler', 2)
         self.assertEqual(
                 conf['yarn.scheduler.capacity.resource-calculator'],
                 'org.apache.hadoop.yarn.util.resource.DefaultResourceCalculator')
