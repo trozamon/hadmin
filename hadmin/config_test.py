@@ -130,6 +130,11 @@ class InternalTest(unittest.TestCase):
         self.mgr = None
         self.data = None
 
+    def test_set_maxcap_str(self):
+        self.data['scheduler']['maxjobs'] = 'sup foo?'
+        with self.assertRaises(TypeError):
+            self.mgr = Internal(self.data)
+
     def test_queue_list(self):
         self.assertEqual(self.mgr.queue_list(), ['default', 'tester'])
 
@@ -643,17 +648,17 @@ class TypeCheckerTest(unittest.TestCase):
     def test_maxcap_list(self):
         self.assertFalse(self.chkr.check('maxcap', [1]))
 
-    def test_running_str(self):
-        self.assertTrue(self.chkr.check('running', 'yessir'))
+    def test_state_str(self):
+        self.assertTrue(self.chkr.check('state', 'yessir'))
 
-    def test_running_csv(self):
-        self.assertFalse(self.chkr.check('running', 'yes,sir'))
+    def test_state_csv(self):
+        self.assertFalse(self.chkr.check('state', 'yes,sir'))
 
-    def test_running_num(self):
-        self.assertFalse(self.chkr.check('running', 1))
+    def test_state_num(self):
+        self.assertFalse(self.chkr.check('state', 1))
 
-    def test_running_list(self):
-        self.assertFalse(self.chkr.check('running', ['yes']))
+    def test_state_list(self):
+        self.assertFalse(self.chkr.check('state', ['yes']))
 
     def test_maxjobs_int(self):
         self.assertTrue(self.chkr.check('maxjobs', 1))

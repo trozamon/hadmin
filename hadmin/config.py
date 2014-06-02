@@ -262,6 +262,7 @@ class Internal:
 
     def __init__(self, data):
         self.conf = copy.deepcopy(data)
+        self.validate()
         self.filename = ''
 
     def __enter__(self):
@@ -272,6 +273,18 @@ class Internal:
             with open(self.filename, 'w') as f:
                 f.write(dump(self.conf, Dumper=Dumper,
                              default_flow_style=False))
+
+    def validate(self):
+        chk = TypeChecker()
+        for queue in self.conf['queues']:
+            queue_dict = self.conf['queues'][queue]
+            for key in queue_dict:
+                if not chk.check(key, queue_dict[key]):
+                    raise TypeError(key + ' in queue ' + queue +
+                            ' is not the correct type')
+        for key in self.conf['scheduler']:
+            if not chk.check(key, self.conf['scheduler'][key]):
+                raise TypeError(key + ' is not correct type')
 
     def check_queue(self, queue):
         """ Checks that a queue exists """
@@ -402,6 +415,8 @@ class Internal:
         else:
             self.conf[owner][key] = tmp
 
+        self.validate()
+
     def __remove(self, args, value, queue=None):
         """ Removes a value from something in the config """
 
@@ -433,6 +448,8 @@ class Internal:
         else:
             self.conf[owner][key] = tmp
 
+        self.validate()
+
     def __set(self, args, value, queue=None):
         """ Appends a value to something in the config """
 
@@ -447,6 +464,9 @@ class Internal:
             self.conf[owner][queue][key] = value
         else:
             self.conf[owner][key] = value
+
+        self.validate()
+
 
 class TypeChecker:
 
@@ -474,15 +494,23 @@ class TypeChecker:
         return False
 
     _types = {
-            'ulim': 'num',
-            'maxjobs': 'num',
-            'maxtpu': 'num',
-            'maxtpq': 'num',
-            'mincap': 'num',
-            'maxcap': 'num',
             'admins': 'csv',
+            'mapred.capacity-scheduler.default-init-accept-jobs-factor': 'num',
+            'mapred.capacity-scheduler.default-user-limit-factor': 'num',
+            'mapred.capacity-scheduler.default-supports-priority': 'str',
+            'mapred.capacity-scheduler.init-poll-interval': 'num',
+            'mapred.capacity-scheduler.init-worker-threads': 'num',
+            'maxcap': 'num',
+            'maxjobs': 'num',
+            'maxtpq': 'num',
+            'maxtpu': 'num',
+            'mincap': 'num',
+            'state': 'str',
+            'ulim': 'num',
             'users': 'csv',
-            'running': 'str'
+            'yarn.scheduler.capacity.maximum-am-resource-percent': 'num',
+            'yarn.scheduler.capacity.node-locality-delay': 'num',
+            'yarn.scheduler.capacity.resource-calculator': 'str'
             }
 
     _funcs = {
