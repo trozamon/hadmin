@@ -100,6 +100,38 @@ These are also represented by configuration keys:
 | Maximum Tasks per User  | maxtpu  | num  |
 +-------------------------+---------+------+
 
+Hardware Sets
+-------------
+Running Hadoop on a heterogenous cluster can be a little difficult. HAdmin
+uses the concept of 'sets' of hardware that are used to generate multiple
+sets of configurations for all your different hardware setups.
+
+The main differences are usually the CPU and the disks.
+
+scheduler:
+  head: jt.blah.com:54311
+  datadir: /var/hadoop/mapred/system
+  tmp: /var/hadoop/mapred/local
+fs:
+  head: nn.blah.com:54310
+  bs: 134217728
+  repmin: 3
+  repmax: 5
+  datadir: /var/hadoop/name
+  umask: 027
+  permissions: 'true'
+  http: nn.blah.com:50070
+  safethresh: 0.999
+  safeext: 5000
+  home: /user
+sets:
+  oldies:
+    datadir: /var/hadoop/data,/mnt/disk2/hadoop/data,/mnt/disk3/hadoop/data
+    cpus: 16
+  newbz:
+    datadir: /var/hadoop/data/,/mnt/disk2/hadoop/data/,/mnt/disk3/hadoop/data/,/mnt/disk4/hadoop/data/,/mnt/disk5/hadoop/data/,/mnt/disk6/hadoop/data/,/mnt/disk7/hadoop/data/,/mnt/disk8/hadoop/data/,/mnt/disk9/hadoop/data/,/mnt/disk10/hadoop/data/,/mnt/disk11/hadoop/data/,/mnt/disk12/hadoop/data/
+    cpus: 12
+
 Using HAdmin
 ============
 
