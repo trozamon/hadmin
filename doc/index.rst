@@ -108,22 +108,6 @@ sets of configurations for all your different hardware setups.
 
 The main differences are usually the CPU and the disks.
 
-scheduler:
-  head: jt.blah.com:54311
-  datadir: /var/hadoop/mapred/system
-  tmp: /var/hadoop/mapred/local
-fs:
-  head: nn.blah.com:54310
-  bs: 134217728
-  repmin: 3
-  repmax: 5
-  datadir: /var/hadoop/name
-  umask: 027
-  permissions: 'true'
-  http: nn.blah.com:50070
-  safethresh: 0.999
-  safeext: 5000
-  home: /user
 sets:
   oldies:
     datadir: /var/hadoop/data,/mnt/disk2/hadoop/data,/mnt/disk3/hadoop/data
@@ -148,3 +132,125 @@ CapacityScheduler).  Many schedulers have a bunch of different options and it's
 impossible to abstract all of them away into a 'model', so I've only taken the
 ones that appear to be universal. Full keys are also allowed in the scheduler
 section, as you can see in the default configuration supplied by HAdmin.
+
+Full Configuration Spec
+=======================
+The configuration is a YAML file. There are three top-level items: fs,
+scheduler, and sets. fs deals with the filesystem; this is typically HDFS.
+Scheduler deals with the scheduler, most likely the Hadoop CapacityScheduler.
+Finally, sets deals with hardware-dependent stuff. The hardware-dependent stuff
+may affect the filesystem or the scheduler, and is done so that when you have a
+heterogenous cluster, you don't have to worry about maintaining multiple sets
+of configuration. In addition to supporting its own internal items and
+sub-items, HAdmin supports a variety of Hadoop's own configuration items. These
+Hadoop-specific items will also be listed below.
+
+fs: Filesystem Configuration
+----------------------------
+fs supports the following sub-items:
+
+* head: The address of the head filesystem node. For Hadoop, this should be a
+  hostname:port combination.
+
+* bs: The block size of the filesystem, if the filesystem supports this as a
+  configurable item.
+
+* repmin: Minimum amount of replication allowed for the filesystem. For a Hadoop
+  installation, this is typically 3.
+
+* repmax: Maximum amount of replication allowed for the filesystem. For a Hadoop
+  installation, I typically set this to 3 as well, although you can certainly
+  set it higher.
+
+* datadir: The directory that the head node stores its data in. For a Hadoop
+  NameNode, this is the metadata of the whole filesystem and the folder should
+  be mounted on a RAIDed set of drives.
+
+* umask: The default umask for new files created.
+
+* permissions: Whether or not permissions should be supported in the
+  filesystem.  *Note: Due to YAML interpreting true and false as boolean
+  values, you must quote them so that you are supplying either 'true' or
+  'false' to avoid the boolean interpretation*
+
+* http: The HTTP address that the head node can be reached at, usually to show
+  a status page. For Hadoop, this should be a hostname:port value.
+
+* safethresh: The safety threshold defines how many blocks should be accounted
+  for before the filesystem goes from just being on to being write-accessible.
+  For Hadoop, should be a floating point number from 0 to 1.
+
+* safeext: The amount of time that the filesystem should delay its transition
+  to write-accessibility after the safety threshold has been reached, in
+  milliseconds.
+
+* home: The home directory for users. Don't ask me why, but it's usually /user
+  for Hadoop installations.
+
+scheduler: Scheduler Configuration
+----------------------------------
+scheduler supports the following sub-items:
+
+* head: Same as in the fs section.
+
+* datadir: Same as in the fs section.
+
+* maxjobs: Maximum number of jobs that can run.
+
+* maxtpq: Assuming each job is split into tasks, the maximum number of tasks
+  allowed to run on the entire cluster.
+
+* maxtpu: Assuming each job is split into tasks, the maximum number of tasks
+  each user is allowed to run.
+
+* tmp: Directory that temporary data is stored on slave nodes.
+
+* ulim: The maximum amount of queue capacity a single user is allowed use
+  unless there are unused task slots available
+
+* mapred.capacity-scheduler.default-init-accept-jobs-factor: Hadoop v1 key
+
+* mapred.capacity-scheduler.default-user-limit-factor: Hadoop v1 key
+
+* mapred.capacity-scheduler.default-supports-priority: Hadoop v1 key
+
+* mapred.capacity-scheduler.init-poll-interval: Hadoop v1 key
+
+* mapred.capacity-scheduler.init-worker-threads: Hadoop v1 key
+
+* yarn.scheduler.capacity.maximum-am-resource-percent: Hadoop v2 key
+
+* yarn.scheduler.capacity.node-locality-delay: Hadoop v2 key
+
+* yarn.scheduler.capacity.resource-calculator: Hadoop v2 key
+
+queues: Queue Configuration
+---------------------------
+queues is an interesting one. The sub-items of queues are the queue names; the
+sub-items of queue names that are supported are:
+
+* admins: CSV list of users that can administer the queue.
+
+* mincap: The guaranteed minimum capacity (percent of total cluster capacity)
+  that this queue gets to use.
+
+* maxcap: The maximum capacity that this queue can use when some slots are
+  empty
+
+* maxtpu: Same as in scheduler, but for this queue.
+
+* state: The state of the queue. For Hadoop, either RUNNING or STOPPED.
+
+* ulim: Same as in scheduler, but for this queue.
+
+* users: CSV list of users that can submit jobs to this queue.
+
+sets: Set Configuration
+-----------------------
+sets is also an interesting one. The sub-items of sets are the set names; the
+sub-items of set names that are supported are:
+
+* datadir: CSV list of folders where slave nodes in this set will store
+  permanent data. As in nodes that are running a filesystem (i.e. HDFS).
+
+* cpus: The number of cores the machines in this set have.
