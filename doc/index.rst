@@ -149,8 +149,8 @@ fs: Filesystem Configuration
 ----------------------------
 fs supports the following sub-items:
 
-* head: The address of the head filesystem node. For Hadoop, this should be a
-  hostname:port combination.
+* head: The address of the head filesystem node. For Hadoop 1, this should be a
+  hostname:port combination, while Hadoop 2 only requires a hostname.
 
 * bs: The block size of the filesystem, if the filesystem supports this as a
   configurable item.
