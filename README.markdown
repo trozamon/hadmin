@@ -1,18 +1,17 @@
-# hadmin
+# HAdmin
 
 *Note: This is my first python project. The python will no doubt be sloppy,
 and I welcome improvements as will as criticism of my coding style.*
 
-Hadmin is a Hadoop administration tool, mostly focused on reducing the
+HAdmin is a Hadoop administration tool, mostly focused on reducing the
 pain of adding users, queues, and adding nodes. There are a couple of
 purposes:
 
 * Provide command-line tools to update Hadoop config
 * Provide a Python API to update Hadoop config
 
-Current Hadoop versions (hopefully) supported are:
+Current Hadoop versions supported are:
 
-* 1.x
 * 2.x
 
 Current operations supported are:
@@ -21,88 +20,61 @@ Current operations supported are:
 * Adding, deleting, and modifying queues
 
 ## Read this first
-The Hadmin project assumes a little familiarity with Hadoop, as well
+The HAdmin project assumes a little familiarity with Hadoop, as well
 as assumes that you're using the CapacityScheduler.
 
-## Getting Started
-Before you run any of the hadmin commands, navigate to the directory you cloned
-this repo to and run
-
-    source env.sh
-
-This puts hadmin in your path so you can run it. Next, I'd suggest making
-a temporary directory somewhere and navigating to it to play around.
-
-Hadmin assumes that all work is carried out in the current directory. Hadmin
-also stores all the config in YAML because it's a little easier to read
-and not nearly as annoying as XML. So, you need to be in whatever directory
-you want all this YAML to be stored in. To generate initial YAML template, run
-
-    hadmin init
-
-in the directory that you'd like to keep your configuration in.
-
-## Generating Hadoop configuration
-Generating Hadoop configuration can be accomplished by running
-
-    hadoop gen <directory>
-
-This command will generate Hadoop XML and throw it in the directory
-specified on the command line. It takes a --version flag to specify
-the version of Hadoop that the config should be generated for. The version
-defaults to 2.
-
-## Queues
-A queue can be added by running
-
-    hadmin queueadd <queue> <user>
-
-Adding a queue requires a user. This initial user will be added as both
-a user and an administrator.
-
-A queue can be deleted by running
-
-    hadmin queuedel <queue>
-
-A queue can be modified by running
-
-    hadmin queuemod --capacity <cap> --maxcap <maxcap> --tpu <tpu> <queue>
-
-At least one of --capacity, --maxcap, --tpu needs to be specified for
-queuemod to actually do anything. --capacity changes the capacity of the
-queue, --maxcap the maximum capacity of the queue, and --tpu the maximum
-initialized tasks per user of the queue.
+To modify users and queues, you must be in the directory that contains
+capacity-scheduler.xml.
 
 ## Users
-A user can be added to a queue by running
 
-    hadmin useradd <user> <queue>
+### Adding Users
+`hadmin useradd [-a|--admin] <user> <queue>` adds users, or admins with `-a` or
+`--admin`, to the specified queues.  Additionally, it will try to run the
+following commands:
 
-and an administrator can be added to a queue by running
+* `hdfs dfs -ls /user/$user || hdfs dfs -mkdir /user/$user`
+* `hdfs dfs -chown $user /user/$user`
+* `yarn rmadmin -refreshQueues`
 
-    hadmin useradd --admin <user> <queue>
+### Removing Users
+`hadmin userdel [-a|--admin] <user> <queue>` removes users, or admins with `-a`
+or `--admin`, from the specified queues.  Additionally, it will try to run the
+following commands:
 
-A user or administrator can be deleted by replacing 'useradd' in the above
-commands with 'userdel'. Please note that --admin must be supplied to userdel
-for admin deletion; 'hadmin userdel <user>' will not remove a user from the
-admin list.
+* `hdfs dfs -rm -r /user/$user`
+* `yarn rmadmin -refreshQueues`
 
-An administrator has the power to delete any job from the queue, while a user
-has the power to add/delete his jobs to the queue.
+## Queues
+
+### Adding Queues
+`hadmin queueadd <queue> <user>` adds a queue with `$user` as an adminstrator
+and a user. It runs the following commands as well:
+
+* `hdfs dfs -ls /user/$user || hdfs dfs -mkdir /user/$user`
+* `hdfs dfs -chown $user /user/$user`
+* `yarn rmadmin -refreshQueues`
+
+By default, queues are turned off and have 0 for both capacity and maximum
+capacity.
+
+### Removing Queues
+`hadmin queuedel <queue>` is aliased to `hadmin queueoff <queue>`. Queues
+can only be removed by restarting the ResourceManager. Adding `-f` will force
+`hadmin` to remove the queue, requiring a ResourceManager restart. This is
+almost never desirable behavior, hence the `-f`.
+
+### Modifying Queues
+* `hadmin queueon <queue>` turns a queue on
+* `hadmin queueoff <queue>` turns a queue off
+* `hadmin queuecap [-m|--max] <queue> <cap>` sets the capacity of a queue, or with
+  `-m` or `--max` sets the maximum capacity.
 
 ## Future work
 Setting the capacity of multiple queues is annoying to get correct right now
 in Hadoop - it must add up to exactly 100. It would be convenient to be
-able to specify two queues with capacities of 1 and have Hadmin figure out
+able to specify two queues with capacities of 1 and have HAdmin figure out
 that that's supposed to be 50 for both.
-
-It'd also be nice to auto-generate sets of configs for machines with
-different CPU/HDD setups as well.
-
-A long-term goal of Hadmin is to intelligently generate as much config
-dynamically as possible, hopefully leading to better configured clusters.
-This could even include tuning performance automatically based on some
-formulas to at least give sys admins a head start on performance tuning.
 
 ## Helping out
 On the off chance that you've stumbled on this project and want to
