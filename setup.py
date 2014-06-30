@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 from setuptools import setup, find_packages
-import hadmin.hadmin_test
+import hadmin_test
 
 setup(
         name = "HAdmin",
@@ -15,7 +15,7 @@ setup(
         url = "http://github.com/trozamon/hadmin",
         license = "MIT",
 
-        test_suite = "hadmin.hadmin_test",
+        test_suite = "hadmin_test",
 
         setup_requires = ['flake8']
 )
