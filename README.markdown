@@ -4,20 +4,14 @@
 and I welcome improvements as will as criticism of my coding style.*
 
 HAdmin is a Hadoop administration tool, mostly focused on reducing the
-pain of adding users, queues, and adding nodes. There are a couple of
-purposes:
+pain of adding users, queues, and adding nodes.
 
-* Provide command-line tools to update Hadoop config
-* Provide a Python API to update Hadoop config
-
-Current Hadoop versions supported are:
-
-* 2.x
+Currently, only Hadoop 2.x is supported.
 
 Current operations supported are:
 
 * Adding and deleting users
-* Adding, deleting, and modifying queues
+* Adding and deleting queues
 
 ## Read this first
 The HAdmin project assumes a little familiarity with Hadoop, as well
@@ -65,16 +59,12 @@ can only be removed by restarting the ResourceManager. Adding `-f` will force
 almost never desirable behavior, hence the `-f`.
 
 ### Modifying Queues
+**Note: Not yet supported**
+
 * `hadmin queueon <queue>` turns a queue on
 * `hadmin queueoff <queue>` turns a queue off
 * `hadmin queuecap [-m|--max] <queue> <cap>` sets the capacity of a queue, or with
   `-m` or `--max` sets the maximum capacity.
-
-## Future work
-Setting the capacity of multiple queues is annoying to get correct right now
-in Hadoop - it must add up to exactly 100. It would be convenient to be
-able to specify two queues with capacities of 1 and have HAdmin figure out
-that that's supposed to be 50 for both.
 
 ## Helping out
 On the off chance that you've stumbled on this project and want to
