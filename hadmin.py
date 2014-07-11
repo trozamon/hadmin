@@ -4,6 +4,7 @@ import pkgutil
 import os
 
 
+scheduler_fname = 'capacity-scheduler.xml'
 pre_scheduler = 'yarn.scheduler.capacity'
 post_users = 'acl_submit_applications'
 post_admins = 'acl_administer_queue'
@@ -60,7 +61,7 @@ class HXML:
 
     @classmethod
     def from_file(cls, fname):
-        ret = cls(ET.parse(fname))
+        ret = cls(ET.parse(fname).getroot())
         return ret
 
     def __getitem__(self, prop):
@@ -79,10 +80,16 @@ class HXML:
 
         if success is not True:
             el = ET.Element('property')
-            el.append(ET.Element('name'))
-            el.append(ET.Element('value'))
-            el.find('name').text = prop
-            el.find('value').text = val
+            el.text = "\n    "
+            el.tail = "\n"
+            name_el = ET.Element('name')
+            name_el.tail = "\n    "
+            name_el.text = prop
+            el.append(name_el)
+            val_el = ET.Element('value')
+            val_el.tail = "\n  "
+            val_el.text = val
+            el.append(val_el)
             self.tree.append(el)
 
     def remove(self, prop):
@@ -91,7 +98,7 @@ class HXML:
                 self.tree.remove(node)
 
     def save(self, fname):
-        self.tree.write(fname)
+        ET.ElementTree(self.tree).write(fname)
 
 
 class QueueManager:
@@ -143,13 +150,13 @@ class QueueManager:
 
     def add(self, queue, user):
         parent = queue_parent(queue)
-        self.__insert(queue_subs_fqn(parent), queue)
+        self.__insert(queue_subs_fqn(parent), queue.split('.')[-1])
 
         self.add_user(user, queue)
         self.add_admin(user, queue)
         self.set_cap(queue, '0')
         self.set_maxcap(queue, '100')
-        self.set_ulim(queue, '25')
+        self.set_ulim(queue, '0.25')
         self.set_state(queue, 'running')
 
     def delete(self, queue):
@@ -187,17 +194,17 @@ def useradd(args):
                         const=True, default=False,
                         help='Add an administrator')
     args = parser.parse_args(args)
-    with hconfig.Internal.from_dir('.') as mgr:
-        try:
-            if args.is_admin:
-                mgr.add_admin(args.user, args.queue)
-                print("Added admin " + args.user + " to queue " + args.queue)
-            else:
-                mgr.add_user(args.user, args.queue)
-                print("Added user " + args.user + " to queue " + args.queue)
-        except KeyError as e:
-            print(str(e)[1:-1])
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+    if args.is_admin:
+        mgr.add_admin(args.user, args.queue)
+        print("Added admin " + args.user + " to queue " + args.queue)
+    else:
+        mgr.add_user(args.user, args.queue)
+        print("Added user " + args.user + " to queue " + args.queue)
 
+    mgr.save(scheduler_fname)
+
+    return 0
 
 def userdel(args):
     """
@@ -213,20 +220,17 @@ def userdel(args):
                         const=True, default=False,
                         help='Delete an administrator')
     args = parser.parse_args(args)
-    with hconfig.Internal.from_dir('.') as mgr:
-        try:
-            if args.is_admin:
-                mgr.del_admin(args.user, args.queue)
-                print("Removed admin " + args.user + " from queue " +
-                      args.queue)
-            else:
-                mgr.del_user(args.user, args.queue)
-                print("Removed user " + args.user + " from queue " +
-                      args.queue)
-        except ValueError as e:
-            print(str(e)[1:-1])
-        except AttributeError as e:
-            print(e)
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+    if args.is_admin:
+        mgr.del_admin(args.user, args.queue)
+        print("Removed admin " + args.user + " from queue " +
+              args.queue)
+    else:
+        mgr.del_user(args.user, args.queue)
+        print("Removed user " + args.user + " from queue " +
+              args.queue)
+
+    mgr.save(scheduler_fname)
 
 
 def queueadd(args):
@@ -235,23 +239,24 @@ def queueadd(args):
     parser.add_argument('queue')
     parser.add_argument('user')
     args = parser.parse_args(args)
-    with hconfig.Internal.from_dir('.') as mgr:
-        try:
-            mgr.add_queue(args.queue, args.user)
-            print('Added queue ' + args.queue +
-                  ' with initial user/admin ' + args.user)
-        except KeyError as e:
-            print(str(e)[1:-1])
+
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+    mgr.add(args.queue, args.user)
+    print('Added queue ' + args.queue +
+          ' with initial user/admin ' + args.user)
+
+    mgr.save(scheduler_fname)
 
 
 def queuedel(args):
     parser = ArgumentParser(prog='queueadd',
                             description='HAdmin queueadd utility')
     parser.add_argument('queue')
+    parser.add_argument('--force', dest='force', action='store_const',
+                        const=True, default=False,
+                        help='Force the queue deletion')
     args = parser.parse_args(args)
-    with hconfig.Internal.from_dir('.') as mgr:
-        try:
-            mgr.del_queue(args.queue)
-            print('Removed queue ' + args.queue)
-        except KeyError as e:
-            print(str(e)[1:-1])
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+    mgr.delete(args.queue)
+    print('Removed queue ' + args.queue)
+    mgr.save(scheduler_fname)

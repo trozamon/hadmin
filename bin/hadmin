@@ -4,7 +4,7 @@ import sys
 import os
 sys.path.append(os.path.dirname(os.path.realpath(__file__)))
 import argparse
-import hadmin.cmd
+import hadmin
 
 help_string = """Usage: hadmin <command> <command options>
 
@@ -20,7 +20,7 @@ def run():
         return 0
     command = sys.argv[1]
     sysargs = sys.argv[2:]
-    return getattr(hadmin.cmd, command)(sysargs)
+    return getattr(hadmin, command)(sysargs)
     return 1
 
 if __name__ == "__main__":

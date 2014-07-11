@@ -150,9 +150,17 @@ class HadminTest(unittest.TestCase):
     def testHXMLGetter(self):
         self.assertEqual(self.hxml[queue_users_fqn('a')], 'trozamon,root')
 
+    def testHXMLGetterNonExistent(self):
+        with self.assertRaises(KeyError):
+            self.hxml['roar']
+
     def testHXMLSetter(self):
         self.hxml[queue_users_fqn('a')] = 'hehe'
         self.assertEqual(self.hxml[queue_users_fqn('a')], 'hehe')
+
+    def testHXMLSetterNonExistent(self):
+        self.hxml['hehe'] = 'hey'
+        self.assertEqual(self.hxml['hehe'], 'hey')
 
     def testAddUserToQueue(self):
         self.man.add_user('test', 'a')
@@ -175,6 +183,11 @@ class HadminTest(unittest.TestCase):
         self.man.add('staff', 'trozamon')
         self.assertEqual(self.hxml[queue_subs_fqn()], 'a,b,staff')
 
+    def testAddQueueStaffBossmanInStaffSubs(self):
+        self.man.add('staff', 'trozamon')
+        self.man.add('staff.bossman', 'trozamon')
+        self.assertEqual(self.hxml[queue_subs_fqn('staff')], 'bossman')
+
     def testAddQueueStaffHasAdmin(self):
         self.man.add('staff', 'trozamon')
         self.assertEqual(self.hxml[queue_admins_fqn('staff')], 'trozamon')
@@ -193,7 +206,7 @@ class HadminTest(unittest.TestCase):
 
     def testAddQueueStaffHasUlim(self):
         self.man.add('staff', 'trozamon')
-        self.assertEqual(self.hxml[queue_ulim_fqn('staff')], '25')
+        self.assertEqual(self.hxml[queue_ulim_fqn('staff')], '0.25')
 
     def testAddQueueStaffIsRunning(self):
         self.man.add('staff', 'trozamon')
