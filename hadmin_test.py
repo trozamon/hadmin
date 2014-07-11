@@ -24,7 +24,7 @@ class HadminTest(unittest.TestCase):
 \t</property>
 \t<property>
 \t\t<name>yarn.scheduler.capacity.root.a.acl_administer_queue</name>
-\t\t<value>root</value>
+\t\t<value>root,test,trozamon</value>
 \t</property>
 \t<property>
 \t\t<name>yarn.scheduler.capacity.root.a.user-limit-factor</name>
@@ -162,6 +162,15 @@ class HadminTest(unittest.TestCase):
         self.man.del_user('root', 'a')
         self.assertEqual(self.hxml[queue_users_fqn('a')], 'trozamon')
 
+    def testAddAdminToQueue(self):
+        self.man.add_admin('test', 'a')
+        self.assertEqual(self.hxml[queue_admins_fqn('a')],
+                'root,test,trozamon')
+
+    def testRemoveAdminFromQueue(self):
+        self.man.del_admin('root', 'a')
+        self.assertEqual(self.hxml[queue_admins_fqn('a')], 'test,trozamon')
+
     def testAddQueueStaffInRootSubs(self):
         self.man.add('staff', 'trozamon')
         self.assertEqual(self.hxml[queue_subs_fqn()], 'a,b,staff')
@@ -176,7 +185,7 @@ class HadminTest(unittest.TestCase):
 
     def testAddQueueStaffHasCapacity(self):
         self.man.add('staff', 'trozamon')
-        self.assertEqual(self.hxml[queue_capacity_fqn('staff')], '0')
+        self.assertEqual(self.hxml[queue_cap_fqn('staff')], '0')
 
     def testAddQueueStaffHasMaximumCapacity(self):
         self.man.add('staff', 'trozamon')
@@ -193,3 +202,33 @@ class HadminTest(unittest.TestCase):
     def testRemoveQueue(self):
         self.man.delete('b')
         self.assertEqual(self.hxml[queue_subs_fqn()], 'a')
+
+    def testRemoveQueueNoMoreUsers(self):
+        self.man.delete('b')
+        with self.assertRaises(KeyError):
+            self.hxml[queue_users_fqn('b')]
+
+    def testRemoveQueueNoMoreAdmins(self):
+        self.man.delete('b')
+        with self.assertRaises(KeyError):
+            self.hxml[queue_admins_fqn('b')]
+
+    def testRemoveQueueNoMoreState(self):
+        self.man.delete('b')
+        with self.assertRaises(KeyError):
+            self.hxml[queue_state_fqn('b')]
+
+    def testRemoveQueueNoMoreUlim(self):
+        self.man.delete('b')
+        with self.assertRaises(KeyError):
+            self.hxml[queue_ulim_fqn('b')]
+
+    def testRemoveQueueNoMoreCap(self):
+        self.man.delete('b')
+        with self.assertRaises(KeyError):
+            self.hxml[queue_cap_fqn('b')]
+
+    def testRemoveQueueNoMoreMaxcap(self):
+        self.man.delete('b')
+        with self.assertRaises(KeyError):
+            self.hxml[queue_maxcap_fqn('b')]
