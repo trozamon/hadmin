@@ -103,6 +103,12 @@ class HXML:
             if node.find('name').text == prop:
                 self.tree.remove(node)
 
+    def keys(self):
+        ret = list()
+        for node in self.tree.findall('property'):
+            ret.append(node.find('name').text)
+        return sorted(ret)
+
     def save(self, fname):
         ET.ElementTree(self.tree).write(fname)
 
@@ -204,6 +210,25 @@ class QueueManager:
 
     def save(self, fname):
         self.hxml.save(fname)
+
+    def queue_list(self, queue='root'):
+        ret = list()
+
+        tmp = self.hxml.keys()
+        tmp_cap = queue_cap_fqn(queue)
+        tmp_subs = queue_subs_fqn(queue)
+        if tmp_cap not in tmp and tmp_subs not in tmp:
+            raise KeyError(queue + ' is not a valid queue')
+
+        ret.append(queue_fqn(queue))
+
+        try:
+            for sub in self.hxml[queue_subs_fqn(queue)].split(','):
+                ret = ret + self.queue_list('.'.join([queue, sub]))
+        except KeyError:
+            pass
+
+        return sorted(ret)
 
 
 def useradd(args):

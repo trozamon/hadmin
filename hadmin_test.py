@@ -4,6 +4,29 @@ from hadmin import *
 
 class HadminTest(unittest.TestCase):
 
+    def testManagerQueueList(self):
+        self.assertEqual(self.man.queue_list(), ['root', 'root.a', 'root.b'])
+
+    def testManagerQueueListA(self):
+        self.assertEqual(self.man.queue_list('a'), ['root.a'])
+
+    def testManagerQueueListWithTwoLevelSub(self):
+        self.man.add('a.staff', 'trozamon')
+        self.assertEqual(self.man.queue_list(),
+                ['root', 'root.a', 'root.a.staff', 'root.b'])
+
+    def testManagerQueueListAWithTwoLevelSub(self):
+        self.man.add('a.staff', 'trozamon')
+        self.assertEqual(self.man.queue_list('a'), ['root.a', 'root.a.staff'])
+
+    def testManagerQueueListStaffWithTwoLevelSub(self):
+        self.man.add('a.staff', 'trozamon')
+        self.assertEqual(self.man.queue_list('a.staff'), ['root.a.staff'])
+
+    def testManagerQueueListBadQueue(self):
+        with self.assertRaises(KeyError):
+            self.man.queue_list('trozamon')
+
     def testSetBCapacityInt(self):
         self.man.set_cap('b', 100)
         self.assertEqual(self.hxml[queue_cap_fqn('b')], '100')
@@ -176,6 +199,11 @@ class HadminTest(unittest.TestCase):
         self.man.add('staff', 'trozamon')
         self.man.add('staff.bossman', 'trozamon')
         self.assertEqual(self.hxml[queue_subs_fqn('staff')], 'bossman')
+
+    def testAddQueueStaffBossmanNotInRootSubs(self):
+        self.man.add('staff', 'trozamon')
+        self.man.add('staff.bossman', 'trozamon')
+        self.assertFalse('bossman' in self.hxml[queue_subs_fqn()].split(','))
 
     def testAddQueueStaffHasAdmin(self):
         self.man.add('staff', 'trozamon')
