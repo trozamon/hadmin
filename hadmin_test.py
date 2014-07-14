@@ -4,6 +4,25 @@ from hadmin import *
 
 class HadminTest(unittest.TestCase):
 
+    def testManagerSanityCheckMaximumCapacitiesNoProbs(self):
+        self.assertEqual(self.man.sc_maxcaps(), [])
+
+    def testManagerSanityCheckMaximumCapacitiesProb(self):
+        self.man.add('a.a', 'trozamon')
+        self.man.set_cap('a.a', 50)
+        self.man.set_maxcap('a.a', 25)
+        self.assertEqual(self.man.sc_maxcaps(), ['root.a.a'])
+
+    def testManagerSanityCheckCapacitiesNoProbs(self):
+        self.assertEqual(self.man.sc_caps(), [])
+
+    def testManagerSanityCheckCapacitiesProb(self):
+        self.man.add('a.a', 'trozamon')
+        self.man.add('a.b', 'trozamon')
+        self.man.add('b.a', 'trozamon')
+        self.man.add('b.b', 'trozamon')
+        self.assertEqual(self.man.sc_caps(), ['root.a', 'root.b'])
+
     def testManagerQueueList(self):
         self.assertEqual(self.man.queue_list(), ['root', 'root.a', 'root.b'])
 
@@ -268,6 +287,14 @@ class HadminTest(unittest.TestCase):
 \t<property>
 \t\t<name>yarn.scheduler.capacity.root.queues</name>
 \t\t<value>a,b</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.capacity</name>
+\t\t<value>100</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.maximum-capacity</name>
+\t\t<value>100</value>
 \t</property>
 \t<property>
 \t\t<name>yarn.scheduler.capacity.root.a.capacity</name>

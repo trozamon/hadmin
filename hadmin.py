@@ -230,6 +230,47 @@ class QueueManager:
 
         return sorted(ret)
 
+    def sc_caps(self):
+        queues = self.queue_list()
+        caps = dict()
+
+        if self.hxml[queue_cap_fqn('root')] != '100':
+            raise ValueError('Capacity of root is not 100')
+
+        if self.hxml[queue_maxcap_fqn('root')] != '100':
+            raise ValueError('Maximum capacity of root is not 100')
+
+        for i in range(len(queues)):
+            if queues[i] == 'root':
+                del(queues[i])
+                break
+
+        for queue in queues:
+            caps[queue_parent(queue)] = 0
+
+        for queue in queues:
+            caps[queue_parent(queue)] = caps[queue_parent(queue)] + \
+                    int(self.hxml[queue_cap_fqn(queue)])
+
+        ret = list()
+        for queue in caps:
+            if caps[queue] != 100:
+                ret.append(queue)
+
+        return sorted(ret)
+
+    def sc_maxcaps(self):
+        queues = self.queue_list()
+        ret = list()
+
+        for queue in queues:
+            cap = int(self.hxml[queue_cap_fqn(queue)])
+            max_cap = int(self.hxml[queue_maxcap_fqn(queue)])
+            if cap > max_cap:
+                ret.append(queue)
+
+        return sorted(ret)
+
 
 def useradd(args):
     """
@@ -392,3 +433,18 @@ def queuestat(args):
             out = queue + ' is not a leaf'
 
         print(out)
+
+def sc(args):
+    parser = ArgumentParser(prog='sc',
+                            description='HAdmin sanity check utility')
+    args = parser.parse_args(args)
+
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+
+    for queue in mgr.sc_caps():
+        print('The capacities of all subqueues of ' + queue +
+                ' do not sum to 100')
+
+    for queue in mgr.sc_maxcaps():
+        print('The capacity of ' + queue +
+                ' is greater than its maximum capacity')
