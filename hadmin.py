@@ -314,7 +314,7 @@ def queuedel(args):
         mgr.save(scheduler_fname)
         print('Removed queue ' + args.queue)
     else:
-        queueon(args.queue)
+        queueoff([args.queue])
 
 def queueon(args):
     parser = ArgumentParser(prog='queueon',
@@ -324,14 +324,71 @@ def queueon(args):
     mgr = QueueManager(HXML.from_file(scheduler_fname))
     mgr.on(args.queue)
     mgr.save(scheduler_fname)
-    print('Turned queue ' + args.queue + 'on')
+    print('Turned queue ' + args.queue + ' on')
 
 def queueoff(args):
-    parser = ArgumentParser(prog='queueon',
-                            description='HAdmin queueon utility')
+    parser = ArgumentParser(prog='queueoff',
+                            description='HAdmin queueoff utility')
     parser.add_argument('queue')
     args = parser.parse_args(args)
     mgr = QueueManager(HXML.from_file(scheduler_fname))
     mgr.off(args.queue)
     mgr.save(scheduler_fname)
-    print('Turned queue ' + args.queue + 'off')
+    print('Turned queue ' + args.queue + ' off')
+
+def queuecap(args):
+    parser = ArgumentParser(prog='queuecap',
+                            description='HAdmin queuecap utility')
+    parser.add_argument('queue')
+    parser.add_argument('capacity')
+    parser.add_argument('--max', dest='maxcap', action='store_const',
+                        const=True, default=False,
+                        help='Set maximum capacity')
+    args = parser.parse_args(args)
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+    if args.maxcap:
+        mgr.set_maxcap(args.queue, args.capacity)
+    else:
+        mgr.set_cap(args.queue, args.capacity)
+    mgr.save(scheduler_fname)
+
+    out = 'Set '
+    if args.maxcap:
+        out = out + 'maximum '
+    out = out + 'capacity of queue ' + args.queue + ' to ' + args.capacity
+    print(out)
+
+def queueulim(args):
+    parser = ArgumentParser(prog='queueulim',
+                            description='HAdmin queueulim utility')
+    parser.add_argument('queue')
+    parser.add_argument('ulim')
+    args = parser.parse_args(args)
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+    mgr.set_ulim(args.queue, args.ulim)
+    mgr.save(scheduler_fname)
+    print('Set ulim of queue ' + args.queue + ' to ' + args.ulim)
+
+def queuestat(args):
+    parser = ArgumentParser(prog='queuestat',
+                            description='HAdmin queuestat utility')
+    parser.add_argument('queue', nargs='?', default='root')
+    args = parser.parse_args(args)
+    hxml = HXML.from_file(scheduler_fname)
+    mgr = QueueManager(hxml)
+
+    for queue in mgr.queue_list(args.queue):
+        try:
+            out = '\n'.join([
+                queue,
+                '\tcapacity:           ' + hxml[queue_cap_fqn(queue)],
+                '\tmaximum capacity:   ' + hxml[queue_maxcap_fqn(queue)],
+                '\tuser limit factor:  ' + hxml[queue_ulim_fqn(queue)],
+                '\tstate:              ' + hxml[queue_state_fqn(queue)],
+                '\tusers:              ' + hxml[queue_users_fqn(queue)],
+                '\tadmins:             ' + hxml[queue_admins_fqn(queue)]
+                ])
+        except KeyError:
+            out = queue + ' is not a leaf'
+
+        print(out)
