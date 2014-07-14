@@ -73,6 +73,12 @@ class HXML:
 
     def __setitem__(self, prop, val):
         success = False
+
+        if type(val) in (int, float):
+            val = str(val)
+        elif type(val) is bool:
+            val = str(val).lower()
+
         for node in self.tree.findall('property'):
             if node.find('name').text == prop:
                 node.find('value').text = val
@@ -137,16 +143,37 @@ class QueueManager:
         self.__insert(queue_admins_fqn(queue), user)
 
     def set_cap(self, queue, cap):
+        cap = int(cap)
+        if cap > 100 or cap < 0:
+            raise ValueError('Queue capacity must be between 0 and 100')
+
         self.hxml[queue_cap_fqn(queue)] = cap
 
     def set_maxcap(self, queue, maxcap):
+        maxcap = int(maxcap)
+        if maxcap > 100 or maxcap < 0:
+            raise ValueError(
+                    'Queue maximum capacity must be between 0 and 100'
+                    )
+
         self.hxml[queue_maxcap_fqn(queue)] = maxcap
 
     def set_ulim(self, queue, ulim):
+        ulim = float(ulim)
+
+        if ulim > 1.0 or ulim < 0.0:
+            raise ValueError('ulim must be a float between 0 and 1')
+
         self.hxml[queue_ulim_fqn(queue)] = ulim
 
     def set_state(self, queue, state):
         self.hxml[queue_state_fqn(queue)] = state
+
+    def off(self, queue):
+        self.set_state(queue, 'stopped')
+
+    def on(self, queue):
+        self.set_state(queue, 'running')
 
     def add(self, queue, user):
         parent = queue_parent(queue)
@@ -256,7 +283,30 @@ def queuedel(args):
                         const=True, default=False,
                         help='Force the queue deletion')
     args = parser.parse_args(args)
+    if args.force:
+        mgr = QueueManager(HXML.from_file(scheduler_fname))
+        mgr.delete(args.queue)
+        mgr.save(scheduler_fname)
+        print('Removed queue ' + args.queue)
+    else:
+        queueon(args.queue)
+
+def queueon(args):
+    parser = ArgumentParser(prog='queueon',
+                            description='HAdmin queueon utility')
+    parser.add_argument('queue')
+    args = parser.parse_args(args)
     mgr = QueueManager(HXML.from_file(scheduler_fname))
-    mgr.delete(args.queue)
-    print('Removed queue ' + args.queue)
+    mgr.on(args.queue)
     mgr.save(scheduler_fname)
+    print('Turned queue ' + args.queue + 'on')
+
+def queueoff(args):
+    parser = ArgumentParser(prog='queueon',
+                            description='HAdmin queueon utility')
+    parser.add_argument('queue')
+    args = parser.parse_args(args)
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+    mgr.off(args.queue)
+    mgr.save(scheduler_fname)
+    print('Turned queue ' + args.queue + 'off')

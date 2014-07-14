@@ -4,64 +4,53 @@ from hadmin import *
 
 class HadminTest(unittest.TestCase):
 
-    def setUp(self):
-        self.base = """<configuration>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.queues</name>
-\t\t<value>a,b</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.a.capacity</name>
-\t\t<value>50</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.a.maximum-capacity</name>
-\t\t<value>50</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.a.acl_submit_applications</name>
-\t\t<value>trozamon,root</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.a.acl_administer_queue</name>
-\t\t<value>root,test,trozamon</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.a.user-limit-factor</name>
-\t\t<value>25</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.a.state</name>
-\t\t<value>running</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.b.capacity</name>
-\t\t<value>50</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.b.maximum-capacity</name>
-\t\t<value>100</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.b.acl_submit_applications</name>
-\t\t<value>trozamon,root</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.b.acl_administer_queue</name>
-\t\t<value>root</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.b.user-limit-factor</name>
-\t\t<value>25</value>
-\t</property>
-\t<property>
-\t\t<name>yarn.scheduler.capacity.root.b.state</name>
-\t\t<value>running</value>
-\t</property>
-</configuration>"""
-        self.xmltree = ET.fromstring(self.base)
-        self.hxml = HXML.from_etree(self.xmltree)
-        self.man = QueueManager(self.hxml)
+    def testSetBCapacityInt(self):
+        self.man.set_cap('b', 100)
+        self.assertEqual(self.hxml[queue_cap_fqn('b')], '100')
+
+    def testSetBMaximumCapacityFloat(self):
+        self.man.set_maxcap('b', 5.1)
+        self.assertEqual(self.hxml[queue_maxcap_fqn('b')], '5')
+
+    def testSetBCapacityGreaterThan100(self):
+        with self.assertRaises(ValueError):
+            self.man.set_cap('b', 101)
+
+    def testSetBCapacityLessThan0(self):
+        with self.assertRaises(ValueError):
+            self.man.set_cap('b', -1)
+
+    def testSetBMaximumCapacityGreaterThan100(self):
+        with self.assertRaises(ValueError):
+            self.man.set_maxcap('b', 101)
+
+    def testSetBMaximumCapacityLessThan0(self):
+        with self.assertRaises(ValueError):
+            self.man.set_maxcap('b', -1)
+
+    def testSetBOff(self):
+        self.man.off('b')
+        self.assertEqual(self.hxml[queue_state_fqn('b')], 'stopped')
+
+    def testSetBOn(self):
+        self.man.on('b')
+        self.assertEqual(self.hxml[queue_state_fqn('b')], 'running')
+
+    def testSetUlimGreaterThanOne(self):
+        with self.assertRaises(ValueError):
+            self.man.set_ulim('b', 2)
+
+    def testSetUlimGreaterThanOneStr(self):
+        with self.assertRaises(ValueError):
+            self.man.set_ulim('b', '2')
+
+    def testSetUlimLessThanOne(self):
+        with self.assertRaises(ValueError):
+            self.man.set_ulim('b', -1)
+
+    def testSetUlimLessThanOneStr(self):
+        with self.assertRaises(ValueError):
+            self.man.set_ulim('b', '-1')
 
     def testQueueFQNBare(self):
         self.assertEqual(queue_fqn('staff'), 'root.staff')
@@ -245,3 +234,62 @@ class HadminTest(unittest.TestCase):
         self.man.delete('b')
         with self.assertRaises(KeyError):
             self.hxml[queue_maxcap_fqn('b')]
+
+    def setUp(self):
+        self.base = """<configuration>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.queues</name>
+\t\t<value>a,b</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.a.capacity</name>
+\t\t<value>50</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.a.maximum-capacity</name>
+\t\t<value>50</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.a.acl_submit_applications</name>
+\t\t<value>trozamon,root</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.a.acl_administer_queue</name>
+\t\t<value>root,test,trozamon</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.a.user-limit-factor</name>
+\t\t<value>25</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.a.state</name>
+\t\t<value>running</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.b.capacity</name>
+\t\t<value>50</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.b.maximum-capacity</name>
+\t\t<value>100</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.b.acl_submit_applications</name>
+\t\t<value>trozamon,root</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.b.acl_administer_queue</name>
+\t\t<value>root</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.b.user-limit-factor</name>
+\t\t<value>25</value>
+\t</property>
+\t<property>
+\t\t<name>yarn.scheduler.capacity.root.b.state</name>
+\t\t<value>running</value>
+\t</property>
+</configuration>"""
+        self.xmltree = ET.fromstring(self.base)
+        self.hxml = HXML.from_etree(self.xmltree)
+        self.man = QueueManager(self.hxml)
