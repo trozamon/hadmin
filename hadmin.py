@@ -143,10 +143,12 @@ class QueueManager:
         self.hxml[prop] = ','.join(sorted(csv))
 
     def add_user(self, user, queue):
-        self.__insert(queue_users_fqn(queue), user)
+        for user in user.split(','):
+            self.__insert(queue_users_fqn(queue), user)
 
     def add_admin(self, user, queue):
-        self.__insert(queue_admins_fqn(queue), user)
+        for user in user.split(','):
+            self.__insert(queue_admins_fqn(queue), user)
 
     def set_cap(self, queue, cap):
         cap = int(cap)
@@ -182,6 +184,9 @@ class QueueManager:
         self.set_state(queue, 'running')
 
     def add(self, queue, user):
+        if queue_fqn(queue) in self.queue_list():
+            raise KeyError('Queue' + queue + ' already exists')
+
         parent = queue_parent(queue)
         self.__insert(queue_subs_fqn(parent), queue.split('.')[-1])
 

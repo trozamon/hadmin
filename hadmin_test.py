@@ -4,6 +4,20 @@ from hadmin import *
 
 class HadminTest(unittest.TestCase):
 
+    def testManagerAddMultipleUsers(self):
+        self.man.add_user('bob,bill', 'a')
+        self.assertEqual(self.hxml[queue_users_fqn('a')],
+                'bill,bob,root,trozamon')
+
+    def testManagerAddMultipleAdmins(self):
+        self.man.add_admin('zoe,joebob', 'a')
+        self.assertEqual(self.hxml[queue_admins_fqn('a')],
+                'joebob,root,test,trozamon,zoe')
+
+    def testManagerAddAlreadyExistingQueue(self):
+        with self.assertRaises(KeyError):
+            self.man.add('a', 'trozamon')
+
     def testManagerSanityCheckMaximumCapacitiesNoProbs(self):
         self.assertEqual(self.man.sc_maxcaps(), [])
 
