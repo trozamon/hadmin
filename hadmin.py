@@ -2,6 +2,7 @@ from argparse import ArgumentParser
 import xml.etree.ElementTree as ET
 import pkgutil
 import os
+import subprocess
 
 
 scheduler_fname = 'capacity-scheduler.xml'
@@ -280,6 +281,35 @@ class QueueManager:
         return sorted(ret)
 
 
+def reload_queues():
+    ret = subprocess.call('which yarn', shell=True)
+
+    if ret != 0:
+        print('You do not have the yarn binary on your system')
+        print("Please manually run 'yarn rmadmin -refreshQueues'")
+
+    return ret
+
+
+def add_user_hdfs(user):
+    ret = subprocess.call('which hdfs', shell=True)
+    if ret != 0:
+        print('You do not have the hdfs binary on your system')
+        print('You will have to manually run:')
+        print('\thdfs dfs -mkdir /user/' + user)
+        print('\thdfs dfs -chown ' + user + ' /user/' + user)
+
+    print('Creating home directory for ' + user + '...', end='')
+    ret = subprocess.call('hdfs dfs -mkdir /user/' + user, shell=True)
+    if ret == 0:
+        ret = subprocess.call('hdfs dfs -chown ' + user + ' /user/' + user,
+                shell=True)
+        if ret == 0:
+            print('SUCCESS')
+        else:
+            print('FAILURE')
+
+
 def useradd(args):
     """
     Takes in the args that come after 'useradd' on the command line and also
@@ -305,7 +335,13 @@ def useradd(args):
 
     mgr.save(scheduler_fname)
 
-    return 0
+    for u in args.user.split(','):
+        add_user_hdfs(u)
+
+    ret = reload_queues()
+
+    return ret
+
 
 def userdel(args):
     """
@@ -333,6 +369,8 @@ def userdel(args):
 
     mgr.save(scheduler_fname)
 
+    return reload_queues()
+
 
 def queueadd(args):
     parser = ArgumentParser(prog='queueadd',
@@ -348,6 +386,10 @@ def queueadd(args):
 
     mgr.save(scheduler_fname)
 
+    add_user_hdfs(args.user)
+
+    return reload_queues()
+
 
 def queuedel(args):
     parser = ArgumentParser(prog='queueadd',
@@ -362,8 +404,10 @@ def queuedel(args):
         mgr.delete(args.queue)
         mgr.save(scheduler_fname)
         print('Removed queue ' + args.queue)
-    else:
-        queueoff([args.queue])
+        return reload_queues()
+    
+    return queueoff([args.queue])
+
 
 def queueon(args):
     parser = ArgumentParser(prog='queueon',
@@ -375,6 +419,9 @@ def queueon(args):
     mgr.save(scheduler_fname)
     print('Turned queue ' + args.queue + ' on')
 
+    return reload_queues()
+
+
 def queueoff(args):
     parser = ArgumentParser(prog='queueoff',
                             description='HAdmin queueoff utility')
@@ -384,6 +431,9 @@ def queueoff(args):
     mgr.off(args.queue)
     mgr.save(scheduler_fname)
     print('Turned queue ' + args.queue + ' off')
+
+    return reload_queues()
+
 
 def queuecap(args):
     parser = ArgumentParser(prog='queuecap',
@@ -407,6 +457,9 @@ def queuecap(args):
     out = out + 'capacity of queue ' + args.queue + ' to ' + args.capacity
     print(out)
 
+    return reload_queues()
+
+
 def queueulim(args):
     parser = ArgumentParser(prog='queueulim',
                             description='HAdmin queueulim utility')
@@ -417,6 +470,9 @@ def queueulim(args):
     mgr.set_ulim(args.queue, args.ulim)
     mgr.save(scheduler_fname)
     print('Set ulim of queue ' + args.queue + ' to ' + args.ulim)
+
+    return reload_queues()
+
 
 def queuestat(args):
     parser = ArgumentParser(prog='queuestat',
@@ -441,6 +497,7 @@ def queuestat(args):
             out = queue + ' is not a leaf'
 
         print(out)
+
 
 def sc(args):
     parser = ArgumentParser(prog='sc',
