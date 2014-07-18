@@ -185,7 +185,10 @@ class QueueManager:
 
     def add(self, queue, user):
         if queue_fqn(queue) in self.queue_list():
-            raise KeyError('Queue' + queue + ' already exists')
+            raise KeyError('Queue ' + queue + ' already exists')
+
+        if len(user.split(',')) != 1:
+            raise ValueError('Queues may be created with one admin only')
 
         parent = queue_parent(queue)
         self.__insert(queue_subs_fqn(parent), queue.split('.')[-1])

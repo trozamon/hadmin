@@ -4,6 +4,10 @@ from hadmin import *
 
 class HadminTest(unittest.TestCase):
 
+    def testManagerAddQueueMultipleUsersThrows(self):
+        with self.assertRaises(ValueError):
+            self.man.add('superqueue', 'bill,alan')
+
     def testManagerAddMultipleUsers(self):
         self.man.add_user('bob,bill', 'a')
         self.assertEqual(self.hxml[queue_users_fqn('a')],
