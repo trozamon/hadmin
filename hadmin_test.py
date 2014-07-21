@@ -4,6 +4,28 @@ from hadmin import *
 
 class HadminTest(unittest.TestCase):
 
+    def testManAdminListB(self):
+        self.man.add('b.b', 'blah')
+        self.assertEqual(self.man.admin_list('b'),
+                ['blah', 'root'])
+
+    def testManAdminListB(self):
+        self.assertEqual(self.man.admin_list('b'),
+                ['root'])
+
+    def testManUserListAAfterAdding(self):
+        self.man.add('a.a', 'blah')
+        self.assertEqual(self.man.user_list('a'),
+                ['blah', 'root', 'trozamon'])
+
+    def testManUserListRoot(self):
+        self.assertEqual(self.man.user_list(),
+                ['root', 'trozamon'])
+
+    def testUserListFromPasswd(self):
+        self.assertEqual(users_from_passwd(self.passwd),
+                ['adm', 'bin', 'daemon', 'root'])
+
     def testManagerAddQueueMultipleUsersThrows(self):
         with self.assertRaises(ValueError):
             self.man.add('superqueue', 'bill,alan')
@@ -301,6 +323,11 @@ class HadminTest(unittest.TestCase):
             self.hxml[queue_maxcap_fqn('b')]
 
     def setUp(self):
+        self.passwd = """root:x:0:0:root:/root:/bin/zsh
+bin:x:1:1:bin:/bin:/bin/false
+daemon:x:2:2:daemon:/sbin:/bin/false
+adm:x:3:4:adm:/var/adm:/bin/false"""
+
         self.base = """<configuration>
 \t<property>
 \t\t<name>yarn.scheduler.capacity.root.queues</name>

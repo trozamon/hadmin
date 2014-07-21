@@ -239,6 +239,30 @@ class QueueManager:
 
         return sorted(ret)
 
+    def user_list(self, queue='root'):
+        ret = list()
+        for sub in self.queue_list(queue):
+            try:
+                for user in self.hxml[queue_users_fqn(sub)].split(','):
+                    if user not in ret:
+                        ret.append(user)
+            except KeyError:
+                pass
+
+        return sorted(ret)
+
+    def admin_list(self, queue='root'):
+        ret = list()
+        for sub in self.queue_list(queue):
+            try:
+                for user in self.hxml[queue_admins_fqn(sub)].split(','):
+                    if user not in ret:
+                        ret.append(user)
+            except KeyError:
+                pass
+
+        return sorted(ret)
+
     def sc_caps(self):
         queues = self.queue_list()
         caps = dict()
@@ -279,6 +303,14 @@ class QueueManager:
                 ret.append(queue)
 
         return sorted(ret)
+
+
+def users_from_passwd(raw):
+    users = list()
+    for line in raw.split('\n'):
+        users.append(line.split(':')[0])
+
+    return sorted(users)
 
 
 def reload_queues():
