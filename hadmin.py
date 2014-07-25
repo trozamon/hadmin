@@ -326,7 +326,9 @@ class QueueManager:
 def users_from_passwd(raw):
     users = list()
     for line in raw.split('\n'):
-        users.append(line.split(':')[0])
+        tmp = line.split(':')[0]
+        if len(tmp) > 0:
+            users.append(tmp)
 
     return sorted(users)
 

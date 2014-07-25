@@ -330,7 +330,8 @@ class HadminTest(unittest.TestCase):
 
     def setUp(self):
         self.passwd = """root:x:0:0:root:/root:/bin/zsh
-adm:x:3:4:adm:/var/adm:/bin/false"""
+adm:x:3:4:adm:/var/adm:/bin/false
+"""
 
         self.base = """<configuration>
 \t<property>
