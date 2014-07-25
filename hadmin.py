@@ -304,6 +304,24 @@ class QueueManager:
 
         return sorted(ret)
 
+    def sc_users(self, passwd):
+        ret = list()
+        real_users = users_from_passwd(passwd)
+        for user in self.user_list():
+            if user not in real_users:
+                ret.append(user)
+
+        return sorted(ret)
+
+    def sc_admins(self, passwd):
+        ret = list()
+        real_admins = users_from_passwd(passwd)
+        for admin in self.admin_list():
+            if admin not in real_admins:
+                ret.append(admin)
+
+        return sorted(ret)
+
 
 def users_from_passwd(raw):
     users = list()

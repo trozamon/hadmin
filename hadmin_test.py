@@ -4,6 +4,12 @@ from hadmin import *
 
 class HadminTest(unittest.TestCase):
 
+    def testManSanityCheckUsers(self):
+        self.assertEqual(['trozamon'], self.man.sc_users(self.passwd))
+
+    def testManSanityCheckAdmins(self):
+        self.assertEqual(['test', 'trozamon'], self.man.sc_admins(self.passwd))
+
     def testManAdminListB(self):
         self.man.add('b.b', 'blah')
         self.assertEqual(self.man.admin_list('b'),
@@ -24,7 +30,7 @@ class HadminTest(unittest.TestCase):
 
     def testUserListFromPasswd(self):
         self.assertEqual(users_from_passwd(self.passwd),
-                ['adm', 'bin', 'daemon', 'root'])
+                ['adm', 'root'])
 
     def testManagerAddQueueMultipleUsersThrows(self):
         with self.assertRaises(ValueError):
@@ -324,8 +330,6 @@ class HadminTest(unittest.TestCase):
 
     def setUp(self):
         self.passwd = """root:x:0:0:root:/root:/bin/zsh
-bin:x:1:1:bin:/bin:/bin/false
-daemon:x:2:2:daemon:/sbin:/bin/false
 adm:x:3:4:adm:/var/adm:/bin/false"""
 
         self.base = """<configuration>
