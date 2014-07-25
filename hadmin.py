@@ -565,3 +565,10 @@ def sc(args):
     for queue in mgr.sc_maxcaps():
         print('The capacity of ' + queue +
                 ' is greater than its maximum capacity')
+
+    passwd_raw = open('/etc/passwd', 'r').read()
+    for user in mgr.sc_users(passwd_raw):
+        print('User ' + user + ' does _not_ exist on this machine.')
+
+    for admin in mgr.sc_admins(passwd_raw):
+        print('Admin ' + admin + ' does _not_ exist on this machine.')
