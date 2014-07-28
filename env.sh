@@ -1,4 +1,6 @@
 #!/bin/bash
 
-export PYTHONPATH="`pwd`:$PYTHONPATH"
-export PATH="`pwd`/bin:$PATH"
+HADMIN_DIR=`pwd`/`dirname ${0}`
+
+export PYTHONPATH="${HADMIN_DIR}:${PYTHONPATH}"
+export PATH="${HADMIN_DIR}/bin:${PATH}"
