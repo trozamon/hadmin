@@ -335,12 +335,18 @@ def users_from_passwd(raw):
 
 def reload_queues():
     ret = subprocess.call('which yarn', shell=True)
-
     if ret != 0:
         print('You do not have the yarn binary on your system')
         print("Please manually run 'yarn rmadmin -refreshQueues'")
+        return ret
 
-    return ret
+    ret = subprocess.call('yarn rmadmin -refreshQueues', shell=True)
+    if ret != 0:
+        print("Refreshing queues failed, please manually run 'yarn rmadmin" +
+              "-refreshQueues'")
+        return ret
+
+    return 0
 
 
 def add_user_hdfs(user):
@@ -350,16 +356,21 @@ def add_user_hdfs(user):
         print('You will have to manually run:')
         print('\thdfs dfs -mkdir /user/' + user)
         print('\thdfs dfs -chown ' + user + ' /user/' + user)
+        return ret
 
     print('Creating home directory for ' + user + '...', end='')
     ret = subprocess.call('hdfs dfs -mkdir /user/' + user, shell=True)
-    if ret == 0:
-        ret = subprocess.call('hdfs dfs -chown ' + user + ' /user/' + user,
-                shell=True)
-        if ret == 0:
-            print('SUCCESS')
-        else:
-            print('FAILURE')
+    if ret != 0:
+        print('Creating directory /user/' + user + ' failed')
+        return ret
+
+    ret = subprocess.call('hdfs dfs -chown ' + user + ' /user/' + user,
+            shell=True)
+    if ret != 0:
+        print('Chowning the above directory failed')
+        return ret
+
+    return 0
 
 
 def useradd(args):
