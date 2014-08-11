@@ -1,3 +1,8 @@
+"""
+HAdmin is an API and command line tool to configure the queues of Hadoop's
+CapacityScheduler.
+"""
+
 from argparse import ArgumentParser
 import xml.etree.ElementTree as ET
 import pkgutil
@@ -17,55 +22,77 @@ post_subs = 'queues'
 
 
 def queue_fqn(queue='root'):
+    """ Returns the fully qualified name of a queue. """
     if (queue[0:4] == 'root'):
         return queue
     return ''.join(['root.', queue])
 
 def queue_parent(queue='root'):
+    """ Returns the parent of a queue. """
     return '.'.join(queue_fqn(queue).split('.')[0:-1])
 
 def queue_cap_fqn(queue='root'):
+    """ Returns the config key specifying the capacity of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_cap])
 
 def queue_maxcap_fqn(queue='root'):
+    """ Returns the config key specifying the max capacity of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_maxcap])
 
 def queue_users_fqn(queue='root'):
+    """ Returns the config key specifying the users of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_users])
 
 def queue_admins_fqn(queue='root'):
+    """ Returns the config key specifying the admins of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_admins])
 
 def queue_state_fqn(queue='root'):
+    """ Returns the config key specifying the state of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_state])
 
 def queue_ulim_fqn(queue='root'):
+    """ Returns the config key specifying the ulim of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_ulim])
 
 def queue_subs_fqn(queue='root'):
+    """ Returns the config key specifying the subqueues of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_subs])
 
 
 class HXML:
+    """
+    A wrapper around etree specific to Hadoop's XML format.
+
+    Provides an easy way to deal with Hadoop's XML so that calling classes
+    only worry about Hadoop config keys and values, and not dealing with all
+    the cruft. Unless you're crazy, avoid using this class directly and instead
+    use a class such as QueueManager to fulfill your needs.
+    """
+
     def __init__(self, etree):
         self.tree = etree
 
     @classmethod
     def from_etree(cls, etree):
+        """ Not sure why this is here since __init__() takes etrees. """
         ret = cls(etree)
         return ret
 
     @classmethod
     def from_str(cls, string):
+        """ Construct from a raw XML string. """
         ret = cls(ET.fromstring(string))
         return ret
 
     @classmethod
     def from_file(cls, fname):
+        """ Construct from an XML file. """
         ret = cls(ET.parse(fname).getroot())
         return ret
 
     def __getitem__(self, prop):
+        """ Retrieves a config value. """
         for node in self.tree.findall('property'):
             if node.find('name').text == prop:
                 return node.find('value').text
@@ -73,6 +100,11 @@ class HXML:
         raise KeyError('Key ' + prop + ' not found')
 
     def __setitem__(self, prop, val):
+        """
+        Sets a config value. Please note that if the specified property
+        prop does not exist, it will be created.
+        """
+
         success = False
 
         if type(val) in (int, float):
@@ -100,26 +132,36 @@ class HXML:
             self.tree.append(el)
 
     def remove(self, prop):
+        """ Deletes a property from the etree. """
         for node in self.tree.findall('property'):
             if node.find('name').text == prop:
                 self.tree.remove(node)
 
     def keys(self):
+        """ Returns a list of keys. """
         ret = list()
         for node in self.tree.findall('property'):
             ret.append(node.find('name').text)
         return sorted(ret)
 
     def save(self, fname):
+        """ Saves to a file. """
         ET.ElementTree(self.tree).write(fname)
 
 
 class QueueManager:
+    """
+    A class to specifically manage the queue's in Hadoop's CapacityScheduler.
+
+    Contains a reasonable amount of functionality, and hopefully most of it
+    is pretty common-sensical.
+    """
 
     def __init__(self, hxml):
         self.hxml = hxml
 
     def __insert(self, prop, value):
+        """ Inserts a value into a CSV string, checking for duplicates. """
         csv = [value]
         try:
             csv = self.hxml[prop].split(',')
@@ -131,6 +173,12 @@ class QueueManager:
         self.hxml[prop] = ','.join(sorted(csv))
 
     def __unsert(self, prop, value):
+        """
+        Unserts a value from a CSV string. I named this before realizing
+        that 'remove' is actually the correct word. Good thing English is my
+        only language.
+        """
+
         csv = self.hxml[prop].split(',')
 
         if len(csv) == 1:
@@ -144,14 +192,17 @@ class QueueManager:
         self.hxml[prop] = ','.join(sorted(csv))
 
     def add_user(self, user, queue):
+        """ Adds a user to a queue. """
         for user in user.split(','):
             self.__insert(queue_users_fqn(queue), user)
 
     def add_admin(self, user, queue):
+        """ Adds an admin to a queue. """
         for user in user.split(','):
             self.__insert(queue_admins_fqn(queue), user)
 
     def set_cap(self, queue, cap):
+        """ Sets a queue's capacity. """
         cap = int(cap)
         if cap > 100 or cap < 0:
             raise ValueError('Queue capacity must be between 0 and 100')
@@ -159,6 +210,7 @@ class QueueManager:
         self.hxml[queue_cap_fqn(queue)] = cap
 
     def set_maxcap(self, queue, maxcap):
+        """ Set's a queue's maximum capacity. """
         maxcap = int(maxcap)
         if maxcap > 100 or maxcap < 0:
             raise ValueError(
@@ -168,6 +220,7 @@ class QueueManager:
         self.hxml[queue_maxcap_fqn(queue)] = maxcap
 
     def set_ulim(self, queue, ulim):
+        """ Set's a queue's user limit factor. """
         ulim = float(ulim)
 
         if ulim > 1.0 or ulim < 0.0:
@@ -176,15 +229,19 @@ class QueueManager:
         self.hxml[queue_ulim_fqn(queue)] = ulim
 
     def set_state(self, queue, state):
+        """ Set's a queue's state, which is either 'running' or 'stopped'. """
         self.hxml[queue_state_fqn(queue)] = state
 
     def off(self, queue):
+        """ Convenience call to set a queue's state to 'stopped'. """
         self.set_state(queue, 'stopped')
 
     def on(self, queue):
+        """ Convenience call to set a queue's state to 'running'. """
         self.set_state(queue, 'running')
 
     def add(self, queue, user):
+        """ Adds a queue with begining user/admin combo. """
         if queue_fqn(queue) in self.queue_list():
             raise KeyError('Queue ' + queue + ' already exists')
 
@@ -202,6 +259,7 @@ class QueueManager:
         self.set_state(queue, 'running')
 
     def delete(self, queue):
+        """ Deletes a queue like a boss. """
         parent = queue_parent(queue)
         self.__unsert(queue_subs_fqn(parent), queue)
         self.hxml.remove(queue_users_fqn(queue))
@@ -212,15 +270,19 @@ class QueueManager:
         self.hxml.remove(queue_state_fqn(queue))
 
     def del_user(self, user, queue):
+        """ Removes a user from a queue. """
         self.__unsert(queue_users_fqn(queue), user)
 
     def del_admin(self, admin, queue):
+        """ Removes an admin from a queue. """
         self.__unsert(queue_admins_fqn(queue), admin)
 
     def save(self, fname):
+        """ Saves the config. """
         self.hxml.save(fname)
 
     def queue_list(self, queue='root'):
+        """ Generates and returns a list of queues. """
         ret = list()
 
         tmp = self.hxml.keys()
@@ -240,6 +302,7 @@ class QueueManager:
         return sorted(ret)
 
     def user_list(self, queue='root'):
+        """ Returns a list of users of a queue and subqueues. """
         ret = list()
         for sub in self.queue_list(queue):
             try:
@@ -252,6 +315,7 @@ class QueueManager:
         return sorted(ret)
 
     def admin_list(self, queue='root'):
+        """ Returns a list of admins of a queue and subqueues. """
         ret = list()
         for sub in self.queue_list(queue):
             try:
@@ -264,6 +328,11 @@ class QueueManager:
         return sorted(ret)
 
     def sc_caps(self):
+        """
+        Sanity check for the queue capacities. Checks that all queues on the
+        same level have capacities that add to 100.
+        """
+
         queues = self.queue_list()
         caps = dict()
 
@@ -293,6 +362,11 @@ class QueueManager:
         return sorted(ret)
 
     def sc_maxcaps(self):
+        """
+        Sanity check for the queue maximum capacities. Ensures that each
+        queue's maximum capacity is greater than or equal to its capacity.
+        """
+
         queues = self.queue_list()
         ret = list()
 
@@ -305,6 +379,12 @@ class QueueManager:
         return sorted(ret)
 
     def sc_users(self, passwd):
+        """
+        Sanity check for the users. Ensures that each user in a queue actually
+        exists on the machine this is being run on, since that's where the
+        CapacityScheduler is running.
+        """
+
         ret = list()
         real_users = users_from_passwd(passwd)
         for user in self.user_list():
@@ -314,6 +394,12 @@ class QueueManager:
         return sorted(ret)
 
     def sc_admins(self, passwd):
+        """
+        Sanity check for the admins. Ensures that each admin in a queue actually
+        exists on the machine this is being run on, since that's where the
+        CapacityScheduler is running.
+        """
+
         ret = list()
         real_admins = users_from_passwd(passwd)
         for admin in self.admin_list():
@@ -324,6 +410,7 @@ class QueueManager:
 
 
 def users_from_passwd(raw):
+    """ Extracts a list of users from a passwd type file. """
     users = list()
     for line in raw.split('\n'):
         tmp = line.split(':')[0]
@@ -334,6 +421,7 @@ def users_from_passwd(raw):
 
 
 def reload_queues():
+    """ Reloads queues. This calls other binaries using subprocess. """
     ret = subprocess.call('which yarn', shell=True)
 
     if ret != 0:
@@ -344,6 +432,7 @@ def reload_queues():
 
 
 def add_user_hdfs(user):
+    """ Adds user directories. This calls other binaries using subprocess. """
     ret = subprocess.call('which hdfs', shell=True)
     if ret != 0:
         print('You do not have the hdfs binary on your system')
@@ -365,7 +454,7 @@ def add_user_hdfs(user):
 def useradd(args):
     """
     Takes in the args that come after 'useradd' on the command line and also
-    and array of config files so it can make changes
+    and array of config files so it can make changes.
 
     """
 
@@ -397,7 +486,7 @@ def useradd(args):
 
 def userdel(args):
     """
-    Takes in a user and removes him from a queue
+    Takes in a user and removes him from a queue.
 
     """
 
@@ -425,6 +514,7 @@ def userdel(args):
 
 
 def queueadd(args):
+    """ Adds a queue. """
     parser = ArgumentParser(prog='queueadd',
                             description='HAdmin queueadd utility')
     parser.add_argument('queue')
@@ -444,6 +534,7 @@ def queueadd(args):
 
 
 def queuedel(args):
+    """ Turns a queue off or deletes it based on args. """
     parser = ArgumentParser(prog='queueadd',
                             description='HAdmin queueadd utility')
     parser.add_argument('queue')
@@ -462,6 +553,7 @@ def queuedel(args):
 
 
 def queueon(args):
+    """ Turns a queue on. """
     parser = ArgumentParser(prog='queueon',
                             description='HAdmin queueon utility')
     parser.add_argument('queue')
@@ -475,6 +567,7 @@ def queueon(args):
 
 
 def queueoff(args):
+    """ Turns a queue off. """
     parser = ArgumentParser(prog='queueoff',
                             description='HAdmin queueoff utility')
     parser.add_argument('queue')
@@ -488,6 +581,7 @@ def queueoff(args):
 
 
 def queuecap(args):
+    """ Sets a queue's capacity or maximum capacity. """
     parser = ArgumentParser(prog='queuecap',
                             description='HAdmin queuecap utility')
     parser.add_argument('queue')
@@ -513,6 +607,7 @@ def queuecap(args):
 
 
 def queueulim(args):
+    """ Sets a queue's ulim. """
     parser = ArgumentParser(prog='queueulim',
                             description='HAdmin queueulim utility')
     parser.add_argument('queue')
@@ -527,6 +622,7 @@ def queueulim(args):
 
 
 def queuestat(args):
+    """ Prints a bunch of queue statistics. """
     parser = ArgumentParser(prog='queuestat',
                             description='HAdmin queuestat utility')
     parser.add_argument('queue', nargs='?', default='root')
@@ -552,6 +648,7 @@ def queuestat(args):
 
 
 def sc(args):
+    """ Runs a sanity check like a champion. """
     parser = ArgumentParser(prog='sc',
                             description='HAdmin sanity check utility')
     args = parser.parse_args(args)
