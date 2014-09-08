@@ -280,7 +280,7 @@ class HadminTest(unittest.TestCase):
 
     def testAddQueueStaffHasCapacity(self):
         self.man.add('staff', 'trozamon')
-        self.assertEqual(self.hxml[queue_cap_fqn('staff')], '0')
+        self.assertEqual(self.hxml[queue_cap_fqn('staff')], '1')
 
     def testAddQueueStaffHasMaximumCapacity(self):
         self.man.add('staff', 'trozamon')

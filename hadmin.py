@@ -253,7 +253,7 @@ class QueueManager:
 
         self.add_user(user, queue)
         self.add_admin(user, queue)
-        self.set_cap(queue, '0')
+        self.set_cap(queue, '1')
         self.set_maxcap(queue, '100')
         self.set_ulim(queue, '0.25')
         self.set_state(queue, 'running')
@@ -421,7 +421,19 @@ def users_from_passwd(raw):
 
 
 def reload_queues():
-    """ Reloads queues. This calls other binaries using subprocess. """
+    """ Reloads queues if relevant sanity checks are passed. This calls other
+    binaries using subprocess. """
+
+    mgr = QueueManager(HXML.from_file(scheduler_fname))
+
+    if len(mgr.sc_caps()) > 0 or len(mgr.sc_maxcaps()) > 0:
+        print('Sanity checks of either the queue capacities or maximum ' +
+                'capacities failed. Please run "hadmin sc" to determine ' +
+                'what is causing this failure. Afterwards, you will have to' +
+                'manually tell yarn to reload the queues with "yarn rmadmin ' +
+                '-refreshQueues')
+        return 1
+
     ret = subprocess.call('which yarn', shell=True)
     if ret != 0:
         print('You do not have the yarn binary on your system')
@@ -663,20 +675,27 @@ def sc(args):
     parser = ArgumentParser(prog='sc',
                             description='HAdmin sanity check utility')
     args = parser.parse_args(args)
+    ret = 0
 
     mgr = QueueManager(HXML.from_file(scheduler_fname))
 
     for queue in mgr.sc_caps():
+        ret = 1
         print('The capacities of all subqueues of ' + queue +
                 ' do not sum to 100')
 
     for queue in mgr.sc_maxcaps():
+        ret = 1
         print('The capacity of ' + queue +
                 ' is greater than its maximum capacity')
 
     passwd_raw = open('/etc/passwd', 'r').read()
     for user in mgr.sc_users(passwd_raw):
+        ret = 1
         print('User ' + user + ' does _not_ exist on this machine.')
 
     for admin in mgr.sc_admins(passwd_raw):
+        ret = 1
         print('Admin ' + admin + ' does _not_ exist on this machine.')
+
+    return ret
