@@ -124,19 +124,11 @@ class HadminTest(unittest.TestCase):
         self.man.on('b')
         self.assertEqual(self.hxml[queue_state_fqn('b')], 'running')
 
-    def testSetUlimGreaterThanOne(self):
-        with self.assertRaises(ValueError):
-            self.man.set_ulim('b', 2)
-
-    def testSetUlimGreaterThanOneStr(self):
-        with self.assertRaises(ValueError):
-            self.man.set_ulim('b', '2')
-
-    def testSetUlimLessThanOne(self):
+    def testSetUlimLessThanZero(self):
         with self.assertRaises(ValueError):
             self.man.set_ulim('b', -1)
 
-    def testSetUlimLessThanOneStr(self):
+    def testSetUlimLessThanZeroStr(self):
         with self.assertRaises(ValueError):
             self.man.set_ulim('b', '-1')
 
@@ -288,7 +280,7 @@ class HadminTest(unittest.TestCase):
 
     def testAddQueueStaffHasUlim(self):
         self.man.add('staff', 'trozamon')
-        self.assertEqual(self.hxml[queue_ulim_fqn('staff')], '0.25')
+        self.assertEqual(self.hxml[queue_ulim_fqn('staff')], '1.0')
 
     def testAddQueueStaffIsRunning(self):
         self.man.add('staff', 'trozamon')

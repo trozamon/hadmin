@@ -223,8 +223,8 @@ class QueueManager:
         """ Set's a queue's user limit factor. """
         ulim = float(ulim)
 
-        if ulim > 1.0 or ulim < 0.0:
-            raise ValueError('ulim must be a float between 0 and 1')
+        if ulim < 0.0:
+            raise ValueError('ulim must be a positive float')
 
         self.hxml[queue_ulim_fqn(queue)] = ulim
 
@@ -255,7 +255,7 @@ class QueueManager:
         self.add_admin(user, queue)
         self.set_cap(queue, '1')
         self.set_maxcap(queue, '100')
-        self.set_ulim(queue, '0.25')
+        self.set_ulim(queue, '1.0')
         self.set_state(queue, 'running')
 
     def delete(self, queue):
