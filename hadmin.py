@@ -203,7 +203,13 @@ class QueueManager:
 
     def set_cap(self, queue, cap):
         """ Sets a queue's capacity. """
-        cap = int(cap)
+        try:
+            cap = int(cap)
+        except ValueError:
+            tmp = cap
+            cap = int(queue)
+            queue = tmp
+
         if cap > 100 or cap < 0:
             raise ValueError('Queue capacity must be between 0 and 100')
 
@@ -211,7 +217,13 @@ class QueueManager:
 
     def set_maxcap(self, queue, maxcap):
         """ Set's a queue's maximum capacity. """
-        maxcap = int(maxcap)
+        try:
+            maxcap = int(maxcap)
+        except ValueError:
+            tmp = maxcap
+            maxcap = int(queue)
+            queue = tmp
+
         if maxcap > 100 or maxcap < 0:
             raise ValueError(
                     'Queue maximum capacity must be between 0 and 100'
