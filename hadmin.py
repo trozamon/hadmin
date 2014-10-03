@@ -23,6 +23,9 @@ post_subs = 'queues'
 
 def queue_fqn(queue='root'):
     """ Returns the fully qualified name of a queue. """
+    if ',' in queue:
+        raise KeyError('Queue names may not contain commas')
+
     if (queue[0:4] == 'root'):
         return queue
     return ''.join(['root.', queue])
@@ -441,7 +444,7 @@ def reload_queues():
     if len(mgr.sc_caps()) > 0 or len(mgr.sc_maxcaps()) > 0:
         print('Sanity checks of either the queue capacities or maximum ' +
                 'capacities failed. Please run "hadmin sc" to determine ' +
-                'what is causing this failure. Afterwards, you will have to' +
+                'what is causing this failure. Afterwards, you will have to ' +
                 'manually tell yarn to reload the queues with "yarn rmadmin ' +
                 '-refreshQueues')
         return 1
@@ -476,6 +479,7 @@ def add_user_hdfs(user):
     if ret != 0:
         print('Creating directory /user/' + user + ' failed')
         return ret
+    print('')
 
     ret = subprocess.call('hdfs dfs -chown ' + user + ' /user/' + user,
             shell=True)

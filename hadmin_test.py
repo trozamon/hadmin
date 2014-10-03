@@ -286,6 +286,14 @@ class HadminTest(unittest.TestCase):
         self.man.add('staff', 'trozamon')
         self.assertEqual(self.hxml[queue_state_fqn('staff')], 'running')
 
+    def testAddQueueRejectsCSV(self):
+        with self.assertRaises(KeyError):
+            self.man.add('trozamon,alec', 'staff')
+
+    def testQueueFQNRejectsCSV(self):
+        with self.assertRaises(KeyError):
+            queue_fqn("heyo,wazzup")
+
     def testRemoveQueue(self):
         self.man.delete('b')
         self.assertEqual(self.hxml[queue_subs_fqn()], 'a')
