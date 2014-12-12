@@ -715,3 +715,21 @@ def sc(args):
         print('Admin ' + admin + ' does _not_ exist on this machine.')
 
     return ret
+
+
+help_string = """Usage: hadmin <command> <command options>
+
+Commands:
+    - useradd
+    - queueadd
+    - userdel
+    - queuedel"""
+
+def run():
+    if (len(sys.argv) <= 1 or sys.argv[1] == "-h"):
+        print(help_string)
+        return 0
+    command = sys.argv[1]
+    sysargs = sys.argv[2:]
+    return getattr(hadmin, command)(sysargs)
+    return 1

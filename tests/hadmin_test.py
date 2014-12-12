@@ -1,5 +1,6 @@
 import unittest
-from hadmin import *
+import xml.etree.ElementTree as ET
+from src.hadmin import *
 
 
 class HadminTest(unittest.TestCase):
