@@ -725,11 +725,23 @@ Commands:
     - userdel
     - queuedel"""
 
+cmds = {
+        'queueadd': queueadd,
+        'queuecap': queuecap,
+        'queuedel': queuedel,
+        'queueoff': queueoff,
+        'queueon': queueon,
+        'queuestat': queuestat,
+        'queueulim': queueulim,
+        'useradd': useradd,
+        'userdel': userdel
+        }
+
 def run():
     if (len(sys.argv) <= 1 or sys.argv[1] == "-h"):
         print(help_string)
         return 0
     command = sys.argv[1]
     sysargs = sys.argv[2:]
-    return getattr(hadmin, command)(sysargs)
+    return cmds[command](sysargs)
     return 1
