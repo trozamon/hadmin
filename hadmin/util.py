@@ -716,22 +716,22 @@ def sc(args):
 
     for queue in mgr.sc_caps():
         ret = 1
-        print('The capacities of all subqueues of ' + queue +
+        print('ERROR: The capacities of all subqueues of ' + queue +
                 ' do not sum to 100')
 
     for queue in mgr.sc_maxcaps():
         ret = 1
-        print('The capacity of ' + queue +
+        print('ERROR: The capacity of ' + queue +
                 ' is greater than its maximum capacity')
 
     passwd_raw = open('/etc/passwd', 'r').read()
     for user in mgr.sc_users(passwd_raw):
         ret = 1
-        print('User ' + user + ' does _not_ exist on this machine.')
+        print('WARN: User ' + user + ' does _not_ exist on this machine.')
 
     for admin in mgr.sc_admins(passwd_raw):
         ret = 1
-        print('Admin ' + admin + ' does _not_ exist on this machine.')
+        print('WARN: Admin ' + admin + ' does _not_ exist on this machine.')
 
     return ret
 
