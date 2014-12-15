@@ -12,6 +12,12 @@ import sys
 
 
 scheduler_fname = 'capacity-scheduler.xml'
+if scheduler_fname not in os.listdir('.'):
+    scheduler_fname = '/'.join([
+        '/etc/hadoop/conf',
+        scheduler_fname
+        ])
+
 pre_scheduler = 'yarn.scheduler.capacity'
 post_users = 'acl_submit_applications'
 post_admins = 'acl_administer_queue'
@@ -74,8 +80,6 @@ class HXML:
     use a class such as QueueManager to fulfill your needs.
     """
 
-    dirs = ['.', '/etc/hadoop/conf']
-
     def __init__(self, etree):
         self.tree = etree
 
@@ -94,15 +98,7 @@ class HXML:
     @classmethod
     def from_file(cls, fname):
         """ Construct from an XML file. """
-        ret = 0
-        for directory in HXML.dirs:
-            try:
-                ret = cls(ET.parse('/'.join([directory, fname])).getroot())
-                break
-            except FileNotFoundError:
-                pass
-        if ret == 0:
-            raise FileNotFoundError('No file ' + fname + ' found')
+        ret = cls(ET.parse(fname).getroot())
         return ret
 
     def __getitem__(self, prop):
@@ -362,7 +358,10 @@ class QueueManager:
         queues = self.queue_list()
         caps = dict()
 
-        if self.hxml[queue_cap_fqn('root')] != '100':
+        try:
+            if self.hxml[queue_cap_fqn('root')] != '100':
+                raise ValueError('Capacity of root is not 100')
+        except KeyError:
             raise ValueError('Capacity of root is not 100')
 
         if self.hxml[queue_maxcap_fqn('root')] != '100':
@@ -571,6 +570,16 @@ def queueadd(args):
     args = parser.parse_args(args)
 
     mgr = QueueManager(HXML.from_file(scheduler_fname))
+
+    confirm = input(' '.join(['Are you sure you want to add queue',
+        args.queue,
+        'with initial user/admin',
+        args.user + '?',
+        '[y/N] ']))
+
+    if confirm != 'y' and confirm != 'Y':
+        return 0
+
     mgr.add(args.queue, args.user)
     print('Added queue ' + args.queue +
           ' with initial user/admin ' + args.user)
@@ -762,6 +771,6 @@ def run():
     sysargs = sys.argv[2:]
     try:
         return cmds[command](sysargs)
-    except KeyError:
+    except KeyError as e:
         print(help_string)
     return 1
