@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 import pkgutil
 import os
 import subprocess
+import sys
 
 
 scheduler_fname = 'capacity-scheduler.xml'
@@ -474,12 +475,11 @@ def add_user_hdfs(user):
         print('\thdfs dfs -chown ' + user + ' /user/' + user)
         return ret
 
-    print('Creating home directory for ' + user + '...', end='')
     ret = subprocess.call('hdfs dfs -mkdir /user/' + user, shell=True)
     if ret != 0:
         print('Creating directory /user/' + user + ' failed')
         return ret
-    print('')
+    print('Created home directory for ' + user)
 
     ret = subprocess.call('hdfs dfs -chown ' + user + ' /user/' + user,
             shell=True)
