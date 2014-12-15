@@ -74,6 +74,8 @@ class HXML:
     use a class such as QueueManager to fulfill your needs.
     """
 
+    dirs = ['.', '/etc/hadoop/conf']
+
     def __init__(self, etree):
         self.tree = etree
 
@@ -92,7 +94,15 @@ class HXML:
     @classmethod
     def from_file(cls, fname):
         """ Construct from an XML file. """
-        ret = cls(ET.parse(fname).getroot())
+        ret = 0
+        for directory in HXML.dirs:
+            try:
+                ret = cls(ET.parse('/'.join([directory, fname])).getroot())
+                break
+            except FileNotFoundError:
+                pass
+        if ret == 0:
+            raise FileNotFoundError('No file ' + fname + ' found')
         return ret
 
     def __getitem__(self, prop):
