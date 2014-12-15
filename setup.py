@@ -10,7 +10,7 @@ setup(
     url='http://github.com/trozamon/hadmin',
     license='MIT',
     test_suite='hadmin.test',
-    setup_requires=['flake8'],
+    tests_require=['flake8'],
     entry_points={
         'console_scripts': [
             'hadmin = hadmin.util:run'
