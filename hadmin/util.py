@@ -720,10 +720,16 @@ def sc(args):
 help_string = """Usage: hadmin <command> <command options>
 
 Commands:
-    - useradd
-    - queueadd
-    - userdel
-    - queuedel"""
+    queueadd    Add a queue
+    queuecap    Change queue capacity
+    queuedel    Remove a queue
+    queueoff    Turn a queue off
+    queueon     Turn a queue on
+    queuestat   View queue information
+    queueulim   Change queue user limit
+    sc          Run a sanity check
+    useradd     Add a user
+    userdel     Remove a user"""
 
 cmds = {
         'queueadd': queueadd,
@@ -733,6 +739,7 @@ cmds = {
         'queueon': queueon,
         'queuestat': queuestat,
         'queueulim': queueulim,
+        'sc': sc,
         'useradd': useradd,
         'userdel': userdel
         }
@@ -743,5 +750,8 @@ def run():
         return 0
     command = sys.argv[1]
     sysargs = sys.argv[2:]
-    return cmds[command](sysargs)
+    try:
+        return cmds[command](sysargs)
+    except KeyError:
+        print(help_string)
     return 1

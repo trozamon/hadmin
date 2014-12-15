@@ -5,6 +5,33 @@ from hadmin.util import *
 
 class HadminTest(unittest.TestCase):
 
+    def testCmdUseradd(self):
+        self.assertEqual(cmds['useradd'], useradd)
+
+    def testCmdUserdel(self):
+        self.assertEqual(cmds['userdel'], userdel)
+
+    def testCmdQueuedel(self):
+        self.assertEqual(cmds['queuedel'], queuedel)
+
+    def testCmdQueueadd(self):
+        self.assertEqual(cmds['queueadd'], queueadd)
+
+    def testCmdQueueulim(self):
+        self.assertEqual(cmds['queueulim'], queueulim)
+
+    def testCmdQueueon(self):
+        self.assertEqual(cmds['queueon'], queueon)
+
+    def testCmdQueueoff(self):
+        self.assertEqual(cmds['queueoff'], queueoff)
+
+    def testCmdQueuecap(self):
+        self.assertEqual(cmds['queuecap'], queuecap)
+
+    def testCmdSc(self):
+        self.assertEqual(cmds['sc'], sc)
+
     def testManSanityCheckUsers(self):
         self.assertEqual(['trozamon'], self.man.sc_users(self.passwd))
 
