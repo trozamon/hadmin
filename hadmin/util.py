@@ -5,7 +5,6 @@ CapacityScheduler.
 
 from argparse import ArgumentParser
 import xml.etree.ElementTree as ET
-import pkgutil
 import os
 import subprocess
 import sys
@@ -37,33 +36,41 @@ def queue_fqn(queue='root'):
         return queue
     return ''.join(['root.', queue])
 
+
 def queue_parent(queue='root'):
     """ Returns the parent of a queue. """
     return '.'.join(queue_fqn(queue).split('.')[0:-1])
+
 
 def queue_cap_fqn(queue='root'):
     """ Returns the config key specifying the capacity of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_cap])
 
+
 def queue_maxcap_fqn(queue='root'):
     """ Returns the config key specifying the max capacity of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_maxcap])
+
 
 def queue_users_fqn(queue='root'):
     """ Returns the config key specifying the users of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_users])
 
+
 def queue_admins_fqn(queue='root'):
     """ Returns the config key specifying the admins of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_admins])
+
 
 def queue_state_fqn(queue='root'):
     """ Returns the config key specifying the state of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_state])
 
+
 def queue_ulim_fqn(queue='root'):
     """ Returns the config key specifying the ulim of a queue. """
     return '.'.join([pre_scheduler, queue_fqn(queue), post_ulim])
+
 
 def queue_subs_fqn(queue='root'):
     """ Returns the config key specifying the subqueues of a queue. """
@@ -236,8 +243,8 @@ class QueueManager:
 
         if maxcap > 100 or maxcap < 0:
             raise ValueError(
-                    'Queue maximum capacity must be between 0 and 100'
-                    )
+                'Queue maximum capacity must be between 0 and 100'
+                )
 
         self.hxml[queue_maxcap_fqn(queue)] = maxcap
 
@@ -377,7 +384,7 @@ class QueueManager:
 
         for queue in queues:
             caps[queue_parent(queue)] = caps[queue_parent(queue)] + \
-                    int(self.hxml[queue_cap_fqn(queue)])
+                int(self.hxml[queue_cap_fqn(queue)])
 
         ret = list()
         for queue in caps:
@@ -420,9 +427,9 @@ class QueueManager:
 
     def sc_admins(self, passwd):
         """
-        Sanity check for the admins. Ensures that each admin in a queue actually
-        exists on the machine this is being run on, since that's where the
-        CapacityScheduler is running.
+        Sanity check for the admins. Ensures that each admin in a queue
+        actually exists on the machine this is being run on, since that's where
+        the CapacityScheduler is running.
         """
 
         ret = list()
@@ -453,10 +460,10 @@ def reload_queues():
 
     if len(mgr.sc_caps()) > 0 or len(mgr.sc_maxcaps()) > 0:
         print('Sanity checks of either the queue capacities or maximum ' +
-                'capacities failed. Please run "hadmin sc" to determine ' +
-                'what is causing this failure. Afterwards, you will have to ' +
-                'manually tell yarn to reload the queues with "yarn rmadmin ' +
-                '-refreshQueues')
+              'capacities failed. Please run "hadmin sc" to determine ' +
+              'what is causing this failure. Afterwards, you will have to ' +
+              'manually tell yarn to reload the queues with "yarn rmadmin ' +
+              '-refreshQueues')
         return 1
 
     ret = subprocess.call('which yarn', shell=True)
@@ -491,7 +498,7 @@ def add_user_hdfs(user):
     print('Created home directory for ' + user)
 
     ret = subprocess.call('hdfs dfs -chown ' + user + ' /user/' + user,
-            shell=True)
+                          shell=True)
     if ret != 0:
         print('Chowning the above directory failed')
         return ret
@@ -572,10 +579,8 @@ def queueadd(args):
     mgr = QueueManager(HXML.from_file(scheduler_fname))
 
     confirm = input(' '.join(['Are you sure you want to add queue',
-        args.queue,
-        'with initial user/admin',
-        args.user + '?',
-        '[y/N] ']))
+                    args.queue, 'with initial user/admin', args.user + '?',
+                    '[y/N] ']))
 
     if confirm != 'y' and confirm != 'Y':
         return 0
@@ -606,7 +611,7 @@ def queuedel(args):
         mgr.save(scheduler_fname)
         print('Removed queue ' + args.queue)
         return reload_queues()
-    
+
     return queueoff([args.queue])
 
 
@@ -717,12 +722,12 @@ def sc(args):
     for queue in mgr.sc_caps():
         ret = 1
         print('ERROR: The capacities of all subqueues of ' + queue +
-                ' do not sum to 100')
+              ' do not sum to 100')
 
     for queue in mgr.sc_maxcaps():
         ret = 1
         print('ERROR: The capacity of ' + queue +
-                ' is greater than its maximum capacity')
+              ' is greater than its maximum capacity')
 
     passwd_raw = open('/etc/passwd', 'r').read()
     for user in mgr.sc_users(passwd_raw):
@@ -751,17 +756,18 @@ Commands:
     userdel     Remove a user"""
 
 cmds = {
-        'queueadd': queueadd,
-        'queuecap': queuecap,
-        'queuedel': queuedel,
-        'queueoff': queueoff,
-        'queueon': queueon,
-        'queuestat': queuestat,
-        'queueulim': queueulim,
-        'sc': sc,
-        'useradd': useradd,
-        'userdel': userdel
-        }
+    'queueadd': queueadd,
+    'queuecap': queuecap,
+    'queuedel': queuedel,
+    'queueoff': queueoff,
+    'queueon': queueon,
+    'queuestat': queuestat,
+    'queueulim': queueulim,
+    'sc': sc,
+    'useradd': useradd,
+    'userdel': userdel
+    }
+
 
 def run():
     if (len(sys.argv) <= 1 or sys.argv[1] == "-h"):
@@ -771,6 +777,6 @@ def run():
     sysargs = sys.argv[2:]
     try:
         return cmds[command](sysargs)
-    except KeyError as e:
+    except KeyError:
         print(help_string)
     return 1

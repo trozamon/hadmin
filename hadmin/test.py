@@ -1,6 +1,10 @@
 import unittest
 import xml.etree.ElementTree as ET
-from hadmin.util import *
+from hadmin.util import HXML, QueueManager, cmds, queue_admins_fqn, \
+    queue_cap_fqn, queue_fqn, queue_maxcap_fqn, queue_parent, \
+    queue_state_fqn, queue_subs_fqn, queue_ulim_fqn, queue_users_fqn, \
+    queueadd, queuecap, queuedel, queueoff, queueon, queueulim, sc, \
+    useradd, userdel, users_from_passwd
 
 
 class HadminTest(unittest.TestCase):
@@ -41,24 +45,24 @@ class HadminTest(unittest.TestCase):
     def testManAdminListB(self):
         self.man.add('b.b', 'blah')
         self.assertEqual(self.man.admin_list('b'),
-                ['blah', 'root'])
+                         ['blah', 'root'])
 
-    def testManAdminListB(self):
+    def testManAdminListBTwo(self):
         self.assertEqual(self.man.admin_list('b'),
-                ['root'])
+                         ['root'])
 
     def testManUserListAAfterAdding(self):
         self.man.add('a.a', 'blah')
         self.assertEqual(self.man.user_list('a'),
-                ['blah', 'root', 'trozamon'])
+                         ['blah', 'root', 'trozamon'])
 
     def testManUserListRoot(self):
         self.assertEqual(self.man.user_list(),
-                ['root', 'trozamon'])
+                         ['root', 'trozamon'])
 
     def testUserListFromPasswd(self):
         self.assertEqual(users_from_passwd(self.passwd),
-                ['adm', 'root'])
+                         ['adm', 'root'])
 
     def testManagerAddQueueMultipleUsersThrows(self):
         with self.assertRaises(ValueError):
@@ -67,12 +71,12 @@ class HadminTest(unittest.TestCase):
     def testManagerAddMultipleUsers(self):
         self.man.add_user('bob,bill', 'a')
         self.assertEqual(self.hxml[queue_users_fqn('a')],
-                'bill,bob,root,trozamon')
+                         'bill,bob,root,trozamon')
 
     def testManagerAddMultipleAdmins(self):
         self.man.add_admin('zoe,joebob', 'a')
         self.assertEqual(self.hxml[queue_admins_fqn('a')],
-                'joebob,root,test,trozamon,zoe')
+                         'joebob,root,test,trozamon,zoe')
 
     def testManagerAddAlreadyExistingQueue(self):
         with self.assertRaises(KeyError):
@@ -106,7 +110,7 @@ class HadminTest(unittest.TestCase):
     def testManagerQueueListWithTwoLevelSub(self):
         self.man.add('a.staff', 'trozamon')
         self.assertEqual(self.man.queue_list(),
-                ['root', 'root.a', 'root.a.staff', 'root.b'])
+                         ['root', 'root.a', 'root.a.staff', 'root.b'])
 
     def testManagerQueueListAWithTwoLevelSub(self):
         self.man.add('a.staff', 'trozamon')
@@ -270,7 +274,7 @@ class HadminTest(unittest.TestCase):
     def testAddAdminToQueue(self):
         self.man.add_admin('test', 'a')
         self.assertEqual(self.hxml[queue_admins_fqn('a')],
-                'root,test,trozamon')
+                         'root,test,trozamon')
 
     def testRemoveAdminFromQueue(self):
         self.man.del_admin('root', 'a')
