@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='hadmin',
-    version='0.1',
+    version='0.2.dev',
     packages=find_packages(),
     author='Alec Ten Harmsel',
     author_email='alec@alectenharmsel.com',
