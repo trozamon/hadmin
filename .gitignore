@@ -4,5 +4,6 @@ __pycache__
 *.egg
 *.pyc
 .eggs
+.tox
 build
 dist
