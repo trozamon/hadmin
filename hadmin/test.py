@@ -1,4 +1,4 @@
-import unittest
+from unittest2 import TestCase
 import xml.etree.ElementTree as ET
 from hadmin.util import HXML, QueueManager, cmds, queue_admins_fqn, \
     queue_cap_fqn, queue_fqn, queue_maxcap_fqn, queue_parent, \
@@ -7,7 +7,7 @@ from hadmin.util import HXML, QueueManager, cmds, queue_admins_fqn, \
     useradd, userdel, users_from_passwd
 
 
-class HadminTest(unittest.TestCase):
+class HadminTest(TestCase):
 
     def testCmdUseradd(self):
         self.assertEqual(cmds['useradd'], useradd)
