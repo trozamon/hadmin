@@ -9,6 +9,7 @@ import os
 import subprocess
 import sys
 from hadmin.jmx import DataNodeJMX
+from hadmin.rest import NodeManagerREST
 
 
 scheduler_fname = 'capacity-scheduler.xml'
@@ -777,6 +778,38 @@ def chk_dn(args):
     return ret
 
 
+def chk_nm(args):
+    """ Checks various nodemanager-related things """
+    parser = ArgumentParser(prog='chk-nm',
+                            description='Check nodemanager stats/health')
+    parser.add_argument('host', nargs='?', default='localhost:8042')
+    parser.add_argument('--health', dest='health', action='store_const',
+                        const=True, default=False,
+                        help='Check the node health')
+    args = parser.parse_args(args)
+
+    ret = 0
+
+    rest = NodeManagerREST()
+    rest.load_from_host(args.host)
+
+    if args.health:
+        status = rest.isHealthy()
+
+        if status:
+            msg = 'node is healthy'
+        else:
+            msg = 'node is unhealthy'
+            ret = 1
+
+        if len(rest.getHealthReport()) > 0:
+            msg = msg + ': ' + rest.getHealthReport()
+
+        print(msg)
+
+    return ret
+
+
 help_string = """Usage: hadmin <command> <command options>
 
 Commands:
@@ -794,6 +827,7 @@ Commands:
 
 cmds = {
     'chk-dn': chk_dn,
+    'chk-nm': chk_nm,
     'queueadd': queueadd,
     'queuecap': queuecap,
     'queuedel': queuedel,
