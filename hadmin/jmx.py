@@ -60,27 +60,3 @@ class DataNodeJMX(JMX):
 
     def getFailedVolumes(self):
         return self['.*FSDatasetState-null$']['NumFailedVolumes']
-
-
-class ResponseMock:
-
-    def __init__(self, content, status):
-        self.content = content
-        self.status = status
-
-    def read(self):
-        return self.content
-
-
-class ConnectionMock:
-
-    def request(self, req_type, path):
-        if req_type == 'GET' and path == '/jmx':
-            self.requested = True
-
-    def getresponse(self):
-        if self.requested:
-            with open('data/datanode.jmx.json') as f:
-                return ResponseMock(f.read(), 200)
-
-        return ResponseMock('', 404)

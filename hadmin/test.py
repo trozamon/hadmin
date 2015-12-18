@@ -5,8 +5,9 @@ from hadmin.util import HXML, QueueManager, cmds, queue_admins_fqn, \
     queue_state_fqn, queue_subs_fqn, queue_ulim_fqn, queue_users_fqn, \
     queueadd, queuecap, queuedel, queueoff, queueon, queueulim, sc, \
     useradd, userdel, users_from_passwd
+from hadmin import mock
 from hadmin.jmx import DataNodeJMX, JMX
-from hadmin import jmx
+from hadmin.rest import NodeManagerREST
 
 
 class UtilTest(TestCase):
@@ -464,7 +465,7 @@ class JMXNetworkTest(JMXTest):
     def setUp(self):
         self.jmx = JMX()
 
-        self.jmx.load_from_connection(jmx.ConnectionMock())
+        self.jmx.load_from_connection(mock.JMXConnectionMock())
 
 
 class DataNodeJMXTest(TestCase):
@@ -477,3 +478,26 @@ class DataNodeJMXTest(TestCase):
 
         with open('data/datanode.jmx.json') as f:
             self.jmx = DataNodeJMX(f.read())
+
+
+class NodeManagerRESTTest(TestCase):
+
+    def testHealthy(self):
+        self.assertEqual(self.rest.isHealthy(), True)
+
+    def testHealthReport(self):
+        self.assertEqual(self.rest.getHealthReport(),
+                         "1/2 local-dirs are bad: /var/hadoop/compute; ")
+
+    def setUp(self):
+        self.rest = NodeManagerREST()
+
+        with open('data/nodemanager.rest.json') as f:
+            self.rest = NodeManagerREST(f.read())
+
+
+class NodeManagerRESTNetworkTest(NodeManagerRESTTest):
+
+    def setUp(self):
+        self.rest = NodeManagerREST()
+        self.rest.load_from_connection(mock.RESTConnectionMock())
