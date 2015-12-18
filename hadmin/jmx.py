@@ -58,7 +58,7 @@ class DataNodeJMX(JMX):
     def __init__(self, json_str=''):
         self.load(json_str)
 
-    def getVolumesFailed(self):
+    def getFailedVolumes(self):
         return self['.*FSDatasetState-null$']['NumFailedVolumes']
 
 

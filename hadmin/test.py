@@ -470,7 +470,7 @@ class JMXNetworkTest(JMXTest):
 class DataNodeJMXTest(TestCase):
 
     def testVolumesFailed(self):
-        self.assertEqual(self.jmx.getVolumesFailed(), 0)
+        self.assertEqual(self.jmx.getFailedVolumes(), 0)
 
     def setUp(self):
         self.jmx = DataNodeJMX()
