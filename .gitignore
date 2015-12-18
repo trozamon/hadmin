@@ -1,9 +1,10 @@
-*.swp
-__pycache__
-*.egg-info
 *.egg
+*.egg-info
 *.pyc
+*.swp
+*~
 .eggs
 .tox
+__pycache__
 build
 dist

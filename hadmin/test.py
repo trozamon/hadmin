@@ -5,6 +5,7 @@ from hadmin.util import HXML, QueueManager, cmds, queue_admins_fqn, \
     queue_state_fqn, queue_subs_fqn, queue_ulim_fqn, queue_users_fqn, \
     queueadd, queuecap, queuedel, queueoff, queueon, queueulim, sc, \
     useradd, userdel, users_from_passwd
+from hadmin.jmx import DataNodeJMX, JMX
 
 
 class UtilTest(TestCase):
@@ -430,3 +431,40 @@ adm:x:3:4:adm:/var/adm:/bin/false
         self.xmltree = ET.fromstring(self.base)
         self.hxml = HXML.from_etree(self.xmltree)
         self.man = QueueManager(self.hxml)
+
+
+class JMXTest(TestCase):
+
+    def testGetRuntime(self):
+        self.assertEqual(self.jmx['java.lang:type=Runtime']['SpecVersion'],
+                         '1.8')
+
+    def testGetVolumesFailed(self):
+        self.assertEqual(self.jmx['Hadoop:service=DataNode,name=FSDatasetState-null']['NumFailedVolumes'],
+                         0)
+
+    def testGetVolumesFailedWithRegex(self):
+        self.assertEqual(self.jmx['.*FSDatasetState-null$']['NumFailedVolumes'],
+                         0)
+
+    def testMissingKey(self):
+        with self.assertRaises(KeyError):
+            self.jmx['blah']
+
+    def setUp(self):
+        self.jmx = JMX()
+
+        with open('data/datanode.jmx.json') as f:
+            self.jmx.load(f.read())
+
+
+class DataNodeJMXTest(TestCase):
+
+    def testVolumesFailed(self):
+        self.assertEqual(self.jmx.getVolumesFailed(), 0)
+
+    def setUp(self):
+        self.jmx = DataNodeJMX()
+
+        with open('data/datanode.jmx.json') as f:
+            self.jmx = DataNodeJMX(f.read())
