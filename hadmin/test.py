@@ -441,12 +441,12 @@ class JMXTest(TestCase):
                          '1.8')
 
     def testGetVolumesFailed(self):
-        self.assertEqual(self.jmx['Hadoop:service=DataNode,name=FSDatasetState-null']['NumFailedVolumes'],
-                         0)
+        k = 'Hadoop:service=DataNode,name=FSDatasetState-null'
+        self.assertEqual(self.jmx[k]['NumFailedVolumes'], 0)
 
     def testGetVolumesFailedWithRegex(self):
-        self.assertEqual(self.jmx['.*FSDatasetState-null$']['NumFailedVolumes'],
-                         0)
+        k = '.*FSDatasetState-null$'
+        self.assertEqual(self.jmx[k]['NumFailedVolumes'], 0)
 
     def testMissingKey(self):
         with self.assertRaises(KeyError):

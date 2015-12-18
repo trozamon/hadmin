@@ -10,6 +10,7 @@ try:
 except ImportError:
     from httplib import HTTPConnection
 
+
 class JMX(dict):
     """
     Class representing JMX values
@@ -17,7 +18,6 @@ class JMX(dict):
 
     def __init__(self, json_str=''):
         self.load(json_str)
-
 
     def load(self, json_str):
         try:
@@ -70,6 +70,7 @@ class ResponseMock:
 
     def read(self):
         return self.content
+
 
 class ConnectionMock:
 

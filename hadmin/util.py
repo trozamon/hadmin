@@ -579,7 +579,12 @@ def queueadd(args):
 
     mgr = QueueManager(HXML.from_file(scheduler_fname))
 
-    confirm = raw_input(' '.join(['Are you sure you want to add queue',
+    try:
+        input = raw_input
+    except NameError:
+        pass
+
+    confirm = input(' '.join(['Are you sure you want to add queue',
                     args.queue, 'with initial user/admin', args.user + '?',
                     '[y/N] ']))
 
