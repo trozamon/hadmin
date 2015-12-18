@@ -1,0 +1,20 @@
+{
+    "nodeInfo": {
+        "hadoopBuildVersion": "2.6.0-cdh5.5.1 from e1581abbb6ab62b0a41b7ce6141d7280bf0c53da by jenkins source checksum 98e07176d1787150a6a9c087627562c",
+        "hadoopVersion": "2.6.0-cdh5.5.1",
+        "hadoopVersionBuiltOn": "2015-12-02T18:33Z",
+        "healthReport": "1/2 local-dirs are bad: /var/hadoop/compute; ",
+        "id": "nm0.hadoop.local:33440",
+        "lastNodeUpdateTime": 1450463349554,
+        "nodeHealthy": true,
+        "nodeHostName": "nm0.hadoop.local",
+        "nodeManagerBuildVersion": "2.6.0-cdh5.5.1 from e1581abbb6ab62b0a41b7ce6141d7280bf0c53da by jenkins source checksum db52b8a74b1a7e55c309ec5fbcd7ca",
+        "nodeManagerVersion": "2.6.0-cdh5.5.1",
+        "nodeManagerVersionBuiltOn": "2015-12-02T18:40Z",
+        "pmemCheckEnabled": true,
+        "totalPmemAllocatedContainersMB": 1024,
+        "totalVCoresAllocatedContainers": 8,
+        "totalVmemAllocatedContainersMB": 2150,
+        "vmemCheckEnabled": false
+    }
+}
