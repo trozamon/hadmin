@@ -6,6 +6,7 @@ from hadmin.util import HXML, QueueManager, cmds, queue_admins_fqn, \
     queueadd, queuecap, queuedel, queueoff, queueon, queueulim, sc, \
     useradd, userdel, users_from_passwd
 from hadmin.jmx import DataNodeJMX, JMX
+from hadmin import jmx
 
 
 class UtilTest(TestCase):
@@ -456,6 +457,14 @@ class JMXTest(TestCase):
 
         with open('data/datanode.jmx.json') as f:
             self.jmx.load(f.read())
+
+
+class JMXNetworkTest(JMXTest):
+
+    def setUp(self):
+        self.jmx = JMX()
+
+        self.jmx.load_from_connection(jmx.ConnectionMock())
 
 
 class DataNodeJMXTest(TestCase):
