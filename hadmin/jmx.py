@@ -34,7 +34,7 @@ class JMX(dict):
 
     def load_from_host(self, addr):
         conn = HTTPConnection(addr)
-        return self.load_from_conn(conn)
+        return self.load_from_connection(conn)
 
     def load_from_connection(self, conn):
         conn.request('GET', '/jmx')
