@@ -8,6 +8,7 @@ import xml.etree.ElementTree as ET
 import os
 import subprocess
 import sys
+from hadmin.jmx import DataNodeJMX
 
 
 scheduler_fname = 'capacity-scheduler.xml'
@@ -741,9 +742,40 @@ def sc(args):
     return ret
 
 
+def chk_dn(args):
+    """ Checks various datanode-related health things. """
+    parser = ArgumentParser(prog='chk-dn',
+                            description='Check datanode stats/health')
+    parser.add_argument('host', nargs='?', default='localhost:50075')
+    parser.add_argument('--failed-volumes', dest='failed_volumes',
+                        action='store_const', const=True, default=False,
+                        help='Check the number of failed volumes')
+    args = parser.parse_args(args)
+
+    ret = 0
+
+    jmx = DataNodeJMX()
+    jmx.load_from_host(args.host)
+
+    if args.failed_volumes:
+        nfails = jmx.getFailedVolumes()
+        msg = ' volumes have failed'
+
+        if nfails == 1:
+            msg = ' volume has failed'
+
+        print(str(nfails) + msg)
+
+        if nfails > 0:
+            ret = 1
+
+    return ret
+
+
 help_string = """Usage: hadmin <command> <command options>
 
 Commands:
+    chk-dn      Check datanode stats/health
     queueadd    Add a queue
     queuecap    Change queue capacity
     queuedel    Remove a queue
@@ -756,6 +788,7 @@ Commands:
     userdel     Remove a user"""
 
 cmds = {
+    'chk-dn': chk_dn,
     'queueadd': queueadd,
     'queuecap': queuecap,
     'queuedel': queuedel,
