@@ -7,7 +7,7 @@ from hadmin.util import HXML, QueueManager, cmds, queue_admins_fqn, \
     useradd, userdel, users_from_passwd
 
 
-class HadminTest(TestCase):
+class UtilTest(TestCase):
 
     def testCmdUseradd(self):
         self.assertEqual(cmds['useradd'], useradd)
