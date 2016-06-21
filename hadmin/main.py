@@ -8,6 +8,7 @@ import sys
 from hadmin.hdfs import NameNode, Directory
 from hadmin.jmx import DataNodeJMX
 from hadmin.rest import NodeManagerREST
+from hadmin.system import get_system_capacity_scheduler
 from hadmin.yarn import CapacityScheduler
 
 
@@ -18,23 +19,28 @@ def queuestat(args):
                             description='HAdmin queuestat utility')
     parser.add_argument('queue', nargs='?', default='root')
     args = parser.parse_args(args)
-    mgr = CapacityScheduler()
 
-    for queue in mgr.queue_list(args.queue):
-        try:
+    try:
+        mgr = get_system_capacity_scheduler()
+
+        for queue_name in mgr.queue_list(args.queue):
+            queue = mgr.queue(queue_name)
             out = '\n'.join([
-                queue,
-                '\tcapacity:           ' + 'None',
+                queue_name,
+                '\tcapacity:           ' + str(queue.cap_min),
                 '\tmaximum capacity:   ' + 'None',
                 '\tuser limit factor:  ' + 'None',
                 '\tstate:              ' + 'None',
                 '\tusers:              ' + 'None',
                 '\tadmins:             ' + 'None'
                 ])
-        except KeyError:
-            out = queue + ' is not a leaf'
 
-        print(out)
+            print(out)
+    except KeyError:
+        print("Your CapacityScheduler configuration is malformed")
+        return 1
+
+    return 0
 
 
 def sc(args):
@@ -45,17 +51,21 @@ def sc(args):
     args = parser.parse_args(args)
     ret = 0
 
-    mgr = CapacityScheduler()
+    try:
+        mgr = get_system_capacity_scheduler()
 
-    for queue in mgr.sc_caps():
-        ret = 1
-        print('ERROR: The capacities of all subqueues of ' + queue +
-              ' do not sum to 100')
+        for queue in mgr.sc_caps():
+            ret = 1
+            print('ERROR: The capacities of all subqueues of ' + queue +
+                  ' do not sum to 100')
 
-    for queue in mgr.sc_maxcaps():
+        for queue in mgr.sc_maxcaps():
+            ret = 1
+            print('ERROR: The capacity of ' + queue +
+                  ' is greater than its maximum capacity')
+    except KeyError:
+        print("your CapacityScheduler configuration is malformed")
         ret = 1
-        print('ERROR: The capacity of ' + queue +
-              ' is greater than its maximum capacity')
 
     return ret
 
@@ -402,10 +412,12 @@ def run():
 
     command = sys.argv[1]
     sysargs = sys.argv[2:]
+    cmd_func = None
 
     try:
-        return cmds[command](sysargs)
+        cmd_func = cmds[command]
     except KeyError:
         print(help_string)
+        return 1
 
-    return 1
+    return cmd_func(sysargs)

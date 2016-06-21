@@ -4,8 +4,33 @@ CapacityScheduler.
 """
 
 
-import xml.etree.ElementTree as ET
+import os
 import subprocess
+import xml.etree.ElementTree as ET
+
+
+HADOOP_CONF_DIRS = [
+        '.',
+        '/etc/hadoop/conf'
+        ]
+
+CAPACITY_SCHEDULER_FILENAME = 'capacity-scheduler.xml'
+
+
+def find_hxml(filename):
+    """
+    Load an py:class:`HXML` from a file in a built-in hadoop configuration
+    directory
+    """
+
+    for d in HADOOP_CONF_DIRS:
+        try:
+            with open(os.path.join(d, filename), 'r') as f:
+                return HXML.from_str(f.read())
+        except IOError:
+            pass
+
+    return None
 
 
 class HXML:

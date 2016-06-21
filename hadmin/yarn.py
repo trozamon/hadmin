@@ -249,7 +249,7 @@ class Queue(object):
     def cap_min(self, new_cap_min):
         """
         Set the minimum capacity.
-        
+
         Checks to ensure that the new capacity is a valid value, and raises
         ValueError if it is not
         """
