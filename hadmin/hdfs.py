@@ -1,4 +1,7 @@
 """
+HDFS-related library functionality
+----------------------------------
+
 HDFS management. Manage the filesystem, get namenode stats, etc.
 """
 

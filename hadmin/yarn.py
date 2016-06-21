@@ -1,5 +1,11 @@
 """
-YARN-related library functionality. Files handled:
+YARN-related library functionality
+----------------------------------
+
+hadmin.yarn allows the managing of scheduling queues and provides a library
+interface for the metrics REST APIs of the ResourceManager and NodeManager.
+
+Files handled:
 
 * capacity-scheduler.xml
 * yarn-site.xml
@@ -12,7 +18,11 @@ from hadmin.util import HXML
 
 class Queue(object):
     """
-    TODO
+    An abstraction of a queue
+
+    Queues are fundamental to managing a YARN cluster. Each queue has a list
+    of allowed users, a minimum guaranteed capacity, and maximum capacity
+    (among other attributes).
     """
 
     pre_scheduler = 'yarn.scheduler.capacity'
@@ -25,6 +35,10 @@ class Queue(object):
     post_subs = 'queues'
 
     def __init__(self, name=None, admins=[], users=[], running=True):
+        """
+        Initialize a queue
+        """
+
         if name is None:
             raise KeyError('Queues must be named')
 
@@ -39,34 +53,61 @@ class Queue(object):
 
     @classmethod
     def fqn_users(cls, queue_name):
+        """ Transform a queue name into the property name for its users """
+
         return '.'.join([cls.pre_scheduler, queue_name, cls.post_users])
 
     @classmethod
     def fqn_admins(cls, queue_name):
+        """ Transform a queue name into the property name for its admins """
+
         return '.'.join([cls.pre_scheduler, queue_name, cls.post_admins])
 
     @classmethod
     def fqn_cap(cls, queue_name):
+        """ Transform a queue name into the property name for its capacity """
+
         return '.'.join([cls.pre_scheduler, queue_name, cls.post_cap])
 
     @classmethod
     def fqn_maxcap(cls, queue_name):
+        """
+        Transform a queue name into the property name for its maximum capacity
+        """
+
         return '.'.join([cls.pre_scheduler, queue_name, cls.post_maxcap])
 
     @classmethod
     def fqn_state(cls, queue_name):
+        """ Transform a queue name into the property name for its state """
+
         return '.'.join([cls.pre_scheduler, queue_name, cls.post_state])
 
     @classmethod
     def fqn_ulim(cls, queue_name):
+        """
+        Transform a queue name into the property name for its user limit factor
+        """
+
         return '.'.join([cls.pre_scheduler, queue_name, cls.post_ulim])
 
     @classmethod
     def fqn_subs(cls, queue_name):
+        """
+        Transform a queue name into the property name for its subqueue list
+        """
+
         return '.'.join([cls.pre_scheduler, queue_name, cls.post_subs])
 
     @classmethod
     def from_hxml(cls, hxml, fqn):
+        """
+        Create a Queue from part of an HXML
+
+        Given the fqn (fully qualified name) of the queue, read its attributes
+        into a Queue and return it
+        """
+
         adms = []
         users = []
 
@@ -104,6 +145,10 @@ class Queue(object):
         return q
 
     def subqueue(self, name):
+        """
+        Retrieve a subqueue of this queue
+        """
+
         for q in self.subqueues:
             if q.name == name:
                 return q
@@ -111,6 +156,11 @@ class Queue(object):
         return None
 
     def check_capacities(self, fqn_prefix=None):
+        """
+        Check that this queue's subqueues have capacities that add to 100,
+        and perform this operation recursively on all subqueues.
+        """
+
         if len(self.subqueues) == 0:
             return []
 
@@ -128,6 +178,11 @@ class Queue(object):
         return failures
 
     def check_maximum_capacities(self, fqn_prefix=None):
+        """
+        Check that this queue's capacity is less than or equal to its capacity,
+        and perform this test recursively on all subqueues.
+        """
+
         failures = []
 
         if self.cap_max < self.cap_min:
@@ -139,6 +194,10 @@ class Queue(object):
         return failures
 
     def get_fqn(self, prefix=None):
+        """
+        Get the fqn (fully qualified name) of this queue given a prefix
+        """
+
         fqn = self.name
 
         if prefix is not None:
@@ -147,6 +206,10 @@ class Queue(object):
         return fqn
 
     def to_hxml(self, fqn_prefix=None):
+        """
+        Convert this Queue to a blurb of HXML
+        """
+
         fqn = self.get_fqn(fqn_prefix)
 
         tmp = HXML()
@@ -165,6 +228,10 @@ class Queue(object):
         return tmp
 
     def get_state_str(self):
+        """
+        Get the state string of this queue. Either RUNNING or STOPPED
+        """
+
         if self.running:
             return 'RUNNING'
 
@@ -172,10 +239,21 @@ class Queue(object):
 
     @property
     def cap_min(self):
+        """
+        This Queue's minimum capacity
+        """
+
         return self._cap_min
 
     @cap_min.setter
     def cap_min(self, new_cap_min):
+        """
+        Set the minimum capacity.
+        
+        Checks to ensure that the new capacity is a valid value, and raises
+        ValueError if it is not
+        """
+
         tmp = float(new_cap_min)
         if 0.0 <= tmp <= 100.0:
             self._cap_min = tmp
@@ -184,10 +262,21 @@ class Queue(object):
 
     @property
     def cap_max(self):
+        """
+        Get the maximum capacity of this queue
+        """
+
         return self._cap_max
 
     @cap_max.setter
     def cap_max(self, new_cap_max):
+        """
+        Set the maximum capacity
+
+        Checks to ensure the new capacity is valid. Raises ValueError if the
+        new value is not valid
+        """
+
         tmp = float(new_cap_max)
         if 0.0 <= tmp <= 100.0:
             self._cap_max = tmp
@@ -196,10 +285,21 @@ class Queue(object):
 
     @property
     def user_limit_factor(self):
+        """
+        The queue's user limit factor
+        """
+
         return self._ulim
 
     @user_limit_factor.setter
     def user_limit_factor(self, new_val):
+        """
+        Set the queue's user limit factor
+
+        Checks to ensure validity of the new value. Raises ValueError if the
+        new value is not valid
+        """
+
         tmp = float(new_val)
         if tmp < 0.0:
             raise ValueError("cap_max must be between 0 and 100")
@@ -210,9 +310,17 @@ class Queue(object):
 class CapacityScheduler:
     """
     A class to specifically manage Hadoop's CapacityScheduler.
+
+    Initialize the CapacityScheduler with an instance of :py:class:HXML.
+
+    CapacityScheduler initializes its internal state with the given HXML.
+    However, it does not modify the given HXML at all, and any
+    modifications require calling to_hxml() to obtain a current
+    configuration in Hadoop XML format.
     """
 
     def __init__(self, hxml):
+
         self.root_queue = Queue(name='root')
 
         if hxml is not None:
