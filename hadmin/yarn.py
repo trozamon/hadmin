@@ -243,17 +243,17 @@ class CapacityScheduler:
         """ Generates and returns a sorted list of queues """
 
         root = self.queue(queue)
-        n = [root.name]
+        n = [queue]
 
-        def recursive_list(queue):
-            names = map(lambda q: q.name, queue.subqueues)
+        def recursive_list(queue, pre=None):
+            names = list(map(lambda q: q.get_fqn(pre), queue.subqueues))
 
             for q in queue.subqueues:
-                names += recursive_list(q)
+                names += recursive_list(q, q.get_fqn(pre))
 
             return names
 
-        n += recursive_list(root)
+        n += recursive_list(root, queue)
 
         return sorted(n)
 
