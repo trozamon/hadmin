@@ -5,6 +5,7 @@ CapacityScheduler.
 
 
 import xml.etree.ElementTree as ET
+import subprocess
 
 
 class HXML:
@@ -117,3 +118,30 @@ def users_from_passwd(raw):
             users.append(tmp)
 
     return sorted(users)
+
+
+class CommandReturn:
+
+    def __init__(self, status, output):
+        self.status = status
+        self.output = output
+
+
+def run_or_warn(cmd, warning=''):
+    try:
+        tmp = subprocess.getstatusoutput(cmd, shell=True)
+        retval = CommandReturn(status=tmp[0], output=tmp[1])
+
+        if retval.status != 0:
+            print(warning)
+
+        return retval
+    except AttributeError:
+        status = 0
+        out = ''
+        try:
+            out = subprocess.check_output(cmd, shell=True)
+        except subprocess.CalledProcessError:
+            status = 1
+
+        return CommandReturn(status=status, output=out)

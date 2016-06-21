@@ -5,7 +5,7 @@ Entry points for the `hadmin` command.
 
 from argparse import ArgumentParser
 import sys
-from hadmin.hdfs import NameNode
+from hadmin.hdfs import NameNode, Directory
 from hadmin.jmx import DataNodeJMX
 from hadmin.rest import NodeManagerREST
 from hadmin.yarn import CapacityScheduler
@@ -321,10 +321,52 @@ def queueulim(args):
     return 0
 
 
+def fhs(args):
+    """ Check and optionally fixup proper HDFS directory permissions """
+
+    parser = ArgumentParser(prog='fhs',
+                            description='HAdmin FHS utility')
+
+    parser.add_argument('--fixup', dest='fixup', action='store_const',
+                        const=True, default=False,
+                        help='Fixup permissions that are not correct')
+
+    args = parser.parse_args(args)
+
+    for d in NameNode.FHS_DIRS:
+        try:
+            current = Directory.from_hdfs(d.path)
+
+            if d != current:
+                print(current.path + ' has problems:')
+
+                if d.perms != current.perms:
+                    print(' * perms are ' + current.perms +
+                          ', but should be ' + d.perms)
+
+                if d.owner != current.owner:
+                    print(' * owner is ' + current.owner +
+                          ', but should be ' + d.owner)
+
+                if d.group != current.group:
+                    print(' * group is ' + current.group +
+                          ', but should be ' + d.group)
+
+                if args.fixup:
+                    d.write()
+        except IOError:
+            print(d.path + ' does not exist')
+
+            if args.fixup:
+                d.write()
+
+
 help_string = """Usage: hadmin <command> <command options>
 
 Commands:
-    chk-dn      Check datanode stats/health
+    chk-dn      Check datanode health
+    chk-nm      Check nodemanager health
+    fhs         Check and fix problems with standard HDFS directories
     queueadd    Add a queue
     queuecap    Change queue capacity
     queuedel    Remove a queue
@@ -339,6 +381,7 @@ Commands:
 cmds = {
     'chk-dn': chk_dn,
     'chk-nm': chk_nm,
+    'fhs': fhs,
     'queueadd': queueadd,
     'queuecap': queuecap,
     'queuedel': queuedel,
