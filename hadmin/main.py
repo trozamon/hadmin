@@ -28,14 +28,15 @@ def queuestat(args):
             out = '\n'.join([
                 queue_name,
                 '\tcapacity:           ' + str(queue.cap_min),
-                '\tmaximum capacity:   ' + 'None',
-                '\tuser limit factor:  ' + 'None',
-                '\tstate:              ' + 'None',
-                '\tusers:              ' + 'None',
-                '\tadmins:             ' + 'None'
+                '\tmaximum capacity:   ' + str(queue.cap_max),
+                '\tuser limit factor:  ' + str(queue.user_limit_factor),
+                '\trunning:            ' + str(queue.running),
+                '\tusers:              ' + str(queue.users),
+                '\tadmins:             ' + str(queue.admins)
                 ])
 
             print(out)
+            print('')
     except KeyError:
         print("Your CapacityScheduler configuration is malformed")
         return 1
