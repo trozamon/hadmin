@@ -8,8 +8,7 @@ import sys
 from hadmin.hdfs import NameNode, Directory
 from hadmin.jmx import DataNodeJMX
 from hadmin.rest import NodeManagerREST
-from hadmin.system import get_system_capacity_scheduler
-from hadmin.system import save_system_capacity_scheduler
+import hadmin.system
 
 
 def queuestat(args):
@@ -21,7 +20,7 @@ def queuestat(args):
     args = parser.parse_args(args)
 
     try:
-        mgr = get_system_capacity_scheduler()
+        mgr = hadmin.system.get_cap()
 
         for queue_name in mgr.queue_list(args.queue):
             queue = mgr.queue(queue_name)
@@ -53,7 +52,7 @@ def sc(args):
     ret = 0
 
     try:
-        mgr = get_system_capacity_scheduler()
+        mgr = hadmin.system.get_cap()
 
         for queue in mgr.check_capacities():
             ret = 1
@@ -150,7 +149,7 @@ def useradd(args):
                         help='Add an administrator')
     args = parser.parse_args(args)
 
-    mgr = get_system_capacity_scheduler()
+    mgr = hadmin.system.get_cap()
     if args.is_admin:
         mgr.queue(args.queue).admins.append(args.user)
         print("Added admin " + args.user + " to queue " + args.queue)
@@ -159,7 +158,7 @@ def useradd(args):
         print("Added user " + args.user + " to queue " + args.queue)
 
     hxml = mgr.to_hxml()
-    save_system_capacity_scheduler(hxml)
+    hadmin.system.save_cap(hxml)
 
     return 0
 
@@ -178,7 +177,7 @@ def userdel(args):
                         help='Delete an administrator')
     args = parser.parse_args(args)
 
-    mgr = get_system_capacity_scheduler()
+    mgr = hadmin.system.get_cap()
     if args.is_admin:
         mgr.queue(args.queue).admins.remove(args.user)
         print("Removed admin " + args.user + " from queue " +
@@ -189,7 +188,7 @@ def userdel(args):
               args.queue)
 
     hxml = mgr.to_hxml()
-    save_system_capacity_scheduler(hxml)
+    hadmin.system.save_cap(hxml)
 
     return 0
 
@@ -202,11 +201,11 @@ def queueon(args):
     parser.add_argument('queue')
     args = parser.parse_args(args)
 
-    mgr = get_system_capacity_scheduler()
+    mgr = hadmin.system.get_cap()
     mgr.queue(args.queue).running = True
 
     hxml = mgr.to_hxml()
-    save_system_capacity_scheduler(hxml)
+    hadmin.system.save_cap(hxml)
 
     print('Turned queue ' + args.queue + ' on')
 
@@ -221,11 +220,11 @@ def queueoff(args):
     parser.add_argument('queue')
     args = parser.parse_args(args)
 
-    mgr = get_system_capacity_scheduler()
+    mgr = hadmin.system.get_cap()
     mgr.queue(args.queue).running = False
 
     hxml = mgr.to_hxml()
-    save_system_capacity_scheduler(hxml)
+    hadmin.system.save_cap(hxml)
 
     print('Turned queue ' + args.queue + ' off')
 
@@ -244,7 +243,7 @@ def queuecap(args):
                         help='Set maximum capacity')
     args = parser.parse_args(args)
 
-    mgr = get_system_capacity_scheduler()
+    mgr = hadmin.system.get_cap()
 
     if args.maxcap:
         mgr.queue(args.queue).cap_max = args.capacity
@@ -252,7 +251,7 @@ def queuecap(args):
         mgr.queue(args.queue).cap_min = args.capacity
 
     hxml = mgr.to_hxml()
-    save_system_capacity_scheduler(hxml)
+    hadmin.system.save_cap(hxml)
 
     out = 'Set '
     if args.maxcap:
@@ -272,12 +271,12 @@ def queueulim(args):
     parser.add_argument('ulim')
     args = parser.parse_args(args)
 
-    mgr = get_system_capacity_scheduler()
+    mgr = hadmin.system.get_cap()
 
     mgr.queue(args.queue).user_limit_factor = args.ulim
 
     hxml = mgr.to_hxml()
-    save_system_capacity_scheduler(hxml)
+    hadmin.system.save_cap(hxml)
 
     print('Set ulim of queue ' + args.queue + ' to ' + args.ulim)
 
@@ -298,7 +297,7 @@ def fhs(args):
 
     user_dirs = []
 
-    sched = get_system_capacity_scheduler()
+    sched = hadmin.system.get_cap()
     for q in sched.queue_list():
         user_dirs += sched.queue(q).users
 

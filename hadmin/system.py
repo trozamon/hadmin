@@ -44,7 +44,7 @@ def find_hxml(filename):
     return None
 
 
-def get_system_capacity_scheduler():
+def get_cap():
     """
     Returns the system's :py:class:`hadmin.yarn.CapacityScheduler`
     """
@@ -53,6 +53,6 @@ def get_system_capacity_scheduler():
     return CapacityScheduler(hxml)
 
 
-def save_system_capacity_scheduler(hxml):
+def save_cap(hxml):
     d = find_hxml_dir()
     hxml.save(os.path.join(d, CAPACITY_SCHEDULER_FILENAME))
