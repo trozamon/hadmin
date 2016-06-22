@@ -34,6 +34,12 @@ class Queue(object):
     post_ulim = 'user-limit-factor'
     post_subs = 'queues'
 
+    DEFAULT_ADMIN_LIST = ['*']
+    DEFAULT_USER_LIST = ['*']
+    DEFAULT_CAP = 100.0
+    DEFAULT_MAXCAP = 100.0
+    DEFAULT_ULIM = 1.0
+
     def __init__(self, name=None, admins=[], users=[], running=True):
         """
         Initialize a queue
@@ -108,19 +114,19 @@ class Queue(object):
         into a Queue and return it
         """
 
-        adms = []
-        users = []
+        adms = Queue.DEFAULT_ADMIN_LIST
+        users = Queue.DEFAULT_USER_LIST
 
         try:
             adms = hxml[cls.fqn_admins(fqn)].split(',')
             users = hxml[cls.fqn_users(fqn)].split(',')
         except KeyError:
-            adms = []
+            adms = Queue.DEFAULT_ADMIN_LIST
             pass
 
-        cap = float(hxml[cls.fqn_cap(fqn)])
-        maxcap = float(hxml[cls.fqn_cap(fqn)])
-        ulim = float(hxml.get_or(cls.fqn_ulim(fqn), 1.0))
+        cap = float(hxml.get_or(cls.fqn_cap(fqn), Queue.DEFAULT_CAP))
+        maxcap = float(hxml.get_or(cls.fqn_maxcap(fqn), Queue.DEFAULT_MAXCAP))
+        ulim = float(hxml.get_or(cls.fqn_ulim(fqn), Queue.DEFAULT_ULIM))
 
         subs = []
         try:
@@ -128,9 +134,9 @@ class Queue(object):
         except KeyError:
             pass
 
-        running = False
-        if hxml.get_or(cls.fqn_state(fqn), 'RUNNING') == 'RUNNING':
-            running = True
+        running = True
+        if hxml.get_or(cls.fqn_state(fqn), 'RUNNING') == 'STOPPED':
+            running = False
 
         q = cls(name=fqn.split('.')[-1], admins=adms, users=users,
                 running=running)
