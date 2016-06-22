@@ -34,8 +34,8 @@ class Queue(object):
     post_ulim = 'user-limit-factor'
     post_subs = 'queues'
 
-    DEFAULT_ADMIN_LIST = ['*']
-    DEFAULT_USER_LIST = ['*']
+    DEFAULT_ADMIN_LIST = []
+    DEFAULT_USER_LIST = []
     DEFAULT_CAP = 100.0
     DEFAULT_MAXCAP = 100.0
     DEFAULT_ULIM = 1.0
@@ -120,6 +120,13 @@ class Queue(object):
         try:
             adms = hxml[cls.fqn_admins(fqn)].split(',')
             users = hxml[cls.fqn_users(fqn)].split(',')
+
+            if '*' in adms:
+                adms.remove('*')
+
+            if '*' in users:
+                users.remove('*')
+
         except KeyError:
             adms = Queue.DEFAULT_ADMIN_LIST
             pass
@@ -224,8 +231,17 @@ class Queue(object):
         fqn = self.get_fqn(fqn_prefix)
 
         tmp = HXML()
-        tmp[Queue.fqn_admins(fqn)] = ','.join(sorted(set(self.admins)))
-        tmp[Queue.fqn_users(fqn)] = ','.join(sorted(set(self.users)))
+
+        admin_list = ','.join(sorted(set(self.admins)))
+        if not self.admins:
+            admin_list = '*'
+
+        user_list = ','.join(sorted(set(self.users)))
+        if not self.users:
+            user_list = '*'
+
+        tmp[Queue.fqn_admins(fqn)] = admin_list
+        tmp[Queue.fqn_users(fqn)] = user_list
         tmp[Queue.fqn_cap(fqn)] = str(self.cap_min)
         tmp[Queue.fqn_maxcap(fqn)] = str(self.cap_max)
         tmp[Queue.fqn_state(fqn)] = self.get_state_str()

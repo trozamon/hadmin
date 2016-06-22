@@ -6,7 +6,6 @@ HDFS management. Manage the filesystem, get namenode stats, etc.
 """
 
 
-import subprocess
 from hadmin.util import run_or_warn
 
 
@@ -69,6 +68,15 @@ class Directory:
 
         return cls.from_hdfs_ls_str(listing.output)
 
+    @classmethod
+    def from_username(cls, username):
+        return Directory(
+                path='/user/' + username,
+                owner=username,
+                group='hadoop',
+                perms='0750'
+                )
+
     def write(self):
         if run_or_warn('hdfs dfs -test -d ' + self.path).status == 1:
             run_or_warn('hdfs dfs -mkdir ' + self.path,
@@ -108,30 +116,3 @@ class NameNode:
 
     def __init__(self, addr):
         self.addr = addr
-
-    def add_home_for(self, user):
-        """
-        Adds user directories. This calls other binaries using subprocess.
-        """
-
-        ret = subprocess.call('which hdfs', shell=True)
-        if ret != 0:
-            print('You do not have the hdfs binary on your system')
-            print('You will have to manually run:')
-            print('\thdfs dfs -mkdir /user/' + user)
-            print('\thdfs dfs -chown ' + user + ' /user/' + user)
-            return ret
-
-        ret = subprocess.call('hdfs dfs -mkdir /user/' + user, shell=True)
-        if ret != 0:
-            print('Creating directory /user/' + user + ' failed')
-            return ret
-        print('Created home directory for ' + user)
-
-        ret = subprocess.call('hdfs dfs -chown ' + user + ' /user/' + user,
-                              shell=True)
-        if ret != 0:
-            print('Chowning the above directory failed')
-            return ret
-
-        return 0

@@ -296,7 +296,15 @@ def fhs(args):
 
     args = parser.parse_args(args)
 
-    for d in NameNode.FHS_DIRS:
+    user_dirs = []
+
+    sched = get_system_capacity_scheduler()
+    for q in sched.queue_list():
+        user_dirs += sched.queue(q).users
+
+    user_dirs = list(map(lambda u: Directory.from_username(u), set(user_dirs)))
+
+    for d in NameNode.FHS_DIRS + user_dirs:
         try:
             current = Directory.from_hdfs(d.path)
 
