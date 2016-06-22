@@ -347,7 +347,6 @@ class CapacityScheduler:
     """
 
     def __init__(self, hxml):
-
         self.root_queue = Queue(name='root')
 
         if hxml is not None:
@@ -355,12 +354,24 @@ class CapacityScheduler:
 
     @classmethod
     def from_file(cls, fname):
+        """
+        Load a CapacityScheduler from a file
+        """
+
         return cls(HXML.from_file(fname))
 
     def to_hxml(self):
+        """
+        Generate an HXML that is the configuration of this CapacityScheduler
+        """
+
         return self.root_queue.to_hxml()
 
     def queue(self, fqn):
+        """
+        Get a queue
+        """
+
         parts = fqn.split('.')
         q = self.root_queue
 
