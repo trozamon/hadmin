@@ -1,9 +1,9 @@
 from unittest2 import TestCase
-from hadmin.rest import NodeManagerREST
+from hadmin.rest import NodeManager
 from hadmin import mock
 
 
-class NodeManagerRESTTest(TestCase):
+class NodeManagerTest(TestCase):
 
     def testHealthy(self):
         self.assertEqual(self.rest.isHealthy(), True)
@@ -13,14 +13,14 @@ class NodeManagerRESTTest(TestCase):
                          "1/2 local-dirs are bad: /var/hadoop/compute; ")
 
     def setUp(self):
-        self.rest = NodeManagerREST()
+        self.rest = NodeManager()
 
         with open('data/nodemanager.rest.json') as f:
-            self.rest = NodeManagerREST(f.read())
+            self.rest = NodeManager(f.read())
 
 
-class NodeManagerRESTNetworkTest(NodeManagerRESTTest):
+class NodeManagerNetworkTest(NodeManagerTest):
 
     def setUp(self):
-        self.rest = NodeManagerREST()
+        self.rest = NodeManager()
         self.rest.load_from_connection(mock.RESTConnectionMock())

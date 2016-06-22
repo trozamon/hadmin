@@ -1,4 +1,8 @@
-""" Hadoop REST api handling """
+"""
+Hadoop REST API handling
+------------------------
+
+"""
 
 import json
 
@@ -8,7 +12,12 @@ except ImportError:
     from httplib import HTTPConnection
 
 
-class NodeManagerREST:
+class NodeManager:
+    """
+    Wrapper around the NodeManager REST interface
+
+    Currently supports the node info only, not applications or containers.
+    """
 
     def __init__(self, json_str=''):
         self.load(json_str)
@@ -36,3 +45,11 @@ class NodeManagerREST:
 
     def getHealthReport(self):
         return self.data['healthReport']
+
+    @property
+    def allocated_memory(self):
+        return self.data['totalPmemAllocatedContainersMB']
+
+    @property
+    def allocated_cores(self):
+        return self.data['totalVCoresAllocatedContainers']

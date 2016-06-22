@@ -4,11 +4,11 @@ Entry points for the `hadmin` command.
 
 
 from argparse import ArgumentParser
-import sys
 from hadmin.hdfs import NameNode, Directory
 from hadmin.jmx import DataNodeJMX
-from hadmin.rest import NodeManagerREST
+import hadmin.rest
 import hadmin.system
+import sys
 
 
 def queuestat(args):
@@ -114,7 +114,7 @@ def chk_nm(args):
 
     ret = 0
 
-    rest = NodeManagerREST()
+    rest = hadmin.rest.NodeManager()
     rest.load_from_host(args.host)
 
     if args.health:
@@ -132,6 +132,24 @@ def chk_nm(args):
         print(msg)
 
     return ret
+
+
+def stats_nm(args):
+    """
+    Get some stats from a NodeManager
+    """
+
+    parser = ArgumentParser(prog='stats-nm', description='Get NM stats')
+    parser.add_argument('host', nargs='?', default='localhost:8042')
+    args = parser.parse_args(args)
+
+    nm = hadmin.rest.NodeManager()
+    nm.load_from_host(args.host)
+
+    print('Total Cores: ' + str(nm.allocated_cores))
+    print('Total Memory: ' + str(nm.allocated_memory) + ' MB')
+
+    return 0
 
 
 def useradd(args):
@@ -356,6 +374,7 @@ cmds = {
     'queuestat': queuestat,
     'queueulim': queueulim,
     'sc': sc,
+    'stats-nm': stats_nm,
     'useradd': useradd,
     'userdel': userdel
     }
