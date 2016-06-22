@@ -7,8 +7,41 @@ load configurations from ``/etc/hadoop/conf``.
 """
 
 
-from hadmin.util import CAPACITY_SCHEDULER_FILENAME, find_hxml
+from hadmin.util import HXML
 from hadmin.yarn import CapacityScheduler
+import os
+
+
+HADOOP_CONF_DIRS = [
+        '.',
+        '/etc/hadoop/conf'
+        ]
+
+CAPACITY_SCHEDULER_FILENAME = 'capacity-scheduler.xml'
+
+
+def find_hxml_dir():
+    for d in HADOOP_CONF_DIRS:
+        if 'core-site.xml' in os.listdir(d):
+            return d
+
+    raise IOError("Can't find directory containing Hadoop configuration")
+
+
+def find_hxml(filename):
+    """
+    Load an py:class:`HXML` from a file in a built-in hadoop configuration
+    directory
+    """
+
+    d = find_hxml_dir()
+    try:
+        with open(os.path.join(d, filename), 'r') as f:
+            return HXML.from_str(f.read())
+    except IOError:
+        pass
+
+    return None
 
 
 def get_system_capacity_scheduler():
@@ -18,3 +51,8 @@ def get_system_capacity_scheduler():
 
     hxml = find_hxml(CAPACITY_SCHEDULER_FILENAME)
     return CapacityScheduler(hxml)
+
+
+def save_system_capacity_scheduler(hxml):
+    d = find_hxml_dir()
+    hxml.save(os.path.join(d, CAPACITY_SCHEDULER_FILENAME))

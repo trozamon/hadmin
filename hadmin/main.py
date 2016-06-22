@@ -9,7 +9,7 @@ from hadmin.hdfs import NameNode, Directory
 from hadmin.jmx import DataNodeJMX
 from hadmin.rest import NodeManagerREST
 from hadmin.system import get_system_capacity_scheduler
-from hadmin.yarn import CapacityScheduler
+from hadmin.system import save_system_capacity_scheduler
 
 
 def queuestat(args):
@@ -150,19 +150,16 @@ def useradd(args):
                         help='Add an administrator')
     args = parser.parse_args(args)
 
-    mgr = CapacityScheduler()
+    mgr = get_system_capacity_scheduler()
     if args.is_admin:
-        mgr.add_admin(args.user, args.queue)
+        mgr.queue(args.queue).admins.append(args.user)
         print("Added admin " + args.user + " to queue " + args.queue)
     else:
-        mgr.add_user(args.user, args.queue)
+        mgr.queue(args.queue).users.append(args.user)
         print("Added user " + args.user + " to queue " + args.queue)
 
-    mgr.save()
-
-    nn = NameNode()
-    for u in args.user.split(','):
-        nn.add_user_hdfs(u)
+    hxml = mgr.to_hxml()
+    save_system_capacity_scheduler(hxml)
 
     return 0
 
@@ -181,75 +178,20 @@ def userdel(args):
                         help='Delete an administrator')
     args = parser.parse_args(args)
 
-    mgr = CapacityScheduler()
+    mgr = get_system_capacity_scheduler()
     if args.is_admin:
-        mgr.del_admin(args.user, args.queue)
+        mgr.queue(args.queue).admins.remove(args.user)
         print("Removed admin " + args.user + " from queue " +
               args.queue)
     else:
-        mgr.del_user(args.user, args.queue)
+        mgr.queue(args.queue).users.remove(args.user)
         print("Removed user " + args.user + " from queue " +
               args.queue)
 
-    mgr.save()
+    hxml = mgr.to_hxml()
+    save_system_capacity_scheduler(hxml)
 
     return 0
-
-
-def queueadd(args):
-    """ Adds a queue. """
-
-    parser = ArgumentParser(prog='queueadd',
-                            description='HAdmin queueadd utility')
-    parser.add_argument('queue')
-    parser.add_argument('user')
-    args = parser.parse_args(args)
-
-    mgr = CapacityScheduler()
-
-    try:
-        input = raw_input
-    except NameError:
-        pass
-
-    confirm = input(' '.join(['Are you sure you want to add queue',
-                    args.queue, 'with initial user/admin', args.user + '?',
-                    '[y/N] ']))
-
-    if confirm != 'y' and confirm != 'Y':
-        return 0
-
-    mgr.add(args.queue, args.user)
-    print('Added queue ' + args.queue +
-          ' with initial user/admin ' + args.user)
-
-    mgr.save()
-
-    nn = NameNode()
-    nn.add_user_hdfs(args.user)
-
-    return 0
-
-
-def queuedel(args):
-    """ Turns a queue off or deletes it based on args. """
-
-    parser = ArgumentParser(prog='queueadd',
-                            description='HAdmin queueadd utility')
-    parser.add_argument('queue')
-    parser.add_argument('--force', dest='force', action='store_const',
-                        const=True, default=False,
-                        help='Force the queue deletion')
-    args = parser.parse_args(args)
-
-    if args.force:
-        mgr = CapacityScheduler()
-        mgr.delete(args.queue)
-        mgr.save()
-        print('Removed queue ' + args.queue)
-        return 0
-
-    return queueoff([args.queue])
 
 
 def queueon(args):
@@ -260,9 +202,11 @@ def queueon(args):
     parser.add_argument('queue')
     args = parser.parse_args(args)
 
-    mgr = CapacityScheduler()
-    mgr.on(args.queue)
-    mgr.save()
+    mgr = get_system_capacity_scheduler()
+    mgr.queue(args.queue).running = True
+
+    hxml = mgr.to_hxml()
+    save_system_capacity_scheduler(hxml)
 
     print('Turned queue ' + args.queue + ' on')
 
@@ -277,9 +221,11 @@ def queueoff(args):
     parser.add_argument('queue')
     args = parser.parse_args(args)
 
-    mgr = CapacityScheduler()
-    mgr.off(args.queue)
-    mgr.save()
+    mgr = get_system_capacity_scheduler()
+    mgr.queue(args.queue).running = False
+
+    hxml = mgr.to_hxml()
+    save_system_capacity_scheduler(hxml)
 
     print('Turned queue ' + args.queue + ' off')
 
@@ -298,12 +244,15 @@ def queuecap(args):
                         help='Set maximum capacity')
     args = parser.parse_args(args)
 
-    mgr = CapacityScheduler()
+    mgr = get_system_capacity_scheduler()
+
     if args.maxcap:
-        mgr.set_maxcap(args.queue, args.capacity)
+        mgr.queue(args.queue).cap_max = args.capacity
     else:
-        mgr.set_cap(args.queue, args.capacity)
-    mgr.save()
+        mgr.queue(args.queue).cap_min = args.capacity
+
+    hxml = mgr.to_hxml()
+    save_system_capacity_scheduler(hxml)
 
     out = 'Set '
     if args.maxcap:
@@ -323,9 +272,12 @@ def queueulim(args):
     parser.add_argument('ulim')
     args = parser.parse_args(args)
 
-    mgr = CapacityScheduler()
-    mgr.set_ulim(args.queue, args.ulim)
-    mgr.save()
+    mgr = get_system_capacity_scheduler()
+
+    mgr.queue(args.queue).user_limit_factor = args.ulim
+
+    hxml = mgr.to_hxml()
+    save_system_capacity_scheduler(hxml)
 
     print('Set ulim of queue ' + args.queue + ' to ' + args.ulim)
 
@@ -378,9 +330,7 @@ Commands:
     chk-dn      Check datanode health
     chk-nm      Check nodemanager health
     fhs         Check and fix problems with standard HDFS directories
-    queueadd    Add a queue
     queuecap    Change queue capacity
-    queuedel    Remove a queue
     queueoff    Turn a queue off
     queueon     Turn a queue on
     queuestat   View queue information
@@ -393,9 +343,7 @@ cmds = {
     'chk-dn': chk_dn,
     'chk-nm': chk_nm,
     'fhs': fhs,
-    'queueadd': queueadd,
     'queuecap': queuecap,
-    'queuedel': queuedel,
     'queueoff': queueoff,
     'queueon': queueon,
     'queuestat': queuestat,

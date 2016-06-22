@@ -130,7 +130,13 @@ class Queue(object):
 
         subs = []
         try:
-            subs = hxml[cls.fqn_subs(fqn)].split(',')
+            subs = hxml[cls.fqn_subs(fqn)]
+
+            if subs is None:
+                subs = []
+            else:
+                subs = subs.split(',')
+
         except KeyError:
             pass
 
@@ -145,8 +151,7 @@ class Queue(object):
         q.ulim = ulim
 
         for sub in subs:
-            q.subqueues.append(
-                    Queue.from_hxml(hxml, '.'.join([fqn, sub])))
+            q.subqueues.append(Queue.from_hxml(hxml, '.'.join([fqn, sub])))
 
         return q
 
