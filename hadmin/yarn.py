@@ -23,6 +23,9 @@ class Queue(object):
     Queues are fundamental to managing a YARN cluster. Each queue has a list
     of allowed users, a minimum guaranteed capacity, and maximum capacity
     (among other attributes).
+
+    :py:class:`Queue` swallows '*' in the ACLs for admins and users, replacing
+    with ' '. Allowing any user to submit to a queue is terrible practice.
     """
 
     pre_scheduler = 'yarn.scheduler.capacity'
@@ -234,11 +237,11 @@ class Queue(object):
 
         admin_list = ','.join(sorted(set(self.admins)))
         if not self.admins:
-            admin_list = '*'
+            admin_list = ' '
 
         user_list = ','.join(sorted(set(self.users)))
         if not self.users:
-            user_list = '*'
+            user_list = ' '
 
         tmp[Queue.fqn_admins(fqn)] = admin_list
         tmp[Queue.fqn_users(fqn)] = user_list
