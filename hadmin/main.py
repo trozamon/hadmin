@@ -55,12 +55,12 @@ def sc(args):
     try:
         mgr = get_system_capacity_scheduler()
 
-        for queue in mgr.sc_caps():
+        for queue in mgr.check_capacities():
             ret = 1
             print('ERROR: The capacities of all subqueues of ' + queue +
                   ' do not sum to 100')
 
-        for queue in mgr.sc_maxcaps():
+        for queue in mgr.check_maximum_capacities():
             ret = 1
             print('ERROR: The capacity of ' + queue +
                   ' is greater than its maximum capacity')
