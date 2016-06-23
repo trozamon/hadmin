@@ -1,0 +1,17 @@
+---
+
+admins:
+  - alec
+  - trozamon
+
+users:
+  - alec
+  - trozamon
+
+running: true
+
+capacity:
+  max: 100
+  weight: 1
+
+user_limit: 100

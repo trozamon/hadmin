@@ -147,3 +147,17 @@ class QueueTest(TestCase):
     def testSetUlimLessThanZeroStr(self):
         with self.assertRaises(ValueError):
             self.root.user_limit_factor = '-1'
+
+    def testRootUsersNoSubqueues(self):
+        self.assertEqual([' '], self.root.users)
+
+    def testRootAdminsNoSubqueues(self):
+        self.assertEqual([' '], self.root.admins)
+
+    def testRootUsersWithSubqueues(self):
+        self.root.subqueues.append(Queue(name='test'))
+        self.assertEqual(['*'], self.root.users)
+
+    def testRootAdminsWithSubqueues(self):
+        self.root.subqueues.append(Queue(name='test'))
+        self.assertEqual(['*'], self.root.admins)

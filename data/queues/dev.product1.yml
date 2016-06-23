@@ -1,0 +1,15 @@
+---
+
+admins:
+  - alec
+
+users:
+  - alec
+
+running: false
+
+capacity:
+  max: 100
+  weight: 1
+
+user_limit: 50

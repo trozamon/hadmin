@@ -1,0 +1,15 @@
+---
+
+admins:
+  - trozamon
+
+users:
+  - trozamon
+
+running: true
+
+capacity:
+  max: 100
+  weight: 1
+
+user_limit: 50

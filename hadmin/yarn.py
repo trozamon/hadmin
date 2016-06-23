@@ -38,16 +38,14 @@ class Queue(object):
     post_subs = 'queues'
 
     DEFAULT_ADMIN_LIST = []
-    DEFAULT_USER_LIST = []
     DEFAULT_CAP = 100.0
     DEFAULT_MAXCAP = 100.0
+    DEFAULT_RUNNING = True
     DEFAULT_ULIM = 1.0
+    DEFAULT_USER_LIST = []
 
-    def __init__(self, name=None, admins=[], users=[], running=True):
-        """
-        Initialize a queue
-        """
-
+    def __init__(self, name=None, admins=DEFAULT_ADMIN_LIST,
+                 users=DEFAULT_USER_LIST, running=DEFAULT_RUNNING):
         if name is None:
             raise KeyError('Queues must be named')
 
@@ -55,9 +53,9 @@ class Queue(object):
         self.admins = admins
         self.users = users
         self.running = running
-        self.user_limit_factor = 1.0
-        self.cap_max = 100.0
-        self.cap_min = 1.0
+        self.user_limit_factor = Queue.DEFAULT_ULIM
+        self.cap_max = Queue.DEFAULT_MAXCAP
+        self.cap_min = Queue.DEFAULT_CAP
         self.subqueues = []
 
     @classmethod
@@ -335,6 +333,50 @@ class Queue(object):
             raise ValueError("cap_max must be between 0 and 100")
 
         self._ulim = tmp
+
+    @property
+    def users(self):
+        """
+        List of queue users
+        """
+
+        if not self._users:
+            if self.subqueues:
+                return ['*']
+            else:
+                return [' ']
+
+        return self._users
+
+    @users.setter
+    def users(self, new_val):
+        """
+        Set the list of users
+        """
+
+        self._users = new_val
+
+    @property
+    def admins(self):
+        """
+        List of queue admins
+        """
+
+        if not self._admins:
+            if self.subqueues:
+                return ['*']
+            else:
+                return [' ']
+
+        return self._admins
+
+    @admins.setter
+    def admins(self, new_val):
+        """
+        Set the list of admins
+        """
+
+        self._admins = new_val
 
 
 class CapacityScheduler:

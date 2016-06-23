@@ -1,6 +1,9 @@
 API
 ===
 
+.. automodule:: hadmin.conf
+   :members:
+
 .. automodule:: hadmin.hdfs
    :members:
 
