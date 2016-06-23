@@ -4,10 +4,12 @@ Entry points for the `hadmin` command.
 
 
 from argparse import ArgumentParser
+from hadmin.conf import QueueGenerator
 from hadmin.hdfs import NameNode, Directory
 from hadmin.jmx import DataNodeJMX
 import hadmin.rest
 import hadmin.system
+import os
 import sys
 
 
@@ -301,6 +303,38 @@ def queueulim(args):
     return 0
 
 
+def genqueues(args):
+    """ Generate capacity-scheduler.xml from YAML """
+
+    parser = ArgumentParser(prog='genqueues',
+                            description='HAdmin genqueues utility')
+
+    parser.add_argument('conf_dir', help='Location of HAdmin YAML configs')
+
+    parser.add_argument('output', nargs='?',
+                        default=os.path.join(hadmin.system.find_hxml_dir(),
+                            hadmin.system.CAPACITY_SCHEDULER_FILENAME),
+                        help='Location of resulting capacity-scheduler.xml')
+
+    args = parser.parse_args(args)
+
+    sched = hadmin.system.get_cap()
+    gen = QueueGenerator.load_dir(args.conf_dir)
+    new_root_queue = gen.generate()
+
+    if new_root_queue is None:
+        print("Your YAML stuff is invalid")
+        return 1
+
+    sched.root_queue = new_root_queue
+    hxml = sched.to_hxml()
+    hxml.save(args.output)
+
+    print("Generated some queues and stuff into " + args.output)
+
+    return 0
+
+
 def fhs(args):
     """ Check and optionally fixup proper HDFS directory permissions """
 
@@ -355,6 +389,7 @@ Commands:
     chk-dn      Check datanode health
     chk-nm      Check nodemanager health
     fhs         Check and fix problems with standard HDFS directories
+    genqueues   Generate CapacityScheduler queues from YAML files
     queuecap    Change queue capacity
     queueoff    Turn a queue off
     queueon     Turn a queue on
@@ -368,6 +403,7 @@ cmds = {
     'chk-dn': chk_dn,
     'chk-nm': chk_nm,
     'fhs': fhs,
+    'genqueues': genqueues,
     'queuecap': queuecap,
     'queueoff': queueoff,
     'queueon': queueon,
