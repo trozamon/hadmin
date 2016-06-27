@@ -311,9 +311,9 @@ def genqueues(args):
 
     parser.add_argument('conf_dir', help='Location of HAdmin YAML configs')
 
-    parser.add_argument('output', nargs='?',
-                        default=os.path.join(hadmin.system.find_hxml_dir(),
-                            hadmin.system.CAPACITY_SCHEDULER_FILENAME),
+    default_output = os.path.join(hadmin.system.find_hxml_dir(),
+                                  hadmin.system.CAPACITY_SCHEDULER_FILENAME)
+    parser.add_argument('output', nargs='?', default=default_output,
                         help='Location of resulting capacity-scheduler.xml')
 
     args = parser.parse_args(args)
