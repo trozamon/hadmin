@@ -32,3 +32,18 @@ class DirectoryTest(TestCase):
 
     def testFromHDFSLsStrPath(self):
         self.assertEqual('/', self.d.path)
+
+    def testFromUsernameNone(self):
+        self.assertEqual(Directory.from_username(None), None)
+
+    def testFromUsernameSpace(self):
+        self.assertEqual(Directory.from_username(' '), None)
+
+    def testFromUsernameEmpty(self):
+        self.assertEqual(Directory.from_username(''), None)
+
+    def testFromUsernameStar(self):
+        self.assertEqual(Directory.from_username('*'), None)
+
+    def testFromUsernameHasStar(self):
+        self.assertEqual(Directory.from_username('talec*'), None)
