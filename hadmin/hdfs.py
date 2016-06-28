@@ -78,7 +78,6 @@ class Directory:
             if c in username:
                 return None
 
-        print('returning dir for "' + username + '"')
         return Directory(
                 path='/user/' + username,
                 owner=username,
