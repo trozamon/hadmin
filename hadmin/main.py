@@ -351,11 +351,15 @@ def fhs(args):
 
     sched = hadmin.system.get_cap()
     for q in sched.queue_list():
-        user_dirs += sched.queue(q).users
+        user_dirs += filter(lambda thing: thing is not None,
+                            sched.queue(q).users)
 
     user_dirs = list(map(lambda u: Directory.from_username(u), set(user_dirs)))
 
     for d in NameNode.FHS_DIRS + user_dirs:
+        if not d:
+            continue
+
         try:
             current = Directory.from_hdfs(d.path)
 

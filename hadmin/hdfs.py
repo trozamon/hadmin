@@ -70,6 +70,15 @@ class Directory:
 
     @classmethod
     def from_username(cls, username):
+        if not username or len(username) == 0:
+            return None
+
+        bad_chars = [' ', '*']
+        for c in bad_chars:
+            if c in username:
+                return None
+
+        print('returning dir for "' + username + '"')
         return Directory(
                 path='/user/' + username,
                 owner=username,
