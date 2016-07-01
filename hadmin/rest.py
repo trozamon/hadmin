@@ -55,6 +55,8 @@ class Base:
             if res.status == 200:
                 jsons.append(res.read())
 
+        return cls.load_from_jsons(jsons)
+
     @classmethod
     def load_from_json(cls, raw_json):
         tmp = dict()
