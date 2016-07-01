@@ -400,6 +400,7 @@ Commands:
     queuestat   View queue information
     queueulim   Change queue user limit
     sc          Run a sanity check
+    stats-nm    Get some statistics about a YARN NodeManager
     useradd     Add a user
     userdel     Remove a user"""
 
