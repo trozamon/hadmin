@@ -1,0 +1,140 @@
+{
+    "scheduler": {
+        "schedulerInfo": {
+            "capacity": 100.0,
+            "maxCapacity": 100.0,
+            "queueName": "root",
+            "queues": {
+                "queue": [
+                    {
+                        "absoluteCapacity": 50.0,
+                        "absoluteMaxCapacity": 100.0,
+                        "absoluteUsedCapacity": 2.0,
+                        "allocatedContainers": 0,
+                        "capacity": 50.0,
+                        "hideReservationQueues": false,
+                        "maxActiveApplications": 9,
+                        "maxActiveApplicationsPerUser": 10,
+                        "maxApplications": 5000,
+                        "maxApplicationsPerUser": 10000,
+                        "maxCapacity": 100.0,
+                        "nodeLabels": [
+                            "*"
+                        ],
+                        "numActiveApplications": 3,
+                        "numApplications": 3,
+                        "numContainers": 6,
+                        "numPendingApplications": 0,
+                        "pendingContainers": 0,
+                        "queueName": "default",
+                        "reservedContainers": 0,
+                        "resourcesUsed": {
+                            "memory": 8192,
+                            "vCores": 6
+                        },
+                        "state": "RUNNING",
+                        "type": "capacitySchedulerLeafQueueInfo",
+                        "usedCapacity": 4.0,
+                        "userLimit": 100,
+                        "userLimitFactor": 2.0,
+                        "users": null
+                    },
+                    {
+                        "absoluteCapacity": 50.0,
+                        "absoluteMaxCapacity": 100.0,
+                        "absoluteUsedCapacity": 50.0,
+                        "allocatedContainers": 0,
+                        "capacity": 50.0,
+                        "hideReservationQueues": false,
+                        "maxCapacity": 100.0,
+                        "nodeLabels": [
+                            "*"
+                        ],
+                        "numApplications": 5,
+                        "pendingContainers": 0,
+                        "queueName": "staff",
+                        "queues": {
+                            "queue": [
+                                {
+                                    "absoluteCapacity": 45.0,
+                                    "absoluteMaxCapacity": 100.0,
+                                    "absoluteUsedCapacity": 45.0,
+                                    "allocatedContainers": 0,
+                                    "capacity": 90.0,
+                                    "hideReservationQueues": false,
+                                    "maxActiveApplications": 9,
+                                    "maxActiveApplicationsPerUser": 5,
+                                    "maxApplications": 4500,
+                                    "maxApplicationsPerUser": 5000,
+                                    "maxCapacity": 100.0,
+                                    "nodeLabels": [
+                                        "*"
+                                    ],
+                                    "numActiveApplications": 0,
+                                    "numApplications": 3,
+                                    "numContainers": 30,
+                                    "numPendingApplications": 0,
+                                    "pendingContainers": 0,
+                                    "queueName": "dev",
+                                    "reservedContainers": 0,
+                                    "resourcesUsed": {
+                                        "memory": 40000,
+                                        "vCores": 15
+                                    },
+                                    "state": "RUNNING",
+                                    "type": "capacitySchedulerLeafQueueInfo",
+                                    "usedCapacity": 100.0,
+                                    "userLimit": 100,
+                                    "userLimitFactor": 1.1111112,
+                                    "users": null
+                                },
+                                {
+                                    "absoluteCapacity": 5.0,
+                                    "absoluteMaxCapacity": 100.0,
+                                    "absoluteUsedCapacity": 0.0,
+                                    "allocatedContainers": 0,
+                                    "capacity": 10.0,
+                                    "hideReservationQueues": false,
+                                    "maxActiveApplications": 9,
+                                    "maxActiveApplicationsPerUser": 10,
+                                    "maxApplications": 500,
+                                    "maxApplicationsPerUser": 5000,
+                                    "maxCapacity": 100.0,
+                                    "nodeLabels": [
+                                        "*"
+                                    ],
+                                    "numActiveApplications": 0,
+                                    "numApplications": 0,
+                                    "numContainers": 0,
+                                    "numPendingApplications": 0,
+                                    "pendingContainers": 0,
+                                    "queueName": "qa",
+                                    "reservedContainers": 0,
+                                    "resourcesUsed": {
+                                        "memory": 0,
+                                        "vCores": 0
+                                    },
+                                    "state": "RUNNING",
+                                    "type": "capacitySchedulerLeafQueueInfo",
+                                    "usedCapacity": 0.0,
+                                    "userLimit": 100,
+                                    "userLimitFactor": 10.0,
+                                    "users": null
+                                }
+                            ]
+                        },
+                        "reservedContainers": 0,
+                        "resourcesUsed": {
+                            "memory": 50000,
+                            "vCores": 20
+                        },
+                        "state": "RUNNING",
+                        "usedCapacity": 100.0
+                    }
+                ]
+            },
+            "type": "capacityScheduler",
+            "usedCapacity": 0.0
+        }
+    }
+}
