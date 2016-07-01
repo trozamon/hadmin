@@ -209,6 +209,19 @@ class ResourceManager(Base):
                 self._load_subqueues(q['queues']['queue'],
                                      prefix=tmp.name)
 
+    def __iter__(self):
+        yield 'metrics_apps_running', self.apps_running
+        yield 'metrics_memory_mb_allocated', self.memory_mb_allocated
+        yield 'metrics_memory_mb_reserved', self.memory_mb_reserved
+        yield 'metrics_memory_mb_total', self.memory_mb_total
+        yield 'metrics_nodes_active', self.nodes_active
+        yield 'metrics_nodes_decommissioned', self.nodes_decommissioned
+        yield 'metrics_nodes_total', self.nodes_total
+        yield 'metrics_nodes_unhealthy', self.nodes_unhealthy
+        yield 'metrics_vcpus_allocated', self.vcpus_allocated
+        yield 'metrics_vcpus_reserved', self.vcpus_reserved
+        yield 'metrics_vcpus_total', self.vcpus_total
+
     def load_metrics(self, data=dict()):
         met = data['clusterMetrics']
 

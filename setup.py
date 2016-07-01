@@ -16,7 +16,8 @@ setup(
     license='MIT',
     entry_points={
         'console_scripts': [
-            'hadmin = hadmin.main:run'
+            'hadmin = hadmin.main:run',
+            'hadmin-stats-influxd = hadmin.influx:run'
             ]
         }
 )

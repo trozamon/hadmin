@@ -7,6 +7,7 @@ load configurations from ``/etc/hadoop/conf``.
 """
 
 
+import hadmin.rest
 from hadmin.util import HXML
 from hadmin.yarn import CapacityScheduler, ResourceManager
 import os
@@ -66,3 +67,25 @@ def get_rm():
 
     hxml = find_hxml(YARN_FILENAME)
     return ResourceManager(hxml)
+
+
+def rest_nm():
+    """
+    Returns a default :py:class:`hadmin.rest.NodeManager`
+    """
+
+    from hadmin.rest import NodeManager
+
+    return NodeManager.load_from_host('localhost:8042',
+                                      path=hadmin.rest.NM_INFO_PATH)
+
+
+def rest_rm():
+    """
+    Returns a default :py:class:`hadmin.rest.ResourceManager`
+    """
+
+    rm = get_rm()
+
+    paths = [hadmin.rest.RM_METRICS_PATH, hadmin.rest.RM_SCHEDULER_PATH]
+    return hadmin.rest.ResourceManager.load_from_host(rm.address, paths=paths)
