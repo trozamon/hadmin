@@ -24,8 +24,12 @@ YARN_FILENAME = 'yarn-site.xml'
 
 def find_hxml_dir():
     for d in HADOOP_CONF_DIRS:
-        if 'core-site.xml' in os.listdir(d):
-            return d
+        try:
+            if 'core-site.xml' in os.listdir(d):
+                return d
+        except OSError:
+            # Probably missing permissions to list the directory
+            pass
 
     raise IOError("Can't find directory containing Hadoop configuration")
 
