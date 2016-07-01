@@ -32,12 +32,10 @@ class Base:
         raise AttributeError("You cannot initialize this class")
 
     @classmethod
-    def load_from_host(cls, addr, path):
-        conn = HTTPConnection(addr)
-        return cls.load_from_connection(conn, path)
+    def load_from_host(cls, addr, path=None, paths=[]):
+        if path:
+            paths.append(path)
 
-    @classmethod
-    def load_from_hosts(cls, addr, paths):
         conn = HTTPConnection(addr)
         return cls.load_from_connections(conn, paths)
 
