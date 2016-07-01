@@ -8,7 +8,7 @@ load configurations from ``/etc/hadoop/conf``.
 
 
 from hadmin.util import HXML
-from hadmin.yarn import CapacityScheduler
+from hadmin.yarn import CapacityScheduler, ResourceManager
 import os
 
 
@@ -18,6 +18,7 @@ HADOOP_CONF_DIRS = [
         ]
 
 CAPACITY_SCHEDULER_FILENAME = 'capacity-scheduler.xml'
+YARN_FILENAME = 'yarn-site.xml'
 
 
 def find_hxml_dir():
@@ -56,3 +57,12 @@ def get_cap():
 def save_cap(hxml):
     d = find_hxml_dir()
     hxml.save(os.path.join(d, CAPACITY_SCHEDULER_FILENAME))
+
+
+def get_rm():
+    """
+    Returns the system's :py:class:`hadmin.yarn.ResourceManager`
+    """
+
+    hxml = find_hxml(YARN_FILENAME)
+    return ResourceManager(hxml)

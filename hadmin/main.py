@@ -146,10 +146,30 @@ def stats_nm(args):
     args = parser.parse_args(args)
 
     nm = hadmin.rest.NodeManager()
-    nm.load_from_host(args.host)
+    nm.load_from_host(args.host, path=hadmin.rest.NM_INFO_PATH)
 
     print('Total Cores: ' + str(nm.allocated_cores))
     print('Total Memory: ' + str(nm.allocated_memory) + ' MB')
+
+    return 0
+
+
+def stats_rm(args):
+    """
+    Get some stats from a ResourceManager
+    """
+
+    rm = hadmin.system.get_rm()
+
+    parser = ArgumentParser(prog='stats-rm', description='Get RM stats')
+    parser.add_argument('host', nargs='?', default=rm.address)
+    args = parser.parse_args(args)
+
+    paths = [hadmin.rest.RM_METRICS_PATH, hadmin.rest.RM_SCHEDULER_PATH]
+    rest_rm = hadmin.rest.ResourceManager.load_from_host(args.host,
+                                                         paths=paths)
+
+    print('Running Applications: ' + str(rest_rm.apps_running))
 
     return 0
 
@@ -401,6 +421,7 @@ Commands:
     queueulim   Change queue user limit
     sc          Run a sanity check
     stats-nm    Get some statistics about a YARN NodeManager
+    stats-rm    Get some statistics about a YARN ResourceManager
     useradd     Add a user
     userdel     Remove a user"""
 
@@ -416,6 +437,7 @@ cmds = {
     'queueulim': queueulim,
     'sc': sc,
     'stats-nm': stats_nm,
+    'stats-rm': stats_rm,
     'useradd': useradd,
     'userdel': userdel
     }

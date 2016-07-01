@@ -473,6 +473,13 @@ class CapacityScheduler:
 
 class ResourceManager:
 
+    def __init__(self, hxml):
+        self.hxml = hxml
+
+    @property
+    def address(self):
+        return self.hxml['yarn.resourcemanager.hostname'] + ':8088'
+
     def reload_queues():
         """
         Reloads queues. This calls other binaries using subprocess.
