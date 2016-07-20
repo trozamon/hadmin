@@ -3,7 +3,7 @@ import hadmin
 
 desc = """HAdmin (Hadoop Admin) is a general hadoop administration tool. It
 allows for creating users, queues, and groups. It also contains utilities for
-exporiting metrics to graphite and influxdb""".replace('\n', ' ')
+exporting metrics to graphite and influxdb""".replace('\n', ' ')
 
 setup(
     name='hadmin',
