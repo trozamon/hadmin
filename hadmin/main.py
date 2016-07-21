@@ -78,9 +78,6 @@ def chk_dn(args):
     parser = ArgumentParser(prog='chk-dn',
                             description='Check datanode stats/health')
     parser.add_argument('host', nargs='?', default='localhost:50075')
-    parser.add_argument('--failed-volumes', dest='failed_volumes',
-                        action='store_const', const=True, default=False,
-                        help='Check the number of failed volumes')
     args = parser.parse_args(args)
 
     ret = 0
@@ -88,17 +85,17 @@ def chk_dn(args):
     jmx = DataNodeJMX()
     jmx.load_from_host(args.host)
 
-    if args.failed_volumes:
-        nfails = jmx.getFailedVolumes()
-        msg = ' volumes have failed'
+    # Check for number of failed volumes
+    nfails = jmx.getFailedVolumes()
+    msg = ' volumes have failed'
 
-        if nfails == 1:
-            msg = ' volume has failed'
+    if nfails == 1:
+        msg = ' volume has failed'
 
-        print(str(nfails) + msg)
+    print(str(nfails) + msg)
 
-        if nfails > 0:
-            ret = 1
+    if nfails > 0:
+        ret = 1
 
     return ret
 
@@ -109,9 +106,6 @@ def chk_nm(args):
     parser = ArgumentParser(prog='chk-nm',
                             description='Check nodemanager stats/health')
     parser.add_argument('host', nargs='?', default='localhost:8042')
-    parser.add_argument('--health', dest='health', action='store_const',
-                        const=True, default=False,
-                        help='Check the node health')
     args = parser.parse_args(args)
 
     ret = 0
@@ -119,19 +113,18 @@ def chk_nm(args):
     rest = hadmin.rest.NodeManager()
     rest.load_from_host(args.host)
 
-    if args.health:
-        status = rest.isHealthy()
+    status = rest.isHealthy()
 
-        if status:
-            msg = 'node is healthy'
-        else:
-            msg = 'node is unhealthy'
-            ret = 1
+    if status:
+        msg = 'node is healthy'
+    else:
+        msg = 'node is unhealthy'
+        ret = 1
 
-        if len(rest.getHealthReport()) > 0:
-            msg = msg + ': ' + rest.getHealthReport()
+    if len(rest.getHealthReport()) > 0:
+        msg = msg + ': ' + rest.getHealthReport()
 
-        print(msg)
+    print(msg)
 
     return ret
 
