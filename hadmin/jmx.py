@@ -1,5 +1,8 @@
 """
 Apache Hadoop-specific JMX parsing
+----------------------------------
+
+Parse JMX JSON objects to get some stats
 """
 
 import json
@@ -13,13 +16,19 @@ except ImportError:
 
 class JMX(dict):
     """
-    Class representing JMX values
+    Base class that does the majority of the JMX/JSON work.
+
+    Subclass this in order to provide nice, easy-to-use wrappers.
     """
 
     def __init__(self, json_str=''):
         self.load(json_str)
 
     def load(self, json_str):
+        """
+        Load JMX data from a JSON string
+        """
+
         try:
             beans = json.loads(json_str)
 
@@ -33,10 +42,20 @@ class JMX(dict):
             pass
 
     def load_from_host(self, addr):
+        """
+        Load JMX data from a host
+        """
+
         conn = HTTPConnection(addr)
         return self.load_from_connection(conn)
 
     def load_from_connection(self, conn):
+        """
+        Load JMX data from a connection. Connections must have a
+        :py:func:`request` function and a
+        :py:func:`getresponse` function.
+        """
+
         conn.request('GET', '/jmx')
         res = conn.getresponse()
         if res.status == 200:
