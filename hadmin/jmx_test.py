@@ -1,6 +1,6 @@
 from unittest2 import TestCase
 from hadmin import mock
-from hadmin.jmx import DataNodeJMX, JMX
+from hadmin.jmx import DataNodeJMX, JMX, NameNodeJMX
 
 
 class JMXTest(TestCase):
@@ -46,3 +46,33 @@ class JMXNetworkTest(JMXTest):
         self.jmx = JMX()
 
         self.jmx.load_from_connection(mock.JMXConnectionMock())
+
+
+class NameNodeJMXTest(TestCase):
+
+    def testHeapMemoryUsed(self):
+        self.assertEqual(73726608, self.jmx.getHeapMemoryUsed())
+
+    def testNumThreads(self):
+        self.assertEqual(34, self.jmx.getNumThreads())
+
+    def testTotalCapacity(self):
+        self.assertEqual(2.0, self.jmx.getTotalCapacity())
+
+    def testUsedCapacity(self):
+        self.assertEqual(0.0, self.jmx.getUsedCapacity())
+
+    def testBlocksPendingReplication(self):
+        self.assertEqual(1, self.jmx.getBlocksPendingReplication())
+
+    def testUnderReplicatedBlocks(self):
+        self.assertEqual(2, self.jmx.getUnderReplicatedBlocks())
+
+    def testCorruptBlocks(self):
+        self.assertEqual(3, self.jmx.getCorruptBlocks())
+
+    def setUp(self):
+        self.jmx = NameNodeJMX()
+
+        with open('data/namenode.jmx.json') as f:
+            self.jmx = NameNodeJMX(f.read())

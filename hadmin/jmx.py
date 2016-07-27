@@ -79,3 +79,70 @@ class DataNodeJMX(JMX):
 
     def getFailedVolumes(self):
         return self['.*FSDatasetState-null$']['NumFailedVolumes']
+
+
+class NameNodeJMX(JMX):
+    """
+    NameNode/HDFS statistics from JMX
+
+    Since the NameNode is responsible for managing HDFS metadata, various
+    statistics about the NameNode and HDFS can be obtained from an instance of
+    this class.
+    """
+
+    def __init__(self, json_str=''):
+        self.load(json_str)
+
+    def getHeapMemoryUsed(self):
+        """
+        Get the amount of memory used of the JVM Heap, in bytes
+        """
+
+        return self['^java.lang:type=Memory$']['HeapMemoryUsage']['used']
+
+    def getNumThreads(self):
+        """
+        Get the number of currently spawned threads the NameNode is running
+        """
+
+        return self['^java.lang:type=Threading$']['ThreadCount']
+
+    def getTotalCapacity(self):
+        """
+        Get the total capacity of HDFS, in GiB
+        """
+
+        tmp = self['^Hadoop:service=NameNode,name=FSNamesystem$']
+        return tmp['CapacityTotalGB']
+
+    def getUsedCapacity(self):
+        """
+        Get the used capacity of HDFS, in GiB
+        """
+
+        tmp = self['^Hadoop:service=NameNode,name=FSNamesystem$']
+        return tmp['CapacityUsedGB']
+
+    def getUnderReplicatedBlocks(self):
+        """
+        Get the number of under-replicated blocks in HDFS
+        """
+
+        tmp = self['^Hadoop:service=NameNode,name=FSNamesystem$']
+        return tmp['UnderReplicatedBlocks']
+
+    def getCorruptBlocks(self):
+        """
+        Get the number of corrupt blocks in HDFS
+        """
+
+        tmp = self['^Hadoop:service=NameNode,name=FSNamesystem$']
+        return tmp['CorruptBlocks']
+
+    def getBlocksPendingReplication(self):
+        """
+        Get the number of blocks whose replication is currently pending
+        """
+
+        tmp = self['^Hadoop:service=NameNode,name=FSNamesystem$']
+        return tmp['PendingReplicationBlocks']

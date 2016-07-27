@@ -7,6 +7,9 @@ API
 .. automodule:: hadmin.hdfs
    :members:
 
+.. automodule:: hadmin.jmx
+   :members:
+
 .. automodule:: hadmin.rest
    :members:
 
