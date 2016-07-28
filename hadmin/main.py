@@ -400,6 +400,31 @@ def fhs(args):
                 d.write()
 
 
+def stats_nn(args):
+    """
+    Print out some NameNode stats
+    """
+
+    parser = ArgumentParser(prog='stats-nn', description='Get NN stats')
+    parser.add_argument('host', nargs='?', default='localhost:50070')
+    args = parser.parse_args(args)
+
+    nn = hadmin.jmx.NameNodeJMX()
+    nn.load_from_host(args.host)
+
+    print('Daemon stats:')
+    print('  Used Memory: ' + str(nn.getHeapMemoryUsed()))
+    print('  Number of Threads: ' + str(nn.getNumThreads()))
+    print('')
+    print('HDFS stats:')
+    print('  Blocks Pending Replication: ' +
+          str(nn.getBlocksPendingReplication()))
+    print('  Corrupt Blocks: ' + str(nn.getCorruptBlocks()))
+    print('  Under-replicated Blocks: ' + str(nn.getUnderReplicatedBlocks()))
+    print('  Total Capacity: ' + str(nn.getTotalCapacity()))
+    print('  Used Capacity: ' + str(nn.getUsedCapacity()))
+
+
 help_string = """Usage: hadmin <command> <command options>
 
 Commands:
@@ -414,6 +439,7 @@ Commands:
     queueulim   Change queue user limit
     sc          Run a sanity check
     stats-nm    Get some statistics about a YARN NodeManager
+    stats-nn    Get some statistics about an HDFS NameNode
     stats-rm    Get some statistics about a YARN ResourceManager
     useradd     Add a user
     userdel     Remove a user"""
@@ -430,6 +456,7 @@ cmds = {
     'queueulim': queueulim,
     'sc': sc,
     'stats-nm': stats_nm,
+    'stats-nn': stats_nn,
     'stats-rm': stats_rm,
     'useradd': useradd,
     'userdel': userdel
